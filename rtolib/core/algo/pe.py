@@ -3,6 +3,7 @@
 from rtolib.core.algo.common import PE_type_Algorithm
 from pyomo.environ import SolverFactory
 from rtolib.core.pyomo_model import *
+from rtolib.core.solve import *
 
 class ITSParameterEstimation(PE_type_Algorithm):
 

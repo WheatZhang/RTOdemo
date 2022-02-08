@@ -22,7 +22,6 @@ class RTO_Mismatched_WO_reactor(PyomoModel):
             'Kb1': (lambda m: m.Kb[1]),
             'Kb2': (lambda m: m.Kb[2]),
         }
-        self.objective = 'profit'
         self.default_value = {
             'Ka1': 2.189e8,
             'Ka2': 4.310e13,
@@ -37,7 +36,7 @@ class RTO_Mismatched_WO_reactor(PyomoModel):
         }
         self.initial_value_file = os.path.join(os.path.dirname(__file__) + r"\wo_reactor_model_init.txt")
 
-    def build(self, wocstr):
+    def build_body(self, wocstr):
         wocstr.Reactions = Set(initialize=[1, 2])
         wocstr.Components = Set(initialize=['A', 'B', 'C', 'E', 'G', 'P'])
         wocstr.Fa = Param(initialize=1.8275)  # kg/s
@@ -95,7 +94,11 @@ class RTO_Mismatched_WO_reactor(PyomoModel):
             return (m.K[r] - m.Ka[r] * exp(-m.Kb[r] / (m.Tr + 273.15))) * 1e1 == 0
         wocstr.kinetic_coff = Constraint(wocstr.Reactions, rule=kinetic_coff)
 
+    def build_rto(self, wocstr, cv_func):
         def profit(m):
-            return -(1143.38 * m.Fr * m.XFr['P'] + 25.92 * m.Fr * m.XFr[
-                'E'] - 76.23 * m.Fa - 114.34 * m.Fb)
+            # return -(1143.38 * m.Fr * m.XFr['P'] + 25.92 * m.Fr * m.XFr[
+            #     'E'] - 76.23 * m.Fa - 114.34 * m.Fb)
+            return -(1143.38 * m.Fr * cv_func['XFr_P'].__call__(m) +\
+                     25.92 * m.Fr * cv_func['XFr_E'].__call__(m) -\
+                     76.23 * m.Fa - 114.34 * m.Fb)
         wocstr.profit = Expression(rule=profit)

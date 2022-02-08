@@ -26,6 +26,7 @@ class ProblemDescription():
                 'MV': ("u1","u2"),# input
                 'CV': ("obj"),# output
                 'OBJ': "obj",# objective function
+                'CON': (),  # inequality constraint
                 'SPEC': None,  # specification
             }
         bounds = {

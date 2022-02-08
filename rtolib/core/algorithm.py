@@ -107,6 +107,7 @@ class Algorithm():
 
     def get_plant_simulation_result(self, trial_points):
         plant_output_data = [{} for i in range(len(trial_points))]
+        # self.plant_simulator.model.display(r"F:\Research\RTOdemo\debug\WO\result\display.txt")
         for i, p in enumerate(trial_points):
             outputs, solve_status = self.plant_simulator.simulate(p, param_values=None,
                                                                   use_homo=self.options["homotopy_simulation"])

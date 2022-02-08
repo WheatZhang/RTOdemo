@@ -3,6 +3,7 @@
 from rtolib.core.algo.common import MA_type_Algorithm,PE_type_Algorithm
 from pyomo.environ import SolverFactory
 from rtolib.core.pyomo_model import *
+from rtolib.core.solve import *
 
 class ISOPE_Algorithm(MA_type_Algorithm,PE_type_Algorithm):
 
@@ -28,9 +29,11 @@ class ISOPE_Algorithm(MA_type_Algorithm,PE_type_Algorithm):
         self.problem_description = problem_description
         self.plant_simulator = PyomoSimulator(plant)
         mvs = self.problem_description.symbol_list['MV']
-        cvs = self.problem_description.symbol_list['CV']
-        self.model_simulator = PyomoSimulator(PyomoModelWithModifiers(model, mvs, cvs))
-        self.model_optimizer = PyomoOptimizer(PyomoModelWithModifiers(model, mvs, cvs))
+        cvs = [self.problem_description.symbol_list['OBJ']]
+        for cv in self.problem_description.symbol_list['CON']:
+            cvs.append(cv)
+        self.model_simulator = PyomoSimulator(PyomoModelWithModifiers(model, ModifierType.RTO, mvs, cvs))
+        self.model_optimizer = PyomoOptimizer(PyomoModelWithModifiers(model, ModifierType.RTO, mvs, cvs))
         self.pe_estimator = PyomoMultiDataPointParamEstimator(model, perturbation_method.number_of_data_points)
         self.perturbation_method = perturbation_method
         self.noise_generator = noise_generator

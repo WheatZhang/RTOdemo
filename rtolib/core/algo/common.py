@@ -40,7 +40,8 @@ class MA_type_Algorithm(Algorithm):
                 for k, v in outputs.items():
                     self.model_history_data[self.iter_count][k] = v
             for k in self.problem_description.symbol_list['CV']:
-                model_output_data[i][k] = outputs[k + '_unmodified']
+                if k + '_unmodified' in outputs.keys():
+                    model_output_data[i][k] = outputs[k + '_unmodified']
         return model_output_data
 
     def update_modifiers(self, plant_output_data, model_output_data):
