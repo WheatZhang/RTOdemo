@@ -1,13 +1,11 @@
-Fb	4
+Fb	5
 
-Fb0	4.77
-
-Fr	5
+Fr	6.8275
 
 K
 Reactions
-1	0.1
-2	0.1
+1	0.02550515783862568
+2	0.02180497135311837
 
 Ka
 Reactions
@@ -19,22 +17,14 @@ Reactions
 1	8077.6
 2	12438
 
-Tr	90
-
-Tr0	78.2
+Tr	80
 
 XFr
 Components
-A	None
-B	None
-C	None
-E	None
-G	None
-P	None
-
-phi_0th_term	0
-
-phi_1st_Fb_term	0
-
-phi_1st_Tr_term	0
+A	0.09829547350657576
+B	0.42400145240085885
+C	-5.510129769479473e-40
+E	0.2779179579931988
+G	0.09123920565415075
+P	0.1085459104452158
 

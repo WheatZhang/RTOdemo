@@ -25,7 +25,6 @@ class SimpleFiniteDiffPerturbation(PerturbationMethod):
         self.ffd_step = ffd_step
         self.mv_bounds = {}
         self.mvs = problem_description.symbol_list['MV']
-        self.cvs = problem_description.symbol_list['CV']
         for v in problem_description.symbol_list['MV']:
             self.mv_bounds[v]=problem_description.bounds[v]
         self.number_of_data_points = len(self.mvs)+1
@@ -71,7 +70,8 @@ class SimpleFiniteDiffPerturbation(PerturbationMethod):
         :return: dict
         '''
         ret = {}
-        for cv in self.cvs:
+        cvs = model_output_data[0].keys()
+        for cv in cvs:
             ret[(cv,None)] = plant_output_data[0][cv] - model_output_data[0][cv]
             for idx,mv in enumerate(self.mvs):
                 ret[(cv, mv)] = (plant_output_data[idx+1][cv] - plant_output_data[0][cv])/self.ffd_step[mv]- \

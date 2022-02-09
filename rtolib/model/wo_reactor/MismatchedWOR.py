@@ -62,10 +62,6 @@ class RTO_Mismatched_WO_reactor(PyomoModel):
                          (2, 'A'): -1, (2, 'B'): -1, (2, 'C'): 0, (2, 'E'): 0, (2, 'G'): 1, (2, 'P'): -1
                          }
         wocstr.stoichiometry = Param(wocstr.Reactions, wocstr.Components, initialize=stoichiometry)
-        wocstr.Fb0 = Var(initialize=4.77)
-        wocstr.Fb0.fixed = True
-        wocstr.Tr0 = Var(initialize=78.2)
-        wocstr.Tr0.fixed = True
         wocstr.Fb = Var(initialize=4, within=NonNegativeReals, bounds=(3, 6))  # kg/s
         wocstr.Fb.fixed = True
         wocstr.Tr = Var(initialize=90, bounds=(70, 100))  # Celsius degree

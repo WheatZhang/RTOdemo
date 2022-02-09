@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
-from rtolib.core.basic import Simulator, Optimizer, ParameterEstimator, ProblemDescription
 from pyomo.environ import *
-from pyomo.opt import SolverStatus, TerminationCondition
-import rtolib.util.init_value as init_value
 from rtolib.util.misc import get_attr_function, modified_output_function
 import copy
 from enum import Enum
 
 __name__ = ['PyomoModelSolvingStatus','PyomoModel',
            'ModifierType','PyomoModelWithModifiers']
+
+class PyomoModelSolvingStatus(Enum):
+    OK = 1
+    HOMOTOPY_TARGET_NOT_REACHED = 2
+    OPTIMIZATION_FAILED = 3
+    OTHER = 0
+
 
 class ModifierType(Enum):
     RTO = 1

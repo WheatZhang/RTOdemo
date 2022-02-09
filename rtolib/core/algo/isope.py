@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 from rtolib.core.algo.common import MA_type_Algorithm,PE_type_Algorithm
-from pyomo.environ import SolverFactory
 from rtolib.core.pyomo_model import *
-from rtolib.core.solve import *
+from rtolib.core.solve import PyomoSimulator,PyomoOptimizer,PyomoMultiDataPointParamEstimator
 
 class ISOPE_Algorithm(MA_type_Algorithm,PE_type_Algorithm):
 
@@ -89,6 +88,11 @@ class ISOPE_Algorithm(MA_type_Algorithm,PE_type_Algorithm):
 
         self.model_history_data[0] = {}
         PE_type_Algorithm.set_initial_model_parameters(self, initial_parameter_value)
+
+        # set basepoint
+        self.model_simulator.set_base_point(self.current_point)
+        self.model_optimizer.set_base_point(self.current_point)
+
 
     def one_step_simulation(self):
         print("Iteration %d" % self.iter_count)

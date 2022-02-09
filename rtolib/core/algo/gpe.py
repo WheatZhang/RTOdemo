@@ -3,6 +3,7 @@
 from rtolib.core.algo.common import PE_type_Algorithm, PE_type_Algorithm
 from pyomo.environ import SolverFactory
 from rtolib.core.pyomo_model import *
+from rtolib.core.solve import PyomoSimulator,PyomoOptimizer,PyomoGradientParamEstimator
 
 class GeneralizedParameterEstimation(PE_type_Algorithm):
 
@@ -31,6 +32,7 @@ class GeneralizedParameterEstimation(PE_type_Algorithm):
                     noise_generator,
                     solver_executable,
                     spec_function,
+                    modifier_type,
                     output_weight=None,
                     parameter_weight=None,
                     parameter_initial_guess=None,
@@ -39,11 +41,23 @@ class GeneralizedParameterEstimation(PE_type_Algorithm):
         self.problem_description = problem_description
         self.plant_simulator = PyomoSimulator(plant)
         mvs = self.problem_description.symbol_list['MV']
-        cvs = self.problem_description.symbol_list['CV']
-        self.model_simulator = PyomoSimulator(PyomoModelWithModifiers(model, mvs, cvs))
-        self.model_optimizer = PyomoOptimizer(PyomoModelWithModifiers(model, mvs, cvs))
-        self.pe_estimator = PyomoGradientParamEstimator(PyomoModelWithModifiers(model, mvs, cvs),\
-                                                        perturbation_method.number_of_data_points)
+        if modifier_type == ModifierType.RTO:
+            cvs = [self.problem_description.symbol_list['OBJ']]
+            for cv in self.problem_description.symbol_list['CON']:
+                cvs.append(cv)
+        elif modifier_type == ModifierType.OUTPUT:
+            cvs = self.problem_description.symbol_list['CV']
+        elif modifier_type == ModifierType:
+            cvs = [self.problem_description.symbol_list['OBJ']]
+            for cv in self.problem_description.symbol_list['CON']:
+                cvs.append(cv)
+            for cv in self.problem_description.symbol_list['CV']:
+                cvs.append(cv)
+        self.model_simulator = PyomoSimulator(PyomoModelWithModifiers(model,modifier_type, mvs, cvs))
+        self.model_optimizer = PyomoOptimizer(PyomoModelWithModifiers(model,modifier_type, mvs, cvs))
+        self.pe_estimator = PyomoGradientParamEstimator(PyomoModelWithModifiers(model,modifier_type, mvs, cvs),\
+                                                        perturbation_method.number_of_data_points,
+                                                        use_obj_and_con_info=True)
         self.perturbation_method = perturbation_method
         self.noise_generator = noise_generator
         self.solver_executable = solver_executable
@@ -70,7 +84,8 @@ class GeneralizedParameterEstimation(PE_type_Algorithm):
         solver3 = SolverFactory('ipopt', executable=self.solver_executable)
         self.model_optimizer.set_solver(solver3, tee=False, default_options=default_options)
         solver4 = SolverFactory('ipopt', executable=self.solver_executable)
-        pe_options={'max_iter':100}
+        pe_options={'max_iter':100,
+                    }
         self.pe_estimator.set_solver(solver4, tee=False, default_options=pe_options)
 
         self.iter_count = 0
@@ -81,6 +96,11 @@ class GeneralizedParameterEstimation(PE_type_Algorithm):
 
         self.model_history_data[0] = {}
         self.set_initial_model_parameters(initial_parameter_value)
+
+        # set basepoint
+        self.model_simulator.set_base_point(self.current_point)
+        self.model_optimizer.set_base_point(self.current_point)
+        self.pe_estimator.set_base_point(self.current_point)
 
 
     def one_step_simulation(self):
@@ -101,6 +121,11 @@ class GeneralizedParameterEstimation(PE_type_Algorithm):
                 plant_data[i][k]=v
 
         self.current_point_model_simulation(trial_points[0])
+
+        # set basepoint
+        self.model_simulator.set_base_point(self.current_point)
+        self.model_optimizer.set_base_point(self.current_point)
+        self.pe_estimator.set_base_point(self.current_point)
 
         # parameter estimation
         self.current_parameter_value = self.pe_estimator.estimate_parameter(plant_data,

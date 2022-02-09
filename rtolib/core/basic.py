@@ -1,21 +1,7 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
-__name__ = ['Simulator', 'Optimizer', 'ParameterEstimator', 'ProblemDescription']
-
-class Simulator():
-    def simulate(self, input_values, param_values=None):
-        return NotImplementedError()
-
-
-class Optimizer():
-    def optimize(self, param_values=None):
-        return NotImplementedError()
-
-
-class ParameterEstimator():
-    def estimate_parameter(self, data_sets):
-        return NotImplementedError()
+__name__ = ['ProblemDescription']
 
 
 class ProblemDescription():
