@@ -8,8 +8,8 @@ solver_executable=r"F:\Research\RTOdemo\external\bin\ipopt.exe"
 result_filename_folder="data/0/"
 
 #------------------------------------
-profit_noise_level=0
-composition_noise_level=0
+profit_noise_level=0.6
+composition_noise_level=1e-4
 starting_point={
         "Fb": 4,
         "Tr": 75,
@@ -54,7 +54,8 @@ print("\nTesting PE")
 result_filename_header=result_filename_folder+"PE_"
 do_test_PE(perturbation_stepsize, starting_point, filtering_factor, \
                noise_filename, solver_executable, print_iter_data, max_iter,\
-               result_filename_header, composition_noise_level)
+               result_filename_header, composition_noise_level, \
+           ka_relative_uncertainty, kb_relative_uncertainty)
 
 print("\nTesting GPE")
 result_filename_header=result_filename_folder+"GPE_"

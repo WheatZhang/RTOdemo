@@ -137,7 +137,8 @@ def do_test_MAy(perturbation_stepsize, starting_point, filtering_factor, \
 
 def do_test_PE(perturbation_stepsize, starting_point, filtering_factor, \
                noise_filename, solver_executable, print_iter_data, max_iter,\
-               result_filename_header, output_noise_level):
+               result_filename_header, output_noise_level,\
+               ka_relative_uncertainty,kb_relative_uncertainty):
     problem_description = copy.deepcopy(default_WOR_description)
 
     ffd_perturb = SimpleFiniteDiffPerturbation(perturbation_stepsize, problem_description)
@@ -158,6 +159,12 @@ def do_test_PE(perturbation_stepsize, starting_point, filtering_factor, \
         "Ka2": 0,
         "Kb1": 0,
         "Kb2": 0,
+    }
+    parameter_weight = {
+        "Ka1": 1 / ka_relative_uncertainty / ka_relative_uncertainty/2.189e8/2.189e8,
+        "Ka2": 1 / ka_relative_uncertainty / ka_relative_uncertainty/4.310e13/4.310e13,
+        "Kb1": 1 / kb_relative_uncertainty / kb_relative_uncertainty/8077.6/8077.6,
+        "Kb2": 1 / kb_relative_uncertainty / kb_relative_uncertainty/12438/12438,
     }
 
     output_weight = {
