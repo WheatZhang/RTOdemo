@@ -3,13 +3,13 @@ from do_test_lib import generate_noise_file, do_test_MA, \
     do_test_PE, do_test_MAy,do_test_GPE,do_test_ISOPE
 
 #------------------------------------
-noise_filename="noise/noise0.txt"
+noise_filename="noise/noise1.txt"
 solver_executable=r"F:\Research\RTOdemo\external\bin\ipopt.exe"
-result_filename_folder="data/0/"
+result_filename_folder="data/1/"
 
 #------------------------------------
-profit_noise_level=0.6
-composition_noise_level=1e-4
+profit_noise_level=0
+composition_noise_level=0
 starting_point={
         "Fb": 4,
         "Tr": 75,
@@ -33,23 +33,23 @@ max_iter=20
 if not os.path.exists(noise_filename):
     generate_noise_file(profit_noise_level, composition_noise_level, noise_filename)
 if profit_noise_level <= 0:
-    profit_noise_level=0.6
+    profit_noise_level=0.01
 if composition_noise_level <= 0:
-    composition_noise_level=1e-4
+    composition_noise_level=1e-6
 
 #------------------------------------
-print("\nTesting MA")
-result_filename_header=result_filename_folder+"MA_"
-do_test_MA(perturbation_stepsize, starting_point, filtering_factor, \
-               noise_filename, solver_executable, print_iter_data, max_iter,\
-               result_filename_header)
-
-print("\nTesting MAy")
-result_filename_header=result_filename_folder+"MAy_"
-do_test_MAy(perturbation_stepsize, starting_point, filtering_factor, \
-               noise_filename, solver_executable, print_iter_data, max_iter,\
-               result_filename_header)
-
+# print("\nTesting MA")
+# result_filename_header=result_filename_folder+"MA_"
+# do_test_MA(perturbation_stepsize, starting_point, filtering_factor, \
+#                noise_filename, solver_executable, print_iter_data, max_iter,\
+#                result_filename_header)
+#
+# print("\nTesting MAy")
+# result_filename_header=result_filename_folder+"MAy_"
+# do_test_MAy(perturbation_stepsize, starting_point, filtering_factor, \
+#                noise_filename, solver_executable, print_iter_data, max_iter,\
+#                result_filename_header)
+#
 print("\nTesting PE")
 result_filename_header=result_filename_folder+"PE_"
 do_test_PE(perturbation_stepsize, starting_point, filtering_factor, \
@@ -64,8 +64,9 @@ do_test_GPE(perturbation_stepsize, starting_point, filtering_factor, \
                result_filename_header,profit_noise_level,composition_noise_level,\
                 ka_relative_uncertainty,kb_relative_uncertainty,factor_n)
 
-print("\nTesting ISOPE")
-result_filename_header=result_filename_folder+"ISOPE_"
-do_test_ISOPE(perturbation_stepsize, starting_point, filtering_factor, \
-               noise_filename, solver_executable, print_iter_data, max_iter,\
-               result_filename_header, composition_noise_level)
+# print("\nTesting ISOPE")
+# result_filename_header=result_filename_folder+"ISOPE_"
+# do_test_ISOPE(perturbation_stepsize, starting_point, filtering_factor, \
+#                noise_filename, solver_executable, print_iter_data, max_iter,\
+#                result_filename_header, composition_noise_level)
+

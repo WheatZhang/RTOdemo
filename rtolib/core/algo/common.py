@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 from enum import Enum
+from pyomo.environ import value
 
 __name__ = ['AlgoIterReturnStatus', 'Algorithm']
 
@@ -33,7 +34,10 @@ class Algorithm():
         self.available_options["filtering_factor"] = ("[0,1]",0.5) # accepted value, default value
         :return:
         '''
-        raise NotImplementedError()
+        self.available_options["filtering_factor"] = ("[0,1]", 0.5)
+        self.available_options["homotopy_simulation"] = ("bool", True)
+        self.available_options["homotopy_optimization"] = ("bool", True)
+        self.available_options["noise_adding_fashion"] = ("integrated/added", "added")
 
     def set_algorithm_option(self, options=None):
         if options is None:
@@ -129,20 +133,35 @@ class Algorithm():
         plant_output_data = [{} for i in range(len(trial_points))]
         # self.plant_simulator.model.display(r"F:\Research\RTOdemo\debug\WO\result\display.txt")
         for i, p in enumerate(trial_points):
+            if self.options["noise_adding_fashion"] == "integrated":
+                for k,v in self.plant_simulator.pyomo_model.output_noise.items():
+                    noise = self.noise_generator.get_noise(self.iter_count, i, k)
+                    var=self.plant_simulator.pyomo_model.output_noise[k].__call__(self.plant_simulator.model)
+                    var.fix(noise)
             outputs, solve_status = self.plant_simulator.simulate(p, param_values=None,
                                                                   use_homo=self.options["homotopy_simulation"])
             # TODO:deal with solve status
+            if self.options["noise_adding_fashion"] == "integrated":
+                noised_outputs = {}
+                for op in self.plant_simulator.pyomo_model.noised_outputs.keys():
+                    var = self.plant_simulator.pyomo_model.noised_outputs[op].__call__(self.plant_simulator.model)
+                    noised_outputs[op] = value(var)
+
             if i == 0:
                 for k, v in outputs.items():
                     self.plant_history_data[self.iter_count][k] = v
             for k in self.available_measurements():
-                plant_output_data[i][k] = outputs[k]
+                if self.options["noise_adding_fashion"] == "integrated":
+                    plant_output_data[i][k] = noised_outputs[k]
+                elif self.options["noise_adding_fashion"] == "added":
+                    plant_output_data[i][k] = outputs[k]
 
         # add noise to the plant data
-        for trial_point_no in range(len(trial_points)):
-            for k in self.problem_description.symbol_list['CV']:
-                noise = self.noise_generator.get_noise(self.iter_count, trial_point_no, k)
-                plant_output_data[trial_point_no][k] += noise
+        if self.options["noise_adding_fashion"] == "added":
+            for trial_point_no in range(len(trial_points)):
+                for k in self.plant_output_data[0].keys():
+                    noise = self.noise_generator.get_noise(self.iter_count, trial_point_no, k)
+                    plant_output_data[trial_point_no][k] += noise
 
         return plant_output_data
 
@@ -164,6 +183,11 @@ class PE_type_Algorithm(Algorithm):
     def __init__(self):
         super().__init__()
         self.pe_estimator=None
+
+    def register_option(self):
+        super().register_option()
+        self.available_options["pre-simulation_before_pe"] = ("bool", True)
+
 
     def set_initial_model_parameters(self, set_pyomo_model_parameters):
         super().set_initial_model_parameters(set_pyomo_model_parameters)

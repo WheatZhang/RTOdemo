@@ -6,11 +6,6 @@ from rtolib.core.solve import PyomoSimulator,PyomoOptimizer
 
 class ModifierAdaptation(MA_type_Algorithm):
 
-    def register_option(self):
-        self.available_options["filtering_factor"] = ("[0,1]",0.5)
-        self.available_options["homotopy_simulation"] = ("bool",True)
-        self.available_options["homotopy_optimization"] = ("bool",True)
-
     def set_problem(self, problem_description,
                     plant,
                     model,

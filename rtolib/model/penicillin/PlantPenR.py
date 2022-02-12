@@ -5,20 +5,12 @@ import os
 class RTO_Plant_WO_reactor(PyomoModel):
     def __init__(self):
         self.output_variables = {
-            'profit': (lambda m: m.profit_noise_free),
+            'profit': (lambda m: m.profit),
             'XFr_A': (lambda m: m.XFr['A']),
             'XFr_B': (lambda m: m.XFr['B']),
             'XFr_E': (lambda m: m.XFr['E']),
             'XFr_P': (lambda m: m.XFr['P']),
             'XFr_G': (lambda m: m.XFr['G']),
-        }
-        self.noised_outputs = {
-            'profit': (lambda m: m.profit),
-            'XFr_A': (lambda m: m.XFr['A'] + m.XFr_noise['A']),
-            'XFr_B': (lambda m: m.XFr['B'] + m.XFr_noise['B']),
-            'XFr_E': (lambda m: m.XFr['E'] + m.XFr_noise['E']),
-            'XFr_P': (lambda m: m.XFr['P'] + m.XFr_noise['P']),
-            'XFr_G': (lambda m: m.XFr['G'] + m.XFr_noise['G']),
         }
         self.input_variables = {
             'Fb': (lambda m: m.Fb),
@@ -26,15 +18,8 @@ class RTO_Plant_WO_reactor(PyomoModel):
         }
         self.parameters = {
         }
-        self.default_value={}
-        self.parameter_scaling_factors={}
-        self.output_noise = {
-            'XFr_A': (lambda m: m.XFr_noise['A']),
-            'XFr_B': (lambda m: m.XFr_noise['B']),
-            'XFr_E': (lambda m: m.XFr_noise['E']),
-            'XFr_P': (lambda m: m.XFr_noise['P']),
-            'XFr_G': (lambda m: m.XFr_noise['G']),
-        }
+        self.default_value = {}
+        self.parameter_scaling_factors = {}
         self.initial_value_file = os.path.join(os.path.dirname(__file__) + r"\wo_reactor_plant_init.txt")
 
     def build_body(self, wocstr):
@@ -59,9 +44,6 @@ class RTO_Plant_WO_reactor(PyomoModel):
         wocstr.Tr.fixed = True
         wocstr.Fr = Var(initialize=5, within=NonNegativeReals)  # kg/s
         wocstr.XFr = Var(wocstr.Components, bounds=(0, 1))
-        wocstr.XFr_noise = Var(wocstr.Components, initialize=0)
-        for c in wocstr.Components:
-            wocstr.XFr_noise[c].fixed=True
         wocstr.K = Var(wocstr.Reactions, initialize=0.1)
 
         def Kmxx(m, r):
@@ -87,18 +69,10 @@ class RTO_Plant_WO_reactor(PyomoModel):
         wocstr.kinetic_coff = Constraint(wocstr.Reactions, rule=kinetic_coff)
 
     def build_rto(self, wocstr, cv_func):
-        def profit_noise_free(m):
-            # return -(1143.38 * m.Fr * m.XFr['P'] + 25.92 * m.Fr * m.XFr[
-            #     'E'] - 76.23 * m.Fa - 114.34 * m.Fb)
-            return -(1143.38 * m.Fr * (cv_func['XFr_P'].__call__(m)) + \
-                     25.92 * m.Fr * (cv_func['XFr_E'].__call__(m)) - \
-                     76.23 * m.Fa - 114.34 * m.Fb)
-        wocstr.profit_noise_free = Expression(rule=profit_noise_free)
-
         def profit(m):
             # return -(1143.38 * m.Fr * m.XFr['P'] + 25.92 * m.Fr * m.XFr[
             #     'E'] - 76.23 * m.Fa - 114.34 * m.Fb)
-            return -(1143.38 * m.Fr * (cv_func['XFr_P'].__call__(m)+m.XFr_noise['P']) + \
-                     25.92 * m.Fr * (cv_func['XFr_E'].__call__(m)+m.XFr_noise['E']) - \
+            return -(1143.38 * m.Fr * cv_func['XFr_P'].__call__(m) + \
+                     25.92 * m.Fr * cv_func['XFr_E'].__call__(m) - \
                      76.23 * m.Fa - 114.34 * m.Fb)
         wocstr.profit = Expression(rule=profit)

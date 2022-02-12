@@ -37,6 +37,8 @@ class PyomoModel():
         self.input_variables = {}
         self.default_value = {}
         self.parameter_scaling_factors = {}
+        self.output_noise = {}
+        self.noised_outputs = {}
         self.initial_value_file=""
 
     def build_body(self, model):

@@ -6,14 +6,6 @@ from rtolib.core.pyomo_model import *
 from rtolib.core.solve import PyomoSimulator,PyomoOptimizer,PyomoGradientParamEstimator
 
 class GeneralizedParameterEstimation(PE_type_Algorithm):
-
-    def register_option(self):
-        self.available_options["filtering_factor"] = ("[0,1]",0.5)
-        self.available_options["homotopy_simulation"] = ("bool",True)
-        self.available_options["homotopy_optimization"] = ("bool",True)
-        self.available_options["pre-simulation_before_pe"] = ("bool",True)
-
-
     def set_homotopy_var(self, homotopy_var):
         '''
 
