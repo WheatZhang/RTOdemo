@@ -23,7 +23,7 @@ def generate_noise_file(profit_noise_level, composition_noise_level, noise_filen
     max_iter = 200
     noise_generator = NoiseGenerator(noise_level)
     for i in range(max_iter):
-        for j in range(len(noise_level)):
+        for j in range(3):
             for k in noise_level.keys():
                 noise_generator.get_noise(i, j, k)
     noise_generator.save_noise(noise_filename)
@@ -271,7 +271,8 @@ def do_test_GPE(perturbation_stepsize, starting_point, filtering_factor, \
     
 def do_test_ISOPE(perturbation_stepsize, starting_point, filtering_factor, \
                noise_filename, solver_executable, print_iter_data, max_iter,\
-               result_filename_header, output_noise_level):
+               result_filename_header, output_noise_level,\
+                ka_relative_uncertainty,kb_relative_uncertainty):
     problem_description = copy.deepcopy(default_WOR_description)
 
     ffd_perturb = SimpleFiniteDiffPerturbation(perturbation_stepsize, problem_description)
@@ -288,11 +289,17 @@ def do_test_ISOPE(perturbation_stepsize, starting_point, filtering_factor, \
     noise_generator = NoiseGenerator()
     noise_generator.load_noise(noise_filename)
 
+    # parameter_weight = {
+    #     "Ka1": 0,
+    #     "Ka2": 0,
+    #     "Kb1": 0,
+    #     "Kb2": 0,
+    # }
     parameter_weight = {
-        "Ka1": 0,
-        "Ka2": 0,
-        "Kb1": 0,
-        "Kb2": 0,
+        "Ka1": 1 / ka_relative_uncertainty / ka_relative_uncertainty / 2.189e8 / 2.189e8,
+        "Ka2": 1 / ka_relative_uncertainty / ka_relative_uncertainty / 4.310e13 / 4.310e13,
+        "Kb1": 1 / kb_relative_uncertainty / kb_relative_uncertainty / 8077.6 / 8077.6,
+        "Kb2": 1 / kb_relative_uncertainty / kb_relative_uncertainty / 12438 / 12438,
     }
 
     output_weight = {
@@ -407,7 +414,8 @@ def batch_test_all_algo(delta_u_Fb, filtering_factor, noise_level_coeff):
     result_filename_header = result_filename_folder + "ISOPE_"
     do_test_ISOPE(perturbation_stepsize, starting_point, filtering_factor, \
                   noise_filename, solver_executable, print_iter_data, max_iter, \
-                  result_filename_header, composition_noise_level)
+                  result_filename_header, composition_noise_level, \
+                  ka_relative_uncertainty, kb_relative_uncertainty)
 
 
 def batch_test_GPE(factor_n=10):
@@ -456,25 +464,25 @@ def batch_test_GPE(factor_n=10):
 
 if __name__ == "__main__":
     # generate_batch_test_noise()
-    # for n in [0, 0.1, 0.2, 0.5, 1, 2, 5]:
-    #     print("n=%f"%n)
-    #     batch_test_all_algo(delta_u_Fb=0.2, filtering_factor=0.5, noise_level_coeff=n)
-    #
-    # for K in [0.1, 0.2, 0.5, 0.75, 1]:
-    #     print("K=%f" % K)
-    #     batch_test_all_algo(delta_u_Fb=0.2, filtering_factor=K, noise_level_coeff=1)
-    #
-    # for delta_u in [0.01, 0.05, 0.1, 0.2, 0.4, 0.6]:
-    #     print("delta_u=%f" % delta_u)
-    #     batch_test_all_algo(delta_u_Fb=delta_u, filtering_factor=0.5, noise_level_coeff=1)
-    #
-    # for K in [0.1, 0.2, 0.5, 0.75, 1]:
-    #     print("K=%f" % K)
-    #     batch_test_all_algo(delta_u_Fb=0.2, filtering_factor=K, noise_level_coeff=0)
-    #
-    # for delta_u in [0.01, 0.05, 0.1, 0.2, 0.4, 0.6]:
-    #     print("delta_u=%f" % delta_u)
-    #     batch_test_all_algo(delta_u_Fb=delta_u, filtering_factor=0.5, noise_level_coeff=0)
+    for n in [0, 0.1, 0.2, 0.5, 1, 2, 5]:
+        print("n=%f"%n)
+        batch_test_all_algo(delta_u_Fb=0.2, filtering_factor=0.5, noise_level_coeff=n)
+
+    for K in [0.1, 0.2, 0.5, 0.75, 1]:
+        print("K=%f" % K)
+        batch_test_all_algo(delta_u_Fb=0.2, filtering_factor=K, noise_level_coeff=1)
+
+    for delta_u in [0.01, 0.05, 0.1, 0.2, 0.4, 0.6]:
+        print("delta_u=%f" % delta_u)
+        batch_test_all_algo(delta_u_Fb=delta_u, filtering_factor=0.5, noise_level_coeff=1)
+
+    for K in [0.1, 0.2, 0.5, 0.75, 1]:
+        print("K=%f" % K)
+        batch_test_all_algo(delta_u_Fb=0.2, filtering_factor=K, noise_level_coeff=0)
+
+    for delta_u in [0.01, 0.05, 0.1, 0.2, 0.4, 0.6]:
+        print("delta_u=%f" % delta_u)
+        batch_test_all_algo(delta_u_Fb=delta_u, filtering_factor=0.5, noise_level_coeff=0)
 
     for factor_n in [0.1,1,10,100,1000]:
         print("factor_n=%f" % factor_n)

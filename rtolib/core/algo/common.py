@@ -147,6 +147,8 @@ class Algorithm():
                     var = self.plant_simulator.pyomo_model.noised_outputs[op].__call__(self.plant_simulator.model)
                     noised_outputs[op] = value(var)
 
+            # print(noised_outputs)
+            # print(outputs)
             if i == 0:
                 for k, v in outputs.items():
                     self.plant_history_data[self.iter_count][k] = v
@@ -189,12 +191,13 @@ class PE_type_Algorithm(Algorithm):
         self.available_options["pre-simulation_before_pe"] = ("bool", True)
 
 
-    def set_initial_model_parameters(self, set_pyomo_model_parameters):
-        super().set_initial_model_parameters(set_pyomo_model_parameters)
+    def set_initial_model_parameters(self, pyomo_model_parameters):
+        super().set_initial_model_parameters(pyomo_model_parameters)
 
-        # self.pe_estimator.model.display("result/display.txt")
         self.pe_estimator.set_weight(self.output_weight, self.parameter_weight)
         self.pe_estimator.set_parameter_guess(self.parameter_initial_guess)
+        # self.pe_estimator.model.display("pe_model.txt")
+        # exit()
 
     def set_weight(self, output_weight, parameter_weight, parameter_initial_guess,
                     fixed_parameter_values):

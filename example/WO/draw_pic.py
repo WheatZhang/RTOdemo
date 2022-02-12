@@ -311,13 +311,13 @@ def draw_GPE_different_weight():
 
 
 if __name__ == "__main__":
-    draw_overall_pic("data/1/", "pic/overall_pic1.png")
+    # draw_overall_pic("data/1/", "pic/overall_pic1.png")
 
-    # for root, dirs, files in os.walk("data/"):
-    #     for dir in dirs:
-    #         if dir.startswith("batch_all"):
-    #             print(dir)
-    #             draw_overall_pic("data/"+dir+"/", "pic/overall_pic_"+dir+".png")
+    for root, dirs, files in os.walk("data/"):
+        for dir in dirs:
+            if dir.startswith("batch_all"):
+                print(dir)
+                draw_overall_pic("data/"+dir+"/", "pic/overall_pic_"+dir+".png")
 
-    # draw_GPE_different_weight()
+    draw_GPE_different_weight()
 

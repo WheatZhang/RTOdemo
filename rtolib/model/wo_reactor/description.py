@@ -2,7 +2,7 @@ from rtolib.core import ProblemDescription
 
 
 symbol_list = {
-                'MV': ("Tr","Fb"),# input
+                'MV': ("Fb","Tr"),# input
                 'CV': ('XFr_A','XFr_B','XFr_E','XFr_P','XFr_G'),# output
                 'OBJ': "profit",# objective function
                 'CON': (),  # inequality constraint

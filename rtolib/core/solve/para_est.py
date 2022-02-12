@@ -246,6 +246,7 @@ class PyomoMultiDataPointParamEstimator(ParameterEstimator):
         # if obj_scaling_factor is small, the chance of failure rises
         # self.solver.options["obj_scaling_factor"] = 1
         results = self.solver.solve(self.model, tee=self.tee)
+        # self.model.display("display.txt")
 
         # TODO: back up model data
         # TODO: fallback strategy
