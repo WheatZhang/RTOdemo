@@ -14,22 +14,18 @@ class NoiseGenerator():
         self.history_noise = {}
 
     def get_noise(self,rto_iter,test_point_no,variable_name):
-        flag = False
-        for k in self.history_noise.keys():
-            if k[0] == rto_iter and k[1] == test_point_no:
-                flag = True
-                break
-        if flag:
-            return self.history_noise[(rto_iter, test_point_no, variable_name)]
-        else:
-            for k,v in self.noise_level.items():
-                noise_value = numpy.random.randn()*v
-                if noise_value > v*2:
-                    noise_value = v*2
-                elif noise_value < -v*2:
-                    noise_value = -2*v
-                self.history_noise[(rto_iter,test_point_no,k)] = noise_value
-            return self.history_noise[(rto_iter, test_point_no, variable_name)]
+        return self.history_noise[(rto_iter, test_point_no, variable_name)]
+
+    def generate_noise(self,total_rto_iters,total_test_points):
+        for rto_iter in range(total_rto_iters):
+            for test_point_no in range(total_test_points):
+                for k,v in self.noise_level.items():
+                    noise_value = numpy.random.randn()*v
+                    if noise_value > v*2:
+                        noise_value = v*2
+                    elif noise_value < -v*2:
+                        noise_value = -2*v
+                    self.history_noise[(rto_iter,test_point_no,k)] = noise_value
 
     def save_noise(self, filename):
         with open(filename, 'w') as fp:

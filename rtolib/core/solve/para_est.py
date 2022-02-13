@@ -149,6 +149,11 @@ class PyomoMultiDataPointParamEstimator(ParameterEstimator):
             raise ValueError("plant data length does not match")
         self.set_measure_data(plant_data)
 
+        # backup parameter
+        para_backup = {}
+        for para_name in self.pyomo_model.parameters.keys():
+            para_backup[para_name] = value(getattr(self.model, para_name))
+
         # pre simulation
         if pre_simulation:
             for case_no in self.model.CaseIndex:
@@ -156,8 +161,8 @@ class PyomoMultiDataPointParamEstimator(ParameterEstimator):
                 # autocomplete
                 param_values = {}
                 for para_name in self.pyomo_model.parameters.keys():
-                    if para_name not in fixed_param_values.keys():
-                        param_values[para_name] = self.pyomo_model.default_value[para_name]
+                    # if para_name not in fixed_param_values.keys():
+                    param_values[para_name] = self.pyomo_model.default_value[para_name]
                 input_values = {}
                 for var_name in self.pyomo_model.input_variables.keys():
                     if var_name not in plant_data[case_no-1].keys():
@@ -244,18 +249,24 @@ class PyomoMultiDataPointParamEstimator(ParameterEstimator):
 
         # solve pe problem
         # if obj_scaling_factor is small, the chance of failure rises
-        # self.solver.options["obj_scaling_factor"] = 1
+        self.solver.options["obj_scaling_factor"] = 1e3
         results = self.solver.solve(self.model, tee=self.tee)
         # self.model.display("display.txt")
 
         # TODO: back up model data
         # TODO: fallback strategy
+        if not ((results.solver.status == SolverStatus.ok) and (
+                results.solver.termination_condition == TerminationCondition.optimal)):
+            print(results.solver.termination_condition)
+            solve_status = PyomoModelSolvingStatus.OPTIMIZATION_FAILED
 
-        # return result
-        para_ret={}
-        for para_name in self.pyomo_model.parameters.keys():
-            para_ret[para_name] = value(getattr(self.model,para_name))
-        para_ret["$residue"]=value(self.model.pe_obj)
+            return para_backup
+        else:
+            # return result
+            para_ret={}
+            for para_name in self.pyomo_model.parameters.keys():
+                para_ret[para_name] = value(getattr(self.model,para_name))
+            para_ret["$residue"]=value(self.model.pe_obj)
         return para_ret
 
     def set_weight(self, output_weight, parameter_weight):

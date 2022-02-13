@@ -44,10 +44,10 @@ class RTO_Mismatched_WO_reactor(PyomoModel):
         wocstr.XFb = Param(wocstr.Components, initialize={'A': 0, 'B': 1, 'C': 0, 'E': 0, 'G': 0, 'P': 0})
         wocstr.MassHoldup = Param(initialize=2105)  # kg
         wocstr.Ka = Var(wocstr.Reactions, initialize={1: 2.189e8, 2: 4.310e13})
-        wocstr.Ka[1].lb = 2.189e8 * 0.5
-        wocstr.Ka[1].ub = 2.189e8 * 1.5
-        wocstr.Ka[2].lb = 4.310e13 * 0.5
-        wocstr.Ka[2].ub = 4.310e13 * 1.5
+        wocstr.Ka[1].lb = 2.189e8 * 0.2
+        wocstr.Ka[1].ub = 2.189e8 * 5
+        wocstr.Ka[2].lb = 4.310e13 * 0.2
+        wocstr.Ka[2].ub = 4.310e13 * 5
         wocstr.Kb = Var(wocstr.Reactions, initialize={1: 8077.6, 2: 12438})
         wocstr.Kb[1].lb = 8077.6 * 0.5
         wocstr.Kb[1].ub = 8077.6 * 1.5
