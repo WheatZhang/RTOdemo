@@ -17,8 +17,8 @@ starting_point={
 fixed_parameter_values={
     # 'Ka1': 2.189e8,
     # 'Ka2': 4.310e13,
-    'Kb1': 8077.6,
-    'Kb2': 12438,
+    # 'Kb1': 8077.6,
+    # 'Kb2': 12438,
 }
 #------------------------------------
 perturbation_stepsize={
@@ -26,8 +26,8 @@ perturbation_stepsize={
         "Tr": 2,
     }
 filtering_factor=0.5
-ka_relative_uncertainty=10 #0.1
-kb_relative_uncertainty=10 #0.1
+ka_relative_uncertainty=0.1 #0.1
+kb_relative_uncertainty=0.1 #0.1
 factor_n=10
 
 #------------------------------------
@@ -54,16 +54,17 @@ if composition_noise_level <= 0:
 # do_test_MAy(perturbation_stepsize, starting_point, filtering_factor, \
 #                noise_filename, solver_executable, print_iter_data, max_iter,\
 #                result_filename_header)
-
-print("\nTesting PE")
-result_filename_header=result_filename_folder+"PE_"
-do_test_PE(perturbation_stepsize, starting_point, filtering_factor, \
-               noise_filename, solver_executable, print_iter_data, max_iter,\
-               result_filename_header, composition_noise_level, \
-           ka_relative_uncertainty, kb_relative_uncertainty,
-           fixed_parameter_values)
+#
+# print("\nTesting PE")
+# result_filename_header=result_filename_folder+"PE_"
+# do_test_PE(perturbation_stepsize, starting_point, filtering_factor, \
+#                noise_filename, solver_executable, print_iter_data, max_iter,\
+#                result_filename_header, composition_noise_level, \
+#            ka_relative_uncertainty, kb_relative_uncertainty,
+#            fixed_parameter_values)
 
 print("\nTesting GPE")
+print_iter_data=True
 result_filename_header=result_filename_folder+"GPE_"
 do_test_GPE(perturbation_stepsize, starting_point, filtering_factor, \
                noise_filename, solver_executable, print_iter_data, max_iter,\
@@ -71,11 +72,11 @@ do_test_GPE(perturbation_stepsize, starting_point, filtering_factor, \
                 ka_relative_uncertainty,kb_relative_uncertainty,factor_n,\
             fixed_parameter_values)
 
-print("\nTesting ISOPE")
-result_filename_header=result_filename_folder+"ISOPE_"
-do_test_ISOPE(perturbation_stepsize, starting_point, filtering_factor, \
-               noise_filename, solver_executable, print_iter_data, max_iter,\
-               result_filename_header, composition_noise_level,\
-                ka_relative_uncertainty,kb_relative_uncertainty,\
-              fixed_parameter_values)
+# print("\nTesting ISOPE")
+# result_filename_header=result_filename_folder+"ISOPE_"
+# do_test_ISOPE(perturbation_stepsize, starting_point, filtering_factor, \
+#                noise_filename, solver_executable, print_iter_data, max_iter,\
+#                result_filename_header, composition_noise_level,\
+#                 ka_relative_uncertainty,kb_relative_uncertainty,\
+#               fixed_parameter_values)
 

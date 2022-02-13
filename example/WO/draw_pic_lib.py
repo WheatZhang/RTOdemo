@@ -444,7 +444,6 @@ def draw_para_set_comp_pic(folder, pic_filename):
 def generate_contour_data(x,y,func,filename):
     x_len = x.shape[0]
     y_len = y.shape[0]
-    Z = np.zeros(shape=(x_len, y_len))
     with open(filename, 'w') as fp:
         for i in range(x_len):
             if i != 0:
@@ -452,12 +451,11 @@ def generate_contour_data(x,y,func,filename):
             for j in range(y_len):
                 if j != 0:
                     fp.write('\t')
-                Z[j, i] = func(x[i], y[j])
-                fp.write("%.6e" % Z[j, i])
+                fp.write("%.6e" % func(x[i], y[j]))
         fp.write('\n')
 
 
-def plot_contour(data_file,x_len,y_len,title):
+def plot_contour(data_file,title):
     global_font_size = 20
     global_marker_size = 3
     contour_linewidth = 1.5
@@ -467,12 +465,16 @@ def plot_contour(data_file,x_len,y_len,title):
     global_font_size = global_font_size / font_factor
     contour_linewidth = contour_linewidth / font_factor
     global_contour_label_size = global_contour_label_size / font_factor
-    Z = np.zeros(shape=(x_len, y_len))
+
     font_title = {'family': 'Times New Roman',
              'size': global_font_size,
              }
 
     data_stored = pandas.read_csv(data_file, index_col=None, header=None, sep='\t')
+    x_len = data_stored.shape[0]
+    y_len = data_stored.shape[1]
+    Z = np.zeros(shape=(x_len, y_len))
+
     for i in range(x_len):
         for j in range(y_len):
             Z[j, i] = data_stored.iloc[i,j]
@@ -490,11 +492,11 @@ def plot_model_maintenance(algo_results_folder, datafile_folder, pic_filename):
     from rtolib.core.solve import PyomoOptimizer
     from rtolib.model.wo_reactor import RTO_Plant_WO_reactor, RTO_Mismatched_WO_reactor, default_WOR_description
     from pyomo.environ import SolverFactory
-    data_files={"Plant":datafile_folder+"_Plant",
-                "Model":datafile_folder+"_Model",
-                "PE":datafile_folder+"_Plant",
-                "ISOPE":datafile_folder+"_ISOPE",
-                "GPE":datafile_folder+"_GPE",}
+    data_files={"Plant":datafile_folder+"_Plant.txt",
+                "Model":datafile_folder+"_Model.txt",
+                "PE":datafile_folder+"_PE.txt",
+                "ISOPE":datafile_folder+"_ISOPE.txt",
+                "GPE":datafile_folder+"_GPE.txt",}
 
     plant_optimizer = PyomoOptimizer(RTO_Plant_WO_reactor())
     model_optimizer = PyomoOptimizer(RTO_Mismatched_WO_reactor())
@@ -515,7 +517,6 @@ def plot_model_maintenance(algo_results_folder, datafile_folder, pic_filename):
     # =======================================
 
     pic_dpi = 600
-    global_contour_resolution = 40
 
     global_font_size = 20
     global_marker_size = 3
@@ -538,7 +539,6 @@ def plot_model_maintenance(algo_results_folder, datafile_folder, pic_filename):
                   'weight': 'normal',
                   'size': global_contour_label_size,
                   }
-    num = global_contour_resolution
     fig = plt.figure(figsize=(26 * pic_constant, 8 * pic_constant))
     print('Plant:')
     plt.rcParams['xtick.direction'] = 'in'
@@ -549,7 +549,7 @@ def plot_model_maintenance(algo_results_folder, datafile_folder, pic_filename):
     plt.xlabel('Flowrate of B (kg/s)', font2)
     plt.ylabel('CSTR Temperature, $T_R$ (℃)', font2)
     plt.tick_params(labelsize=global_tick_size)
-    plot_contour(data_files['Plant'], num, num, '(a) Plant')
+    plot_contour(data_files['Plant'],  '(a) Plant')
 
     ax = plt.gca()
     labels = ax.get_xticklabels() + ax.get_yticklabels()
@@ -565,7 +565,7 @@ def plot_model_maintenance(algo_results_folder, datafile_folder, pic_filename):
     x_pos = Fb
     y_pos = Tr
     plt.plot(x_pos, y_pos, marker='o', c='black', markersize=global_marker_size)
-    plt.text(x_pos, y_pos - 0.1, '%.2f, %.1f' % (Fb, Tr), fontsize=global_contour_label_size, fontdict=font_point,
+    plt.text(x_pos, y_pos - 0.1, '%.2f, %.1f' % (Fb, Tr),  fontdict=font_point,
              verticalalignment="top",  # ‘center’ | ‘top’ | ‘bottom’
              horizontalalignment="center")  # ‘center’ | ‘right’ | ‘left’
     x_major_locator = MultipleLocator(1)
@@ -577,7 +577,7 @@ def plot_model_maintenance(algo_results_folder, datafile_folder, pic_filename):
     plt.subplot(1, 5, 2)
     plt.rcParams['xtick.direction'] = 'in'
     plt.rcParams['ytick.direction'] = 'in'
-    plot_contour(data_files['Model'], num, num, '(b) Model')
+    plot_contour(data_files['Model'],  '(b) Model')
     plt.xlabel('Flowrate of B (kg/s)', font2)
     plt.tick_params(labelsize=global_tick_size)
     ax = plt.gca()
@@ -593,7 +593,7 @@ def plot_model_maintenance(algo_results_folder, datafile_folder, pic_filename):
     x_pos = Fb
     y_pos = Tr
     plt.plot(x_pos, y_pos, marker='o', c='black', markersize=global_marker_size)
-    plt.text(x_pos, y_pos - 0.1, '%.2f, %.1f' % (Fb, Tr), fontsize=global_contour_label_size, fontdict=font_point,
+    plt.text(x_pos, y_pos - 0.1, '%.2f, %.1f' % (Fb, Tr),  fontdict=font_point,
              verticalalignment="top",  # ‘center’ | ‘top’ | ‘bottom’
              horizontalalignment="center")  # ‘center’ | ‘right’ | ‘left’
     x_major_locator = MultipleLocator(1)
@@ -605,7 +605,7 @@ def plot_model_maintenance(algo_results_folder, datafile_folder, pic_filename):
     plt.subplot(1, 5, 3)
     plt.rcParams['xtick.direction'] = 'in'
     plt.rcParams['ytick.direction'] = 'in'
-    plot_contour(data_files['PE'], num, num, '(c) PE')
+    plot_contour(data_files['PE'],  '(c) PE')
     plt.xlabel('Flowrate of B (kg/s)', font2)
     plt.tick_params(labelsize=global_tick_size)
     ax = plt.gca()
@@ -614,6 +614,7 @@ def plot_model_maintenance(algo_results_folder, datafile_folder, pic_filename):
     param_values={}
     for k in model_optimizer.pyomo_model.parameters.keys():
         param_values[k]=PE_model_data.loc[20, k]
+    # print(param_values)
     optimized_input, solve_status = model_optimizer.optimize(input_values={},
                                                              param_values=param_values,
                                                              use_homo=True)
@@ -624,7 +625,7 @@ def plot_model_maintenance(algo_results_folder, datafile_folder, pic_filename):
     x_pos = Fb
     y_pos = Tr
     plt.plot(x_pos, y_pos, marker='o', c='black', markersize=global_marker_size)
-    plt.text(x_pos, y_pos - 0.1, '%.2f, %.1f' % (Fb, Tr), fontsize=global_contour_label_size, fontdict=font_point,
+    plt.text(x_pos, y_pos - 0.1, '%.2f, %.1f' % (Fb, Tr),  fontdict=font_point,
              verticalalignment="top",  # ‘center’ | ‘top’ | ‘bottom’
              horizontalalignment="center")  # ‘center’ | ‘right’ | ‘left’
     x_major_locator = MultipleLocator(1)
@@ -636,7 +637,7 @@ def plot_model_maintenance(algo_results_folder, datafile_folder, pic_filename):
     plt.subplot(1, 5, 4)
     plt.rcParams['xtick.direction'] = 'in'
     plt.rcParams['ytick.direction'] = 'in'
-    plot_contour(data_files['ISOPE'], num, num, '(d) PE+MA')
+    plot_contour(data_files['ISOPE'],  '(d) PE+MA')
     plt.xlabel('Flowrate of B (kg/s)', font2)
     plt.tick_params(labelsize=global_tick_size)
     ax = plt.gca()
@@ -652,8 +653,10 @@ def plot_model_maintenance(algo_results_folder, datafile_folder, pic_filename):
     Tr = optimized_input['Tr']
     print(Fb)
     print(Tr)
+    x_pos = Fb
+    y_pos = Tr
     plt.plot(x_pos, y_pos, marker='o', c='black', markersize=global_marker_size)
-    plt.text(x_pos, y_pos - 0.1, '%.2f, %.1f' % (Fb, Tr), fontsize=global_contour_label_size, fontdict=font_point,
+    plt.text(x_pos, y_pos - 0.1, '%.2f, %.1f' % (Fb, Tr),  fontdict=font_point,
              verticalalignment="top",  # ‘center’ | ‘top’ | ‘bottom’
              horizontalalignment="center")  # ‘center’ | ‘right’ | ‘left’
     x_major_locator = MultipleLocator(1)
@@ -665,7 +668,7 @@ def plot_model_maintenance(algo_results_folder, datafile_folder, pic_filename):
     plt.subplot(1, 5, 5)
     plt.rcParams['xtick.direction'] = 'in'
     plt.rcParams['ytick.direction'] = 'in'
-    plot_contour(data_files['GPE'], num, num, '(e) GPE')
+    plot_contour(data_files['GPE'],  '(e) GPE')
     plt.xlabel('Flowrate of B (kg/s)', font2)
     plt.tick_params(labelsize=global_tick_size)
     ax = plt.gca()
@@ -681,8 +684,10 @@ def plot_model_maintenance(algo_results_folder, datafile_folder, pic_filename):
     Tr = optimized_input['Tr']
     print(Fb)
     print(Tr)
+    x_pos = Fb
+    y_pos = Tr
     plt.plot(x_pos, y_pos, marker='o', c='black', markersize=global_marker_size)
-    plt.text(x_pos, y_pos - 0.1, '%.2f, %.1f' % (Fb, Tr), fontsize=global_contour_label_size, fontdict=font_point,
+    plt.text(x_pos, y_pos - 0.1, '%.2f, %.1f' % (Fb, Tr),  fontdict=font_point,
              verticalalignment="top",  # ‘center’ | ‘top’ | ‘bottom’
              horizontalalignment="center")  # ‘center’ | ‘right’ | ‘left’
     x_major_locator = MultipleLocator(1)
@@ -694,5 +699,4 @@ def plot_model_maintenance(algo_results_folder, datafile_folder, pic_filename):
     plt.close()
 
 if __name__ == "__main__":
-    # draw_overall_pic("data/1/", "pic/overall_pic1.png")
-    pass
+    draw_overall_pic("data/1/", "pic/overall_pic1.png")

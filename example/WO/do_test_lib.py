@@ -209,7 +209,7 @@ def do_test_GPE(perturbation_stepsize, starting_point, filtering_factor, \
                noise_filename, solver_executable, print_iter_data, max_iter,\
                result_filename_header,profit_noise_level,output_noise_level,\
                 ka_relative_uncertainty,kb_relative_uncertainty,factor_n,\
-                fixed_parameter_values=None):
+                fixed_parameter_values):
     problem_description = copy.deepcopy(default_WOR_description)
     problem_description.symbol_list['CV']=[]
 
@@ -274,7 +274,7 @@ def do_test_ISOPE(perturbation_stepsize, starting_point, filtering_factor, \
                noise_filename, solver_executable, print_iter_data, max_iter,\
                result_filename_header, output_noise_level,\
                 ka_relative_uncertainty,kb_relative_uncertainty,\
-                  fixed_parameter_values=None):
+                  fixed_parameter_values):
     problem_description = copy.deepcopy(default_WOR_description)
 
     ffd_perturb = SimpleFiniteDiffPerturbation(perturbation_stepsize, problem_description)
@@ -405,6 +405,78 @@ def batch_test_all_algo(delta_u_Fb, filtering_factor, noise_level_coeff):
                 noise_filename, solver_executable, print_iter_data, max_iter, \
                 result_filename_header, profit_noise_level, composition_noise_level, \
                 ka_relative_uncertainty, kb_relative_uncertainty, factor_n,\
+                fixed_parameter_values)
+
+    print("\nTesting ISOPE")
+    result_filename_header = result_filename_folder + "ISOPE_"
+    do_test_ISOPE(perturbation_stepsize, starting_point, filtering_factor, \
+                  noise_filename, solver_executable, print_iter_data, max_iter, \
+                  result_filename_header, composition_noise_level, \
+                  ka_relative_uncertainty, kb_relative_uncertainty,\
+                  fixed_parameter_values)
+
+
+def test_compare_modifiers():
+    noise_level_coeff = 1
+    # ------------------------------------
+    noise_filename = "noise/batch_noise_%s.txt"%str(noise_level_coeff)
+    solver_executable = r"F:\Research\RTOdemo\external\bin\ipopt.exe"
+    result_filename_folder="data/comp_modifiers/"
+    if not os.path.exists(result_filename_folder):
+        os.makedirs(result_filename_folder)
+
+    # ------------------------------------
+    delta_u_Fb=0.2
+    filtering_factor=0.5
+
+    profit_noise_level = 0.6*noise_level_coeff
+    composition_noise_level = 1e-4*noise_level_coeff
+    starting_point = {
+        "Fb": 4,
+        "Tr": 75,
+    }
+
+    # ------------------------------------
+    perturbation_stepsize = {
+        "Fb": delta_u_Fb,
+        "Tr": delta_u_Fb*10,
+    }
+    ka_relative_uncertainty = 0.1
+    kb_relative_uncertainty = 0.1
+    fixed_parameter_values=None
+    # ------------------------------------
+    print_iter_data = False
+    max_iter = 20
+
+    # ------------------------------------
+    if profit_noise_level <= 0:
+        profit_noise_level = 0.01
+    if composition_noise_level <= 0:
+        composition_noise_level = 1e-6
+
+    # ------------------------------------
+    print("\nTesting MA")
+    result_filename_header = result_filename_folder + "MA_"
+    do_test_MA(perturbation_stepsize, starting_point, filtering_factor, \
+               noise_filename, solver_executable, print_iter_data, max_iter, \
+               result_filename_header)
+
+    print("\nTesting GPE")
+    factor_n=10
+    result_filename_header = result_filename_folder + "GPE10_"
+    do_test_GPE(perturbation_stepsize, starting_point, filtering_factor, \
+                noise_filename, solver_executable, print_iter_data, max_iter, \
+                result_filename_header, profit_noise_level, composition_noise_level, \
+                ka_relative_uncertainty, kb_relative_uncertainty, factor_n,\
+                fixed_parameter_values)
+
+    print("\nTesting GPE")
+    factor_n = 1
+    result_filename_header = result_filename_folder + "GPE1_"
+    do_test_GPE(perturbation_stepsize, starting_point, filtering_factor, \
+                noise_filename, solver_executable, print_iter_data, max_iter, \
+                result_filename_header, profit_noise_level, composition_noise_level, \
+                ka_relative_uncertainty, kb_relative_uncertainty, factor_n, \
                 fixed_parameter_values)
 
     print("\nTesting ISOPE")
