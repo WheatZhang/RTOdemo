@@ -6,6 +6,10 @@ from rtolib.core.pyomo_model import *
 from rtolib.core.solve import PyomoSimulator,PyomoOptimizer,PyomoGradientParamEstimator
 
 class GeneralizedParameterEstimation(PE_type_Algorithm):
+    def register_option(self):
+        super(GeneralizedParameterEstimation, self).register_option()
+        self.available_options["prior_theta_strategy"]=("[Fixed,Adapted]", "Fixed")
+
     def set_homotopy_var(self, homotopy_var):
         '''
 
@@ -124,6 +128,10 @@ class GeneralizedParameterEstimation(PE_type_Algorithm):
                                              fixed_param_values=self.fixed_parameter_values,
                                              use_homo=self.options["homotopy_simulation"],
                                              pre_simulation=self.options["pre-simulation_before_pe"])
+
+        # set prior theta
+        if self.options["prior_theta_strategy"] == "Adapted":
+            self.pe_estimator.set_parameter_guess(self.current_parameter_value)
 
         self.store_model_adaptation_data()
 

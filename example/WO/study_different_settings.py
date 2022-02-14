@@ -1,5 +1,6 @@
-from do_test_lib import batch_test_GPE, batch_test_all_algo, different_para_set_test
-from draw_pic_lib import draw_para_set_comp_pic,draw_overall_pic,draw_GPE_different_weight
+from do_test_lib import batch_test_GPE, batch_test_all_algo, different_para_set_test, adapted_prior_test
+from draw_pic_lib import draw_para_set_comp_pic,draw_overall_pic,draw_GPE_different_weight,\
+draw_GPES2_different_weight
 import os
 
 for n in [0, 0.5, 1, 2]:
@@ -25,6 +26,10 @@ for delta_u in [0.1, 0.2, 0.4]:
 for factor_n in [0.1, 1, 10, 100, 1000]:
     print("factor_n=%f" % factor_n)
     batch_test_GPE(factor_n=factor_n)
+    
+for factor_n in [0.1, 1, 10, 100, 1000]:
+    print("factor_n=%f" % factor_n)
+    adapted_prior_test(factor_n=factor_n)
 
 different_para_set_test(ka_relative_uncertainty=1, kb_relative_uncertainty=1)
 different_para_set_test(ka_relative_uncertainty=0.1, kb_relative_uncertainty=0.1)
@@ -39,6 +44,7 @@ for fname in os.listdir("data/", ):
             draw_overall_pic("data/" + fname + "/", "pic/overall_pic_" + fname + ".png")
 
 draw_GPE_different_weight()
+draw_GPES2_different_weight()
 
 for fname in os.listdir("data/", ):
     if os.path.isdir("data/" + fname):

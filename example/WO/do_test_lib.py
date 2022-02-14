@@ -269,6 +269,70 @@ def do_test_GPE(perturbation_stepsize, starting_point, filtering_factor, \
     save_iteration_data_in_dict(rto_algorithm.plant_history_data, result_filename_header + "plant_data.txt")
     save_iteration_data_in_dict(rto_algorithm.input_history_data, result_filename_header + "input_data.txt")
 
+def do_test_GPES2(perturbation_stepsize, starting_point, filtering_factor, \
+               noise_filename, solver_executable, print_iter_data, max_iter,\
+               result_filename_header,profit_noise_level,output_noise_level,\
+                ka_relative_uncertainty,kb_relative_uncertainty,factor_n,\
+                fixed_parameter_values):
+    problem_description = copy.deepcopy(default_WOR_description)
+    problem_description.symbol_list['CV']=[]
+
+    ffd_perturb = SimpleFiniteDiffPerturbation(perturbation_stepsize, problem_description)
+
+    rto_algorithm = GeneralizedParameterEstimation()
+    options={
+        "homotopy_optimization": True,
+        "pre-simulation_before_pe": False,
+        "filtering_factor": filtering_factor,
+        "noise_adding_fashion": "integrated",
+        'prior_theta_strategy': "Adapted",
+    }
+    rto_algorithm.set_algorithm_option(options)
+
+    noise_generator = NoiseGenerator()
+    noise_generator.load_noise(noise_filename)
+
+    parameter_weight = {
+        "Ka1": 1 / ka_relative_uncertainty / ka_relative_uncertainty/2.189e8/2.189e8,
+        "Ka2": 1 / ka_relative_uncertainty / ka_relative_uncertainty/4.310e13/4.310e13,
+        "Kb1": 1 / kb_relative_uncertainty / kb_relative_uncertainty/8077.6/8077.6,
+        "Kb2": 1 / kb_relative_uncertainty / kb_relative_uncertainty/12438/12438,
+        "profit_eps":factor_n * (1 / profit_noise_level / profit_noise_level),
+        "Fb_profit_lam":factor_n * (1 / profit_noise_level / profit_noise_level / 2 * (perturbation_stepsize['Fb'] ** 2)),
+        "Tr_profit_lam":factor_n * (1 / profit_noise_level / profit_noise_level / 2 * (perturbation_stepsize['Tr'] ** 2)),
+    }
+
+    output_weight = {
+        'profit': 1 / profit_noise_level / profit_noise_level,
+    }
+
+    rto_algorithm.set_problem(
+        problem_description=problem_description,
+        plant=RTO_Plant_WO_reactor(),
+        model=RTO_Mismatched_WO_reactor(),
+        perturbation_method=ffd_perturb,
+        noise_generator=noise_generator,
+        solver_executable=solver_executable,
+        spec_function=None,
+        modifier_type=ModifierType.RTO,
+        parameter_weight=parameter_weight,
+        output_weight=output_weight,
+        fixed_parameter_values=fixed_parameter_values
+        )
+
+    rto_algorithm.initialize_simulation(starting_point, initial_parameter_value={})
+
+    for i in range(max_iter):
+        rto_algorithm.one_step_simulation()
+        if print_iter_data:
+            print(rto_algorithm.model_history_data)
+            print(rto_algorithm.plant_history_data)
+            print(rto_algorithm.input_history_data)
+
+    # save data
+    save_iteration_data_in_dict(rto_algorithm.model_history_data, result_filename_header + "model_data.txt")
+    save_iteration_data_in_dict(rto_algorithm.plant_history_data, result_filename_header + "plant_data.txt")
+    save_iteration_data_in_dict(rto_algorithm.input_history_data, result_filename_header + "input_data.txt")
     
 def do_test_ISOPE(perturbation_stepsize, starting_point, filtering_factor, \
                noise_filename, solver_executable, print_iter_data, max_iter,\
@@ -487,6 +551,48 @@ def test_compare_modifiers():
                   ka_relative_uncertainty, kb_relative_uncertainty,\
                   fixed_parameter_values)
 
+def adapted_prior_test(factor_n):
+    # ------------------------------------
+    noise_filename = "noise/batch_noise_%s.txt" % str(1)
+    solver_executable = r"F:\Research\RTOdemo\external\bin\ipopt.exe"
+    result_filename_folder = "data/batch_GPES2_%s/" % (str(factor_n))
+    if not os.path.exists(result_filename_folder):
+        os.makedirs(result_filename_folder)
+
+    # ------------------------------------
+    noise_level_coeff = 1
+    profit_noise_level = 0.6 * noise_level_coeff
+    composition_noise_level = 1e-4 * noise_level_coeff
+    starting_point = {
+        "Fb": 4,
+        "Tr": 75,
+    }
+    filtering_factor = 0.5
+    # ------------------------------------
+    delta_u_Fb = 0.2
+    perturbation_stepsize = {
+        "Fb": delta_u_Fb,
+        "Tr": delta_u_Fb * 10,
+    }
+    ka_relative_uncertainty = 0.1
+    kb_relative_uncertainty = 0.1
+    fixed_parameter_values = None
+    # ------------------------------------
+    print_iter_data = False
+    max_iter = 20
+
+    # ------------------------------------
+    if profit_noise_level <= 0:
+        profit_noise_level = 0.01
+    if composition_noise_level <= 0:
+        composition_noise_level = 1e-6
+
+    result_filename_header = result_filename_folder + "GPES2_"
+    do_test_GPES2(perturbation_stepsize, starting_point, filtering_factor, \
+                noise_filename, solver_executable, print_iter_data, max_iter, \
+                result_filename_header, profit_noise_level, composition_noise_level, \
+                ka_relative_uncertainty, kb_relative_uncertainty, factor_n, \
+                fixed_parameter_values)
 
 def batch_test_GPE(factor_n=10):
     # ------------------------------------
