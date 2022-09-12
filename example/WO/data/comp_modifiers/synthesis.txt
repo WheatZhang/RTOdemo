@@ -1,0 +1,5 @@
+method	epsilon_data	lambda_Fb_data	lambda_Tr_data
+MA	1.60	1.43	0.84
+PE+MA	1.02	1.20	0.32
+GPE(n=10)	-2.87	-0.23	-1.70
+GPE(n=1)	-2.12	0.50	-0.96
