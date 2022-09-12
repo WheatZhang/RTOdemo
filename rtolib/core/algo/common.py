@@ -110,6 +110,18 @@ class Algorithm():
                 filtered_input[k] = mv_bounds[k][1]
         return filtered_input
 
+    def adapt_to_bound_mv(self, optimized_input, mv_bounds):
+        bounded_input = {}
+        for k in self.problem_description.symbol_list['MV']:
+            bounded_input[k] = optimized_input[k]
+            if mv_bounds[k][0] is not None and optimized_input[k] <= mv_bounds[k][0]:
+                print("MV %s reaches its lower bound." % k)
+                bounded_input[k] = mv_bounds[k][0]
+            if mv_bounds[k][0] is not None and optimized_input[k] >= mv_bounds[k][1]:
+                print("MV %s reaches its upper bound." % k)
+                bounded_input[k] = mv_bounds[k][1]
+        return bounded_input
+
     def optimize_for_u(self):
         input_values = {}
         if self.spec_function is not None:
@@ -161,7 +173,7 @@ class Algorithm():
         # add noise to the plant data
         if self.options["noise_adding_fashion"] == "added":
             for trial_point_no in range(len(trial_points)):
-                for k in self.plant_output_data[0].keys():
+                for k in plant_output_data[0].keys():
                     noise = self.noise_generator.get_noise(self.iter_count, trial_point_no, k)
                     plant_output_data[trial_point_no][k] += noise
 
@@ -179,6 +191,21 @@ class Algorithm():
         # TODO:deal with solve status
         for k, v in outputs.items():
             self.model_history_data[self.iter_count][k] = v
+
+    def get_model_simulation_result(self, trial_points):
+        model_output_data = [{} for i in range(len(trial_points))]
+        for i, p in enumerate(trial_points):
+            outputs, solve_status = self.model_simulator.simulate(p, param_values=self.current_parameter_value,
+                                                                  use_homo=self.options["homotopy_simulation"])
+            # TODO:deal with solve status
+            if i == 0:
+                for k, v in outputs.items():
+                    self.model_history_data[self.iter_count][k] = v
+
+            for k in self.available_measurements():
+                if k + '_unmodified' in outputs.keys():
+                    model_output_data[i][k] = outputs[k + '_unmodified']
+        return model_output_data
             
 
 class PE_type_Algorithm(Algorithm):
@@ -221,22 +248,6 @@ class MA_type_Algorithm(Algorithm):
     def __init__(self):
         super().__init__()
         self.skipped_modifiers=[]
-
-
-    def get_model_simulation_result(self, trial_points):
-        model_output_data = [{} for i in range(len(trial_points))]
-        for i, p in enumerate(trial_points):
-            outputs, solve_status = self.model_simulator.simulate(p, param_values=self.current_parameter_value,
-                                                                  use_homo=self.options["homotopy_simulation"])
-            # TODO:deal with solve status
-            if i == 0:
-                for k, v in outputs.items():
-                    self.model_history_data[self.iter_count][k] = v
-
-            for k in self.available_measurements():
-                if k + '_unmodified' in outputs.keys():
-                    model_output_data[i][k] = outputs[k + '_unmodified']
-        return model_output_data
 
     def update_modifiers(self, plant_output_data, model_output_data):
         modifiers = self.perturbation_method.calculate_modifiers(plant_output_data, model_output_data)

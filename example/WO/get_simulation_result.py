@@ -1,6 +1,6 @@
 import os
 from do_test_lib import generate_noise_file, do_test_MA, \
-    do_test_PE, do_test_MAy,do_test_GPE,do_test_ISOPE
+    do_test_PE, do_test_MAy,do_test_GPE,do_test_ISOPE,do_test_GPE_AW
 
 #------------------------------------
 noise_filename="noise/noise1.txt"
@@ -28,7 +28,7 @@ perturbation_stepsize={
 filtering_factor=0.5
 ka_relative_uncertainty=0.1 #0.1
 kb_relative_uncertainty=0.1 #0.1
-factor_n=10
+factor_n=100 #10
 
 #------------------------------------
 print_iter_data=False
@@ -63,14 +63,14 @@ if composition_noise_level <= 0:
 #            ka_relative_uncertainty, kb_relative_uncertainty,
 #            fixed_parameter_values)
 
-print("\nTesting GPE")
-print_iter_data=True
-result_filename_header=result_filename_folder+"GPE_"
-do_test_GPE(perturbation_stepsize, starting_point, filtering_factor, \
-               noise_filename, solver_executable, print_iter_data, max_iter,\
-               result_filename_header,profit_noise_level,composition_noise_level,\
-                ka_relative_uncertainty,kb_relative_uncertainty,factor_n,\
-            fixed_parameter_values)
+# print("\nTesting GPE")
+# print_iter_data=True
+# result_filename_header=result_filename_folder+"GPE_"
+# do_test_GPE(perturbation_stepsize, starting_point, filtering_factor, \
+#                noise_filename, solver_executable, print_iter_data, max_iter,\
+#                result_filename_header,profit_noise_level,composition_noise_level,\
+#                 ka_relative_uncertainty,kb_relative_uncertainty,factor_n,\
+#             fixed_parameter_values)
 
 # print("\nTesting ISOPE")
 # result_filename_header=result_filename_folder+"ISOPE_"
@@ -79,4 +79,13 @@ do_test_GPE(perturbation_stepsize, starting_point, filtering_factor, \
 #                result_filename_header, composition_noise_level,\
 #                 ka_relative_uncertainty,kb_relative_uncertainty,\
 #               fixed_parameter_values)
+
+print("\nTesting GPE_AW")
+print_iter_data=True
+result_filename_header=result_filename_folder+"GPEAW_"
+do_test_GPE_AW(perturbation_stepsize, starting_point, filtering_factor, \
+               noise_filename, solver_executable, print_iter_data, max_iter,\
+               result_filename_header,profit_noise_level,composition_noise_level,\
+                ka_relative_uncertainty,kb_relative_uncertainty,factor_n,\
+            fixed_parameter_values)
 

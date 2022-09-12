@@ -5,7 +5,7 @@ from rtolib.model.wo_reactor import RTO_Plant_WO_reactor, RTO_Mismatched_WO_reac
 from rtolib.core import NoiseGenerator, ModifierType,\
                     SimpleFiniteDiffPerturbation
 from rtolib.core.algo import ModifierAdaptation, GeneralizedParameterEstimation, ISOPE_Algorithm,\
-        ITSParameterEstimation
+        ITSParameterEstimation, GPEAdaptedWeight
 import copy
 from rtolib.util.misc import save_iteration_data_in_dict
 import os
@@ -268,6 +268,72 @@ def do_test_GPE(perturbation_stepsize, starting_point, filtering_factor, \
     save_iteration_data_in_dict(rto_algorithm.model_history_data, result_filename_header + "model_data.txt")
     save_iteration_data_in_dict(rto_algorithm.plant_history_data, result_filename_header + "plant_data.txt")
     save_iteration_data_in_dict(rto_algorithm.input_history_data, result_filename_header + "input_data.txt")
+
+
+def do_test_GPE_AW(perturbation_stepsize, starting_point, filtering_factor, \
+               noise_filename, solver_executable, print_iter_data, max_iter,\
+               result_filename_header,profit_noise_level,output_noise_level,\
+                ka_relative_uncertainty,kb_relative_uncertainty,factor_n,\
+                fixed_parameter_values):
+    problem_description = copy.deepcopy(default_WOR_description)
+    problem_description.symbol_list['CV']=[]
+
+    ffd_perturb = SimpleFiniteDiffPerturbation(perturbation_stepsize, problem_description)
+
+    rto_algorithm = GPEAdaptedWeight()
+    options={
+        "homotopy_optimization": True,
+        "pre-simulation_before_pe": False,
+        "filtering_factor": filtering_factor,
+        "noise_adding_fashion": "integrated",
+    }
+    rto_algorithm.set_algorithm_option(options)
+
+    noise_generator = NoiseGenerator()
+    noise_generator.load_noise(noise_filename)
+
+    parameter_weight = {
+        "Ka1": 1 / ka_relative_uncertainty / ka_relative_uncertainty/2.189e8/2.189e8,
+        "Ka2": 1 / ka_relative_uncertainty / ka_relative_uncertainty/4.310e13/4.310e13,
+        "Kb1": 1 / kb_relative_uncertainty / kb_relative_uncertainty/8077.6/8077.6,
+        "Kb2": 1 / kb_relative_uncertainty / kb_relative_uncertainty/12438/12438,
+        "profit_eps":factor_n * (1 / profit_noise_level / profit_noise_level),
+        "Fb_profit_lam":factor_n * (1 / profit_noise_level / profit_noise_level / 2 * (perturbation_stepsize['Fb'] ** 2)),
+        "Tr_profit_lam":factor_n * (1 / profit_noise_level / profit_noise_level / 2 * (perturbation_stepsize['Tr'] ** 2)),
+    }
+
+    output_weight = {
+        'profit': 1 / profit_noise_level / profit_noise_level,
+    }
+
+    rto_algorithm.set_problem(
+        problem_description=problem_description,
+        plant=RTO_Plant_WO_reactor(),
+        model=RTO_Mismatched_WO_reactor(),
+        perturbation_method=ffd_perturb,
+        noise_generator=noise_generator,
+        solver_executable=solver_executable,
+        spec_function=None,
+        modifier_type=ModifierType.RTO,
+        parameter_weight=parameter_weight,
+        output_weight=output_weight,
+        fixed_parameter_values=fixed_parameter_values
+        )
+
+    rto_algorithm.initialize_simulation(starting_point, initial_parameter_value={})
+
+    for i in range(max_iter):
+        rto_algorithm.one_step_simulation()
+        if print_iter_data:
+            print(rto_algorithm.model_history_data)
+            print(rto_algorithm.plant_history_data)
+            print(rto_algorithm.input_history_data)
+
+    # save data
+    save_iteration_data_in_dict(rto_algorithm.model_history_data, result_filename_header + "model_data.txt")
+    save_iteration_data_in_dict(rto_algorithm.plant_history_data, result_filename_header + "plant_data.txt")
+    save_iteration_data_in_dict(rto_algorithm.input_history_data, result_filename_header + "input_data.txt")
+
 
 def do_test_GPES2(perturbation_stepsize, starting_point, filtering_factor, \
                noise_filename, solver_executable, print_iter_data, max_iter,\

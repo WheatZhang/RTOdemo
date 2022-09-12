@@ -1,4 +1,6 @@
 from .gpe import GeneralizedParameterEstimation
-from .ma import ModifierAdaptation
+from .ma import ModifierAdaptation, ModifierAdaptationTR, ModifierAdaptationPenaltyTR,\
+ModifierAdaptationCompoStepTR
 from .isope import ISOPE_Algorithm
 from .pe import ITSParameterEstimation
+from .gpe_aw import GPEAdaptedWeight
