@@ -241,12 +241,14 @@ def draw_batch_pic_algo12():
             plot_algo12_profile(batch_prefix+data_prefix)
 
 def draw_batch_pic_algo13():
+    batch_prefixes = ["N_", "O1_", "O2_", "C_", "OC_"]
     batch_names = [
         "U0","U1","U2","U3","U4",
     ]
-    for data_prefix in batch_names:
-        draw_algo_13_input_on_contour(data_prefix)
-        plot_algo13_profile(data_prefix)
+    for batch_prefix in batch_prefixes:
+        for data_prefix in batch_names:
+            draw_algo_13_input_on_contour(batch_prefix+data_prefix)
+            plot_algo13_profile(batch_prefix+data_prefix)
 
 
 if __name__ == "__main__":
@@ -255,6 +257,6 @@ if __name__ == "__main__":
     # draw_nominal_contour(resolution)
     # draw_all_contour()
     #
-    do_all_batches_for_all_model()
-    draw_batch_pic_algo12()
+    # do_all_batches_for_all_model()
+    # draw_batch_pic_algo12()
     draw_batch_pic_algo13()

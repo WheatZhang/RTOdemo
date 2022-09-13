@@ -215,8 +215,7 @@ class ModifierAdaptationTR(ModifierAdaptation):
                                                                         param_values=self.current_parameter_value,
                                                                         use_homo=self.options["homotopy_simulation"])
         obj_var_name = self.problem_description.symbol_list['OBJ']
-        base_obj_value = base_model_output[obj_var_name] / \
-              self.problem_description.scaling_factors[obj_var_name]
+        base_obj_value = base_model_output[obj_var_name]
 
         iter_successful_flag=False
         rho = 100
