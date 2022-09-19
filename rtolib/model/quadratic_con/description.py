@@ -9,8 +9,8 @@ symbol_list = {
                 'SPEC': None,  # specification
             }
 bounds = {
-        "u1":(None, None),
-        "u2":(None, None),
+        "u1":(-2, 4),
+        "u2":(-4, 2),
         "cost":(None, None),
         "con":(None, None),
     }

@@ -1,8 +1,11 @@
 import matplotlib.pyplot as plt
+import matplotlib
 from draw_lib import generate_all_contour_data, plot_contour
 import pandas
 import os
-from algo_tr_ma import do_all_batches_for_all_model
+from tr_quadr_eg import do_all_batches_for_all_model
+
+matplotlib.use('Agg')
 
 def draw_nominal_contour(resolution):
     datafile_folder = "data/contour_data/res%d" % resolution
@@ -139,7 +142,7 @@ def draw_algo_13_input_on_contour(data_prefix):
     plt.close()
 
 def plot_algo12_profile(data_prefix):
-    max_iter=20
+    max_iter=30
     global_marker_size = 2
     linewidth=1
     compo_step_plant_data = pandas.read_csv("data/batch12/"+data_prefix+"/CompoStep_TR_MA_plant_data.txt", \
@@ -150,27 +153,43 @@ def plot_algo12_profile(data_prefix):
                                       index_col=0, header=0, sep='\t')
     penalty_model_data = pandas.read_csv("data/batch12/"+data_prefix+"/Penalty_TR_MA_model_data.txt", \
                                    index_col=0, header=0, sep='\t')
+    compo_step_input_data = pandas.read_csv("data/batch12/" + data_prefix + "/CompoStep_TR_MA_input_data.txt", \
+                                            index_col=0, header=0, sep='\t')
+    inf_averse_input_data = pandas.read_csv("data/batch12/" + data_prefix + "/Penalty_TR_MA_input_data.txt", \
+                                            index_col=0, header=0, sep='\t')
 
     fig = plt.figure(figsize=(6,9))
-    plt.subplot(411)
+    plt.subplot(611)
     plt.plot(range(1,max_iter+1), compo_step_plant_data.loc[1:max_iter, 'cost'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), penalty_plant_data.loc[1:max_iter, 'cost'], \
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel("plant cost")
-    plt.subplot(412)
+    plt.subplot(612)
     plt.plot(range(1, max_iter + 1), compo_step_plant_data.loc[1:max_iter, 'con'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), penalty_plant_data.loc[1:max_iter, 'con'], \
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel("plant constraints")
-    plt.subplot(413)
+    plt.subplot(613)
+    plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'u1'], \
+             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
+    plt.plot(range(1, max_iter + 1), inf_averse_input_data.loc[1:max_iter, 'u1'], \
+             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
+    plt.ylabel("u1")
+    plt.subplot(614)
+    plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'u2'], \
+             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
+    plt.plot(range(1, max_iter + 1), inf_averse_input_data.loc[1:max_iter, 'u2'], \
+             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
+    plt.ylabel("u2")
+    plt.subplot(615)
     plt.plot(range(1, max_iter + 1), compo_step_model_data.loc[1:max_iter, 'rho'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), penalty_model_data.loc[1:max_iter, 'rho'], \
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel(r"$\rho$")
-    plt.subplot(414)
+    plt.subplot(616)
     plt.plot(range(1, max_iter + 1), compo_step_model_data.loc[1:max_iter, 'tr'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), penalty_model_data.loc[1:max_iter, 'tr'], \
@@ -182,7 +201,7 @@ def plot_algo12_profile(data_prefix):
     plt.close()
 
 def plot_algo13_profile(data_prefix):
-    max_iter=20
+    max_iter=30
     global_marker_size = 2
     linewidth=1
     compo_step_plant_data = pandas.read_csv("data/batch13/"+data_prefix+"/CompoStep_TR_MA_plant_data.txt", \
@@ -193,27 +212,43 @@ def plot_algo13_profile(data_prefix):
                                       index_col=0, header=0, sep='\t')
     inf_averse_model_data = pandas.read_csv("data/batch13/"+data_prefix+"/InfAverse_TR_MA_model_data.txt", \
                                    index_col=0, header=0, sep='\t')
+    compo_step_input_data = pandas.read_csv("data/batch13/" + data_prefix + "/CompoStep_TR_MA_input_data.txt", \
+                                            index_col=0, header=0, sep='\t')
+    inf_averse_input_data = pandas.read_csv("data/batch13/" + data_prefix + "/InfAverse_TR_MA_input_data.txt", \
+                                            index_col=0, header=0, sep='\t')
 
     fig = plt.figure(figsize=(6,9))
-    plt.subplot(411)
+    plt.subplot(611)
     plt.plot(range(1,max_iter+1), compo_step_plant_data.loc[1:max_iter, 'cost'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), inf_averse_plant_data.loc[1:max_iter, 'cost'], \
              marker='o', c='darkorange', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel("plant cost")
-    plt.subplot(412)
+    plt.subplot(612)
     plt.plot(range(1, max_iter + 1), compo_step_plant_data.loc[1:max_iter, 'con'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), inf_averse_plant_data.loc[1:max_iter, 'con'], \
              marker='o', c='darkorange', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel("plant constraints")
-    plt.subplot(413)
+    plt.subplot(613)
+    plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'u1'], \
+             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
+    plt.plot(range(1, max_iter + 1), inf_averse_input_data.loc[1:max_iter, 'u1'], \
+             marker='o', c='darkorange', markersize=global_marker_size, linewidth=linewidth)
+    plt.ylabel("u1")
+    plt.subplot(614)
+    plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'u2'], \
+             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
+    plt.plot(range(1, max_iter + 1), inf_averse_input_data.loc[1:max_iter, 'u2'], \
+             marker='o', c='darkorange', markersize=global_marker_size, linewidth=linewidth)
+    plt.ylabel("u2")
+    plt.subplot(615)
     plt.plot(range(1, max_iter + 1), compo_step_model_data.loc[1:max_iter, 'rho'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), inf_averse_model_data.loc[1:max_iter, 'rho'], \
              marker='o', c='darkorange', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel(r"$\rho$")
-    plt.subplot(414)
+    plt.subplot(616)
     plt.plot(range(1, max_iter + 1), compo_step_model_data.loc[1:max_iter, 'tr'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), inf_averse_model_data.loc[1:max_iter, 'tr'], \
@@ -230,10 +265,15 @@ def draw_batch_pic_algo12():
     batch_names = [
         "U0","U1","U2","U3","U4","U5","U6","U7",
         "R0","R1","R2","R3","R4",
-        "FP0","FP1","FP2","FP3","FP4",
-        "IFP0","IFP1","IFP2","IFP3","IFP4",
-        "XINM0","XINM1","XINM2",
-        "XISR0","XISR1","XISR2",
+        "P0", "P1", "P2", "P3", "P4", "P5",
+        "PF0","PF1","PF2","PF3","PF4","PF5",
+        "PIF0","PIF1","PIF2","PIF3","PIF4","PIF5",
+        "X0", "X1", "X2", "X3", "X4",
+        "XF0","XF1","XF2","XF3","XF4",
+        "XIF0","XIF1","XIF2","XIF3","XIF4",
+        "XR0", "XR1", "XR2", "XR3", "XR4",
+        "XRF0", "XRF1", "XRF2", "XRF3", "XRF4",
+        "XRIF0", "XRIF1", "XRIF2", "XRIF3", "XRIF4",
     ]
     for batch_prefix in batch_prefixes:
         for data_prefix in batch_names:
@@ -258,5 +298,8 @@ if __name__ == "__main__":
     # draw_all_contour()
     #
     # do_all_batches_for_all_model()
-    # draw_batch_pic_algo12()
+    draw_batch_pic_algo12()
     draw_batch_pic_algo13()
+
+    # draw_algo_13_input_on_contour("O2_U0")
+    # plot_algo13_profile("O2_U0")

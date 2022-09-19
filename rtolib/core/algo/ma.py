@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
+import numpy
+
 from rtolib.core.algo.common import MA_type_Algorithm
 from rtolib.core.pyomo_model import *
 from rtolib.core.solve import PyomoSimulator,PyomoOptimizer,TrustRegionOptimizer, PenaltyTrustRegionOptimizer,\
@@ -59,7 +61,7 @@ class ModifierAdaptation(MA_type_Algorithm):
         # set solver
         # TODO: solver parameter tuning
         # TODO: each solver should be seperate
-        default_options={'max_iter':100}
+        default_options={'max_iter':200}
         solver1 = SolverFactory('ipopt', executable=self.solver_executable)
         self.plant_simulator.set_solver(solver1, tee=False, default_options=default_options)
         solver2 = SolverFactory('ipopt', executable=self.solver_executable)
@@ -351,9 +353,11 @@ class ModifierAdaptationPenaltyTR(ModifierAdaptationTR):
         obj_var_name = self.problem_description.symbol_list['OBJ']
         ret = self.plant_history_data[self.iter_count][obj_var_name] / \
               self.problem_description.scaling_factors[obj_var_name]
+        infeasibility_sq = 0
         for con_var_name in self.problem_description.symbol_list['CON']:
-            ret += max(self.plant_history_data[self.iter_count][con_var_name],0) * self.options['sigma'] / \
-                   self.problem_description.scaling_factors[con_var_name]
+            infeasibility_sq += max(self.plant_history_data[self.iter_count][con_var_name],0)**2 / \
+                   self.problem_description.scaling_factors[con_var_name]**2
+        ret += numpy.sqrt(infeasibility_sq)* self.options['sigma']
         self.plant_history_data[self.iter_count]['merit'] = ret
 
         # get model simulation result with and without modifiers
@@ -361,9 +365,11 @@ class ModifierAdaptationPenaltyTR(ModifierAdaptationTR):
         obj_var_name = self.problem_description.symbol_list['OBJ']
         ret = self.model_history_data[self.iter_count][obj_var_name] / \
               self.problem_description.scaling_factors[obj_var_name]
+        infeasibility_sq = 0
         for con_var_name in self.problem_description.symbol_list['CON']:
-            ret += max(self.model_history_data[self.iter_count][con_var_name],0) * self.options['sigma'] / \
-                   self.problem_description.scaling_factors[con_var_name]
+            infeasibility_sq += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
+                                self.problem_description.scaling_factors[con_var_name] ** 2
+        ret += numpy.sqrt(infeasibility_sq) * self.options['sigma']
         self.model_history_data[self.iter_count]['merit'] = ret
 
         # update modifiers
@@ -381,9 +387,11 @@ class ModifierAdaptationPenaltyTR(ModifierAdaptationTR):
         obj_var_name = self.problem_description.symbol_list['OBJ']
         ret = base_model_output[obj_var_name] / \
               self.problem_description.scaling_factors[obj_var_name]
+        infeasibility_sq = 0
         for con_var_name in self.problem_description.symbol_list['CON']:
-            ret += max(base_model_output[con_var_name], 0) * self.options['sigma'] / \
-                   self.problem_description.scaling_factors[con_var_name]
+            infeasibility_sq += max(base_model_output[con_var_name], 0) ** 2 / \
+                                self.problem_description.scaling_factors[con_var_name] ** 2
+        ret += numpy.sqrt(infeasibility_sq) * self.options['sigma']
         base_merit = ret
 
         iter_successful_flag = False
@@ -415,17 +423,21 @@ class ModifierAdaptationPenaltyTR(ModifierAdaptationTR):
             obj_var_name = self.problem_description.symbol_list['OBJ']
             ret = self.plant_history_data[self.iter_count][obj_var_name] / \
                   self.problem_description.scaling_factors[obj_var_name]
+            infeasibility_sq = 0
             for con_var_name in self.problem_description.symbol_list['CON']:
-                ret += max(self.plant_history_data[self.iter_count][con_var_name],0) * self.options['sigma'] / \
-                       self.problem_description.scaling_factors[con_var_name]
+                infeasibility_sq += max(self.plant_history_data[self.iter_count][con_var_name], 0) ** 2 / \
+                                    self.problem_description.scaling_factors[con_var_name] ** 2
+            ret += numpy.sqrt(infeasibility_sq) * self.options['sigma']
             self.plant_history_data[self.iter_count]['merit'] = ret
             model_trial_point_output = self.get_model_simulation_result([filtered_input])[0]
             obj_var_name = self.problem_description.symbol_list['OBJ']
             ret = self.model_history_data[self.iter_count][obj_var_name] / \
                   self.problem_description.scaling_factors[obj_var_name]
+            infeasibility_sq = 0
             for con_var_name in self.problem_description.symbol_list['CON']:
-                ret += max(self.model_history_data[self.iter_count][con_var_name],0) * self.options['sigma'] / \
-                       self.problem_description.scaling_factors[con_var_name]
+                infeasibility_sq += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
+                                    self.problem_description.scaling_factors[con_var_name] ** 2
+            ret += numpy.sqrt(infeasibility_sq) * self.options['sigma']
             self.model_history_data[self.iter_count]['merit'] = ret
 
             # accept the trial point

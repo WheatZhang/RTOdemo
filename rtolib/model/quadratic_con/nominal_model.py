@@ -21,8 +21,8 @@ class quadratic_con_problem_model(PyomoModel):
         self.initial_value_file = os.path.join(os.path.dirname(__file__) + r"\quadratic_init.txt")
 
     def build_body(self, model):
-        model.u1 = Var(initialize=1)
-        model.u2 = Var(initialize=1)
+        model.u1 = Var(initialize=1, bounds=(-2, 4))
+        model.u2 = Var(initialize=1, bounds=(-4, 2))
         model.cost_var = Var(initialize=0)
         model.con_var = Var(initialize=0)
 

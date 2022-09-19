@@ -312,10 +312,10 @@ def do_test():
     }
     # ------------------------------------
     print_iter_data = False
-    max_iter = 80
-    initial_trust_radius = 0.2
-    sigma = 40
-    xi_N = 0.5
+    max_iter = 40
+    initial_trust_radius = 0.1
+    sigma = 100
+    xi_N = 0.7
     max_trust_radius=1
 
     # # ------------------------------------
@@ -349,7 +349,7 @@ def do_test():
 
 
 def plot_profile():
-    max_iter=80
+    max_iter=40
     global_marker_size = 2
     linewidth=1
     compo_step_plant_data = pandas.read_csv("data/wo_example/CompoStep_TR_MA_plant_data.txt", \
