@@ -3,6 +3,7 @@ import matplotlib
 from draw_lib import generate_all_contour_data, plot_contour
 import pandas
 import os
+import numpy
 from tr_quadr_eg import do_all_batches_for_all_model
 
 matplotlib.use('Agg')
@@ -155,32 +156,44 @@ def plot_algo12_profile(data_prefix):
                                    index_col=0, header=0, sep='\t')
     compo_step_input_data = pandas.read_csv("data/batch12/" + data_prefix + "/CompoStep_TR_MA_input_data.txt", \
                                             index_col=0, header=0, sep='\t')
-    inf_averse_input_data = pandas.read_csv("data/batch12/" + data_prefix + "/Penalty_TR_MA_input_data.txt", \
+    penalty_input_data = pandas.read_csv("data/batch12/" + data_prefix + "/Penalty_TR_MA_input_data.txt", \
                                             index_col=0, header=0, sep='\t')
 
     fig = plt.figure(figsize=(6,9))
     plt.subplot(611)
+    optimal = 1.453659e-01 * numpy.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
+             linestyle='--')
     plt.plot(range(1,max_iter+1), compo_step_plant_data.loc[1:max_iter, 'cost'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), penalty_plant_data.loc[1:max_iter, 'cost'], \
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel("plant cost")
     plt.subplot(612)
+    optimal = 0 * numpy.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
+             linestyle='--')
     plt.plot(range(1, max_iter + 1), compo_step_plant_data.loc[1:max_iter, 'con'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), penalty_plant_data.loc[1:max_iter, 'con'], \
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel("plant constraints")
     plt.subplot(613)
+    optimal = 3.684054e-01 * numpy.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
+             linestyle='--')
     plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'u1'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
-    plt.plot(range(1, max_iter + 1), inf_averse_input_data.loc[1:max_iter, 'u1'], \
+    plt.plot(range(1, max_iter + 1), penalty_input_data.loc[1:max_iter, 'u1'], \
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel("u1")
     plt.subplot(614)
+    optimal = -3.929466e-01 * numpy.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
+             linestyle='--')
     plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'u2'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
-    plt.plot(range(1, max_iter + 1), inf_averse_input_data.loc[1:max_iter, 'u2'], \
+    plt.plot(range(1, max_iter + 1), penalty_input_data.loc[1:max_iter, 'u2'], \
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel("u2")
     plt.subplot(615)
@@ -219,24 +232,36 @@ def plot_algo13_profile(data_prefix):
 
     fig = plt.figure(figsize=(6,9))
     plt.subplot(611)
+    optimal = 1.453659e-01 * numpy.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
+             linestyle='--')
     plt.plot(range(1,max_iter+1), compo_step_plant_data.loc[1:max_iter, 'cost'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), inf_averse_plant_data.loc[1:max_iter, 'cost'], \
              marker='o', c='darkorange', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel("plant cost")
     plt.subplot(612)
+    optimal = 0 * numpy.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
+             linestyle='--')
     plt.plot(range(1, max_iter + 1), compo_step_plant_data.loc[1:max_iter, 'con'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), inf_averse_plant_data.loc[1:max_iter, 'con'], \
              marker='o', c='darkorange', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel("plant constraints")
     plt.subplot(613)
+    optimal = 3.684054e-01 * numpy.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
+             linestyle='--')
     plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'u1'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), inf_averse_input_data.loc[1:max_iter, 'u1'], \
              marker='o', c='darkorange', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel("u1")
     plt.subplot(614)
+    optimal = -3.929466e-01 * numpy.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
+             linestyle='--')
     plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'u2'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), inf_averse_input_data.loc[1:max_iter, 'u2'], \
@@ -291,6 +316,23 @@ def draw_batch_pic_algo13():
             plot_algo13_profile(batch_prefix+data_prefix)
 
 
+def select_pic():
+    import glob
+    import shutil
+
+    files = glob.glob('pic/selected_pic/*')
+    for f in files:
+        os.remove(f)
+
+    with open('data/report/case_list.txt') as f:
+        for line in f.readlines():
+            case_name = line.strip()
+            shutil.copyfile('pic/batch12/'+case_name+"_algo12_input_iterates.png",\
+                            'pic/selected_pic/'+case_name+"_algo12_input_iterates.png")
+            shutil.copyfile('pic/batch12/' + case_name + "_algo12_profile.png", \
+                            'pic/selected_pic/' + case_name + "_algo12_profile.png")
+
+
 if __name__ == "__main__":
     # resolution=40
     # generate_all_contour_data(resolution)
@@ -298,8 +340,10 @@ if __name__ == "__main__":
     # draw_all_contour()
     #
     # do_all_batches_for_all_model()
-    draw_batch_pic_algo12()
-    draw_batch_pic_algo13()
+    # draw_batch_pic_algo12()
+    # draw_batch_pic_algo13()
 
     # draw_algo_13_input_on_contour("O2_U0")
     # plot_algo13_profile("O2_U0")
+
+    select_pic()

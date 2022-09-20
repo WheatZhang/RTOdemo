@@ -462,6 +462,7 @@ class CompoStepTrustRegionOptimizer(PyomoOptimizer):
         self.model.tangential_step_feasibility.deactivate()
 
         results = self.solver.solve(self.model, tee=self.tee)
+        # results = self.solver.solve(self.model, tee=True)
 
         if not ((results.solver.status == SolverStatus.ok) and (
                 results.solver.termination_condition == TerminationCondition.optimal)):

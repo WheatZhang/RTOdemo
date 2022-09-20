@@ -265,14 +265,23 @@ class ModifierAdaptationTR(ModifierAdaptation):
                     rho = -1
                     break
             obj_name = self.problem_description.symbol_list['OBJ']
-            if not flag_infeasible:
-                if abs(plant_output_data[0][obj_name]-plant_trial_point_output[obj_name])<self.options['stationarity_tol']:
-                    iter_successful_flag=True
-                    self.model_history_data[self.iter_count-1]['rho'] = 1
-                    continue
-                else:
-                    rho=(self.plant_history_data[base_iteration][obj_name] - self.plant_history_data[self.iter_count][obj_name])/ \
-                        (base_obj_value - self.model_history_data[self.iter_count][obj_name])
+            if base_obj_value < self.model_history_data[self.iter_count][obj_name]:
+                # Because the solver is not a global optimization solver, it is possible
+                # that the model obj function increases. In this case, we ask for backtracking.
+                rho = -2
+            else:
+                if not flag_infeasible:
+                    if abs(plant_output_data[0][obj_name]-plant_trial_point_output[obj_name])<self.options['stationarity_tol']:
+                        iter_successful_flag=True
+                        self.model_history_data[self.iter_count-1]['rho'] = 1
+                        continue
+                    else:
+                        if base_obj_value - self.model_history_data[self.iter_count][obj_name] > 1e-6:
+                            rho=(self.plant_history_data[base_iteration][obj_name] - self.plant_history_data[self.iter_count][obj_name])/ \
+                                (base_obj_value - self.model_history_data[self.iter_count][obj_name])
+                        else:
+                            rho = (self.plant_history_data[base_iteration][obj_name] -
+                                   self.plant_history_data[self.iter_count][obj_name]) / 1e-6
 
             self.rho = rho
             self.model_history_data[self.iter_count-1]['rho'] = self.rho
@@ -446,16 +455,24 @@ class ModifierAdaptationPenaltyTR(ModifierAdaptationTR):
                 if plant_trial_point_output[con_name] > self.options['feasibility_tol']:
                     flag_infeasible = True
                     break
-            if (not flag_infeasible) and\
-                        abs(self.plant_history_data[base_iteration]['merit'] - self.plant_history_data[self.iter_count]['merit']) < self.options[
-                'stationarity_tol']:
-                iter_successful_flag = True
-                self.model_history_data[self.iter_count-1]['rho'] = 1
-                continue
+            if base_merit < self.model_history_data[self.iter_count]['merit']:
+                # Because the solver is not a global optimization solver, it is possible
+                # that the model merit function increases. In this case, we ask for backtracking.
+                rho = -2
             else:
-                rho = (self.plant_history_data[base_iteration]['merit'] - self.plant_history_data[self.iter_count]['merit']) / \
-                      (base_merit - self.model_history_data[self.iter_count]['merit'])
-
+                if (not flag_infeasible) and\
+                            abs(self.plant_history_data[base_iteration]['merit'] - self.plant_history_data[self.iter_count]['merit']) < self.options[
+                    'stationarity_tol']:
+                    iter_successful_flag = True
+                    self.model_history_data[self.iter_count-1]['rho'] = 1
+                    continue
+                else:
+                    if base_merit - self.model_history_data[self.iter_count]['merit'] >1e-6:
+                        rho = (self.plant_history_data[base_iteration]['merit'] - self.plant_history_data[self.iter_count]['merit']) / \
+                              (base_merit - self.model_history_data[self.iter_count]['merit'])
+                    else:
+                        rho = (self.plant_history_data[base_iteration]['merit'] -
+                               self.plant_history_data[self.iter_count]['merit']) / 1e-6
             self.rho = rho
             self.model_history_data[self.iter_count-1]['rho'] = self.rho
 

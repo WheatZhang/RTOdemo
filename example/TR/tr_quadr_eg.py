@@ -565,16 +565,43 @@ def do_test():
                 result_filename_header)
 
 
+def study_certain_case():
+    from example.TR.draw_pic import draw_algo_12_input_on_contour, plot_algo12_profile
+
+    batch_model_prefix="OC"
+    batch_scenario_prefix="XRIF"
+    batch_scenario_no=1
+
+    default_u1_0 = 1.1
+    default_u2_0 = 0.1
+    default_r_0 = 1
+    default_sigma = 10
+    default_xi_N = 0.5
+    default_r_max = 4
+
+    if batch_model_prefix == "N":
+        model_name = "nominal"
+    elif batch_model_prefix == "O1":
+        model_name = "obj_wrong_curv"
+    elif batch_model_prefix == "O2":
+        model_name = "obj_partial_wrong_curv"
+    elif batch_model_prefix == "C":
+        model_name = "con_wrong_curv"
+    elif batch_model_prefix == "OC":
+        model_name = "obj_con_wrong_curv"
+    else:
+        raise ValueError("Wrong model name.")
+    do_batch_test_algo12(model_name, "OC_XRIF", 1, -1.1, -0.1, default_r_0 / 10, \
+                         default_r_max / 10, default_sigma, 0.1)
+
+    draw_algo_12_input_on_contour(batch_model_prefix + "_" + batch_scenario_prefix+\
+                                  "%d"%batch_scenario_no)
+    plot_algo12_profile(batch_model_prefix + "_" + batch_scenario_prefix+\
+                                  "%d"%batch_scenario_no)
+
 if __name__ == "__main__":
-    generate_noise_file()
-    do_test()
+    # generate_noise_file()
+    # do_test()
     # do_all_batches_for_all_model()
 
-    # default_u1_0 = 1.1
-    # default_u2_0 = 0.1
-    # default_r_0 = 1
-    # default_sigma = 10
-    # default_xi_N = 0.5
-    # default_r_max = 4
-    # do_batch_test_algo13("obj_partial_wrong_curv", "O2_U", 0, 3.5, -2.5, default_r_0, default_r_max, default_sigma,
-    #                      default_xi_N)
+    study_certain_case()
