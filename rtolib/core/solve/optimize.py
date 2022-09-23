@@ -232,7 +232,7 @@ class TrustRegionOptimizer(PyomoOptimizer):
 
 
 class PenaltyTrustRegionOptimizer(PyomoOptimizer):
-    def build(self, problem_description, homotopy_factor=1000):
+    def build(self, problem_description, constraint_scaling=1):
         assert isinstance(problem_description, ProblemDescription)
         self.problem_description = problem_description
         self.pyomo_model.build(self.model)
@@ -248,7 +248,8 @@ class PenaltyTrustRegionOptimizer(PyomoOptimizer):
             setattr(self.model, "con_vio_"+con_var_name, Var(initialize=0, within=NonNegativeReals))
         def _violation_cons(m):
             for con_var_name in self.problem_description.symbol_list['CON']:
-                yield self.pyomo_model.output_variables[con_var_name].__call__(m)-getattr(self.model, "con_vio_"+con_var_name) <=0
+                yield (self.pyomo_model.output_variables[con_var_name].__call__(m)/self.problem_description.scaling_factors[con_var_name]\
+                      -getattr(self.model, "con_vio_"+con_var_name))*constraint_scaling <=0
         self.model.violation_cons = ConstraintList(rule=_violation_cons)
 
         # merit function
@@ -261,7 +262,7 @@ class PenaltyTrustRegionOptimizer(PyomoOptimizer):
         self.model.tr_infeasibility_sq = Expression(rule=_tr_infeasibility_sq)
 
         def c_sqrt_cons(m):
-            return m.dummy_var_for_sqrt_c**2 == m.tr_infeasibility_sq
+            return (m.dummy_var_for_sqrt_c**2 - m.tr_infeasibility_sq)*constraint_scaling==0
         self.model.c_sqrt_cons = Constraint(rule=c_sqrt_cons)
 
         def _tr_merit_function(m):
@@ -357,30 +358,30 @@ class PenaltyTrustRegionOptimizer(PyomoOptimizer):
 
 
 class CompoStepTrustRegionOptimizer(PyomoOptimizer):
-    def build(self, problem_description, homotopy_factor=1000):
+    def build(self, problem_description, constraint_scaling=1e3, objective_scaling=1e3):
         assert isinstance(problem_description, ProblemDescription)
         self.problem_description = problem_description
         self.pyomo_model.build(self.model)
         # print(self.pyomo_model.parameters['Fb_profit_lam'].__call__(self.model))
 
         # set base infeasibility
-        setattr(self.model, "base_infeasibility", Var(initialize=0))
-        getattr(self.model, "base_infeasibility").fixed = True
+        setattr(self.model, "base_infeasibility_sq", Var(initialize=0))
+        getattr(self.model, "base_infeasibility_sq").fixed = True
 
         # inequality violation measure
         for con_var_name in self.problem_description.symbol_list['CON']:
             setattr(self.model, "con_vio_"+con_var_name, Var(initialize=0, within=NonNegativeReals))
         def _violation_cons(m):
             for con_var_name in self.problem_description.symbol_list['CON']:
-                yield self.pyomo_model.output_variables[con_var_name].__call__(m)-getattr(self.model, "con_vio_"+con_var_name) <=0
+                yield (self.pyomo_model.output_variables[con_var_name].__call__(m)/self.problem_description.scaling_factors[con_var_name]\
+                      -getattr(self.model, "con_vio_"+con_var_name))*constraint_scaling <=0
         self.model.violation_cons = ConstraintList(rule=_violation_cons)
 
         # c^2
         def _tr_infeasibility_sq(m):
             ret = 0
             for con_var_name in self.problem_description.symbol_list['CON']:
-                ret += getattr(self.model, "con_vio_"+con_var_name)**2 / \
-                      self.problem_description.scaling_factors[con_var_name]**2
+                ret += getattr(self.model, "con_vio_"+con_var_name)**2
             return ret
         self.model.tr_infeasibility_sq = Expression(rule=_tr_infeasibility_sq)
 
@@ -400,19 +401,19 @@ class CompoStepTrustRegionOptimizer(PyomoOptimizer):
 
         # set tangential step constraints
         def _tangential_step_feasibility(m):
-            return m.tr_infeasibility_sq <= m.base_infeasibility
+            return (m.tr_infeasibility_sq - m.base_infeasibility_sq)*constraint_scaling**2<=0
         self.model.tangential_step_feasibility = Constraint(rule=_tangential_step_feasibility)
 
         # set obj
         def _normal_step_objective(m):
-            ret = m.tr_infeasibility_sq
+            ret = m.tr_infeasibility_sq*constraint_scaling
             return ret
         self.model.normal_step_objective = Objective(rule=_normal_step_objective, sense=minimize)
 
         def _tangential_step_objective(m):
             obj_var_name = self.problem_description.symbol_list['OBJ']
             ret = self.pyomo_model.output_variables[obj_var_name].__call__(m)/ \
-                           self.problem_description.scaling_factors[obj_var_name]
+                           self.problem_description.scaling_factors[obj_var_name]*objective_scaling
             return ret
         self.model.tangential_step_objective = Objective(rule=_tangential_step_objective, sense=minimize)
 
@@ -478,9 +479,11 @@ class CompoStepTrustRegionOptimizer(PyomoOptimizer):
         self.model.normal_step_objective.deactivate()
         self.model.tangential_step_objective.activate()
         self.model.tangential_step_feasibility.activate()
-        self.model.base_infeasibility.fix(value(self.model.tr_infeasibility_sq))
+        # print(value(self.model.tr_infeasibility_sq))
+        self.model.base_infeasibility_sq.fix(value(self.model.tr_infeasibility_sq))
 
         results = self.solver.solve(self.model, tee=self.tee)
+        # print(value(self.model.tr_infeasibility_sq))
 
         if not ((results.solver.status == SolverStatus.ok) and (
                 results.solver.termination_condition == TerminationCondition.optimal)):

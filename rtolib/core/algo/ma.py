@@ -61,7 +61,8 @@ class ModifierAdaptation(MA_type_Algorithm):
         # set solver
         # TODO: solver parameter tuning
         # TODO: each solver should be seperate
-        default_options={'max_iter':200}
+        default_options={'max_iter':500,
+                         "tol":1e-10}
         solver1 = SolverFactory('ipopt', executable=self.solver_executable)
         self.plant_simulator.set_solver(solver1, tee=False, default_options=default_options)
         solver2 = SolverFactory('ipopt', executable=self.solver_executable)
@@ -189,8 +190,12 @@ class ModifierAdaptationTR(ModifierAdaptation):
         self.model_history_data[self.iter_count] = {}
         self.plant_history_data[self.iter_count] = {}
         self.input_history_data[self.iter_count] = {}
-        self.model_history_data[self.iter_count]['rho'] = ""
-        self.model_history_data[self.iter_count]['tr'] = self.trust_radius
+        if self.iter_count == 1:
+            # If we want to add some print information, do it here.
+            self.model_history_data[1]['rho'] = ""
+            self.model_history_data[1]['tr'] = ""
+            self.model_history_data[1]['tr_adjusted'] = ""
+            self.model_history_data[1]['event'] = ""
 
         # get trial point
         trial_points = self.get_trial_point()
@@ -226,7 +231,9 @@ class ModifierAdaptationTR(ModifierAdaptation):
             if k in self.problem_description.symbol_list['MV']:
                 tr_base[k]=v
         while(not iter_successful_flag):
+            self.model_history_data[self.iter_count]['tr'] = self.trust_radius
             optimized_input, solve_status = self.optimize_for_u(self.trust_radius, tr_base)
+
             if solve_status == PyomoModelSolvingStatus.OPTIMIZATION_FAILED:
                 # starting point infeasible
                 self.set_current_point(self.current_point)
@@ -237,6 +244,7 @@ class ModifierAdaptationTR(ModifierAdaptation):
                 plant_trial_point_output = self.get_plant_simulation_result([self.current_point])[0]
                 model_trial_point_output = self.get_model_simulation_result([self.current_point])[0]
                 self.model_history_data[self.iter_count - 1]['rho'] = -1
+                self.model_history_data[self.iter_count - 1]['event'] = "subproblem infeasible"
                 break
 
             mv_bounds = self.problem_description.bounds
@@ -268,11 +276,13 @@ class ModifierAdaptationTR(ModifierAdaptation):
             if base_obj_value < self.model_history_data[self.iter_count][obj_name]:
                 # Because the solver is not a global optimization solver, it is possible
                 # that the model obj function increases. In this case, we ask for backtracking.
+                self.model_history_data[self.iter_count - 1]['event'] = "model merit increases"
                 rho = -2
             else:
                 if not flag_infeasible:
                     if abs(plant_output_data[0][obj_name]-plant_trial_point_output[obj_name])<self.options['stationarity_tol']:
                         iter_successful_flag=True
+                        self.model_history_data[self.iter_count - 1]['event'] = "plant converges"
                         self.model_history_data[self.iter_count-1]['rho'] = 1
                         continue
                     else:
@@ -283,8 +293,7 @@ class ModifierAdaptationTR(ModifierAdaptation):
                             rho = (self.plant_history_data[base_iteration][obj_name] -
                                    self.plant_history_data[self.iter_count][obj_name]) / 1e-6
 
-            self.rho = rho
-            self.model_history_data[self.iter_count-1]['rho'] = self.rho
+            self.model_history_data[self.iter_count-1]['rho'] = rho
 
             # update trust-region radius
             if rho < self.options["eta1"]:
@@ -298,9 +307,11 @@ class ModifierAdaptationTR(ModifierAdaptation):
             self.trust_radius *= gamma
             if self.trust_radius < 1e-8:
                 self.trust_radius = 1e-8
+                self.model_history_data[self.iter_count - 1]['event'] = "trust region too small"
             if self.trust_radius > self.options['max_trust_radius']:
                 self.trust_radius = self.options['max_trust_radius']
-            self.model_history_data[self.iter_count]['tr'] = self.trust_radius
+                self.model_history_data[self.iter_count - 1]['event'] = "trust region too large"
+            self.model_history_data[self.iter_count - 1]['tr_adjusted'] = self.trust_radius
 
 
 class ModifierAdaptationPenaltyTR(ModifierAdaptationTR):
@@ -349,8 +360,20 @@ class ModifierAdaptationPenaltyTR(ModifierAdaptationTR):
         self.model_history_data[self.iter_count] = {}
         self.plant_history_data[self.iter_count] = {}
         self.input_history_data[self.iter_count] = {}
-        self.model_history_data[self.iter_count]['rho'] = ""
-        self.model_history_data[self.iter_count]['tr'] = self.trust_radius
+        if self.iter_count == 1:
+            # If we want to add some print information, do it here.
+            self.model_history_data[1]['rho'] = ""
+            self.model_history_data[1]['tr'] = ""
+            self.model_history_data[1]['tr_adjusted'] = ""
+            self.model_history_data[1]['event'] = ""
+            obj_var_name = self.problem_description.symbol_list['OBJ']
+            self.model_history_data[1]['base_'+obj_var_name] = ""
+            for con_var_name in self.problem_description.symbol_list['CON']:
+                self.model_history_data[1]['base_'+con_var_name] = ""
+            self.model_history_data[1]['merit'] = ""
+            self.model_history_data[1]['base_merit'] = ""
+            self.plant_history_data[1]['merit'] = ""
+            self.plant_history_data[1]['base_merit'] = ""
 
         # get trial point
         trial_points = self.get_trial_point()
@@ -368,6 +391,7 @@ class ModifierAdaptationPenaltyTR(ModifierAdaptationTR):
                    self.problem_description.scaling_factors[con_var_name]**2
         ret += numpy.sqrt(infeasibility_sq)* self.options['sigma']
         self.plant_history_data[self.iter_count]['merit'] = ret
+        self.plant_history_data[self.iter_count]['base_merit'] = ret
 
         # get model simulation result with and without modifiers
         model_output_data = self.get_model_simulation_result(trial_points)
@@ -403,6 +427,11 @@ class ModifierAdaptationPenaltyTR(ModifierAdaptationTR):
         ret += numpy.sqrt(infeasibility_sq) * self.options['sigma']
         base_merit = ret
 
+        self.model_history_data[self.iter_count]['base_'+obj_var_name] = base_model_output[obj_var_name]
+        for con_var_name in self.problem_description.symbol_list['CON']:
+            self.model_history_data[self.iter_count]['base_' + con_var_name] = base_model_output[con_var_name]
+        self.model_history_data[self.iter_count]['base_merit'] = base_merit
+
         iter_successful_flag = False
         rho = 100
         tr_base = {}
@@ -410,7 +439,15 @@ class ModifierAdaptationPenaltyTR(ModifierAdaptationTR):
             if k in self.problem_description.symbol_list['MV']:
                 tr_base[k] = v
         while (not iter_successful_flag):
-            optimized_input, solve_status = self.optimize_for_u(self.trust_radius, tr_base)
+            self.model_history_data[self.iter_count]['tr'] = self.trust_radius
+            try:
+                optimized_input, solve_status = self.optimize_for_u(self.trust_radius, tr_base)
+            except Exception as e:
+                optimized_input = self.current_point
+                self.model_history_data[self.iter_count]['event'] = "optimization failed"
+            if solve_status == PyomoModelSolvingStatus.OPTIMIZATION_FAILED:
+                optimized_input = self.current_point
+                self.model_history_data[self.iter_count]['event'] = "optimization failed"
 
             mv_bounds = self.problem_description.bounds
             filtered_input = self.adapt_to_bound_mv(optimized_input, mv_bounds)
@@ -458,12 +495,19 @@ class ModifierAdaptationPenaltyTR(ModifierAdaptationTR):
             if base_merit < self.model_history_data[self.iter_count]['merit']:
                 # Because the solver is not a global optimization solver, it is possible
                 # that the model merit function increases. In this case, we ask for backtracking.
+                self.model_history_data[self.iter_count-1]['event'] = "model merit increases"
                 rho = -2
+                # if self.plant_history_data[base_iteration]['merit'] -\
+                #                self.plant_history_data[self.iter_count]['merit'] >0:
+                #     rho = 0.1
+                # else:
+                #     rho = -2
             else:
                 if (not flag_infeasible) and\
                             abs(self.plant_history_data[base_iteration]['merit'] - self.plant_history_data[self.iter_count]['merit']) < self.options[
                     'stationarity_tol']:
                     iter_successful_flag = True
+                    self.model_history_data[self.iter_count-1]['event'] = "plant converges"
                     self.model_history_data[self.iter_count-1]['rho'] = 1
                     continue
                 else:
@@ -473,8 +517,7 @@ class ModifierAdaptationPenaltyTR(ModifierAdaptationTR):
                     else:
                         rho = (self.plant_history_data[base_iteration]['merit'] -
                                self.plant_history_data[self.iter_count]['merit']) / 1e-6
-            self.rho = rho
-            self.model_history_data[self.iter_count-1]['rho'] = self.rho
+            self.model_history_data[self.iter_count-1]['rho'] = rho
 
             # update trust-region radius
             if rho < self.options["eta1"]:
@@ -488,9 +531,11 @@ class ModifierAdaptationPenaltyTR(ModifierAdaptationTR):
             self.trust_radius *= gamma
             if self.trust_radius < 1e-8:
                 self.trust_radius = 1e-8
+                self.model_history_data[self.iter_count - 1]['event'] = "trust region too small"
             if self.trust_radius > self.options['max_trust_radius']:
                 self.trust_radius = self.options['max_trust_radius']
-            self.model_history_data[self.iter_count]['tr'] = self.trust_radius
+                self.model_history_data[self.iter_count - 1]['event'] = "trust region too large"
+            self.model_history_data[self.iter_count-1]['tr_adjusted'] = self.trust_radius
 
 
 class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
@@ -539,6 +584,5 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
         optimized_input, solve_status = self.model_optimizer.optimize(input_values, tr_radius, tr_base, self.options['xi_N'],
                                                                       param_values=self.current_parameter_value,
                                                                       use_homo=self.options["homotopy_optimization"])
-        # TODO:deal with solve status, fallback strategy
         return optimized_input, solve_status
 

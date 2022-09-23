@@ -17,7 +17,10 @@ def save_iteration_data_in_dict(history_data, filename):
             fp.write("%d" % r)
             for h in headers:
                 try:
-                    fp.write('\t%e' % history_data[r][h])
+                    if isinstance(history_data[r][h], str):
+                        fp.write('\t%s' % history_data[r][h])
+                    else:
+                        fp.write('\t%e' % history_data[r][h])
                 except:
                     fp.write('\t')
             fp.write('\n')

@@ -129,3 +129,42 @@ def generate_all_contour_data(resolution):
 
         func = lambda u1, u2: model_simulation_callback(model_name, u1, u2, {}, 'con')
         generate_contour_data(u1_points, u2_points, func, get_data_path('con_model_'+model_name))
+
+def draw_contour_of_certain_function():
+    global_font_size = 20
+    contour_linewidth = 1.5
+    global_contour_label_size = 18
+    font_factor = numpy.sqrt(1 / 0.39370)
+    global_font_size = global_font_size / font_factor
+    contour_linewidth = contour_linewidth / font_factor
+    global_contour_label_size = global_contour_label_size / font_factor
+
+    font_title = {'family': 'Times New Roman',
+                  'size': global_font_size,
+                  }
+
+    resolution = 40
+    x = numpy.linspace(start=-2, stop=4, endpoint=True, num=resolution)
+    y = numpy.linspace(start=-4, stop=2, endpoint=True, num=resolution)
+    Z = numpy.zeros(shape=(resolution, resolution))
+
+    def test_fun(x,y):
+        return -x**2+y**2 -1.28E-01+(x-6.803317e-01)*1.19E+00+(y-(-1.548099e+00))*6.80E-01
+
+    for i in range(resolution):
+        for j in range(resolution):
+            Z[j, i] = test_fun(x[i], y[j])
+
+    N = numpy.array([-4,-3,-2,-1,0,0.5,1,2,3,4])  # 用来指明等高线对应的值为多少时才出图线
+    CS = plt.contour(x, y, Z, N, linewidths=contour_linewidth, cmap=plt.get_cmap('jet'))  # 画出等高线图，cmap表示颜色的图层。
+    plt.tick_params(top=['on', 'true'], right=['on', 'true'], which='both')
+    plt.xlabel('u1')
+    plt.ylabel('u2')
+    plt.clabel(CS, inline=True, fmt='%d', fontsize=global_contour_label_size)  # 在等高线图里面加入每条线对应的值
+    plt.plot(6.803317e-01,-1.548099e+00,'bo')
+    plt.plot(1.498780e+00,-9.735186e-01,'ko')
+    plt.plot(5.332000e-02,-7.690888e-01,'ro')
+    plt.show()
+
+if __name__ == "__main__":
+    draw_contour_of_certain_function()
