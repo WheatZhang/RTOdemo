@@ -20,7 +20,7 @@ global_parameter={
         "gamma1": 0.5,
         "gamma2": 1,
         "gamma3": 2,
-        "MA_filtering": 0.5,
+        "MA_filtering": 1, #0.2
 }
 
 def generate_noise_file():
@@ -288,6 +288,62 @@ def original_MA(perturbation_stepsize, starting_point, \
     save_iteration_data_in_dict(rto_algorithm.plant_history_data, result_filename_header + "plant_data.txt")
     save_iteration_data_in_dict(rto_algorithm.input_history_data, result_filename_header + "input_data.txt")
 
+def original_MA_with_QC(perturbation_stepsize, starting_point, \
+               noise_filename, solver_executable, print_iter_data, max_iter,\
+               result_filename_header):
+    '''
+
+    :param perturbation_stepsize: dict
+    :param starting_point: dict
+    :param filtering_factor: double within [0,1]
+    :param noise_filename: string
+    :param solver_executable: string
+    :param print_iter_data: bool
+    :param max_iter: int, e.g. 20
+    :param result_filename_header: string
+    :return:
+    '''
+    problem_description = copy.deepcopy(default_WOR_description)
+
+    rto_algorithm = ModifierAdaptation()
+    options = {
+        "homotopy_simulation": False,
+        "homotopy_optimization": False,
+        "filtering_factor": global_parameter["MA_filtering"],
+        "noise_adding_fashion": "integrated",
+    }
+    rto_algorithm.set_algorithm_option(options)
+
+    ffd_perturb = SimpleFiniteDiffPerturbation(perturbation_stepsize, problem_description)
+
+    noise_generator = NoiseGenerator()
+    noise_generator.load_noise(noise_filename)
+
+    rto_algorithm.set_problem(
+        problem_description=problem_description,
+        plant=RTO_Plant_WO_reactor(),
+        model=RTO_Mismatched_WO_reactor_QC(),
+        perturbation_method=ffd_perturb,
+        noise_generator=noise_generator,
+        solver_executable=solver_executable,
+        spec_function=None,
+        modifier_type=ModifierType.RTO,
+        )
+
+    rto_algorithm.initialize_simulation(starting_point, initial_parameter_value={})
+
+    while rto_algorithm.iter_count <= max_iter:
+        rto_algorithm.one_step_simulation()
+        if print_iter_data:
+            print(rto_algorithm.model_history_data)
+            print(rto_algorithm.plant_history_data)
+            print(rto_algorithm.input_history_data)
+
+    # save data
+    save_iteration_data_in_dict(rto_algorithm.model_history_data, result_filename_header + "model_data.txt")
+    save_iteration_data_in_dict(rto_algorithm.plant_history_data, result_filename_header + "plant_data.txt")
+    save_iteration_data_in_dict(rto_algorithm.input_history_data, result_filename_header + "input_data.txt")
+
 
 def do_test():
     # ------------------------------------
@@ -314,31 +370,31 @@ def do_test():
     print_iter_data = False
     max_iter = 80
     initial_trust_radius = 0.1
-    sigma = 1000
+    sigma = 100
     xi_N = 0.5
     max_trust_radius=1
 
+    # # # ------------------------------------
+    # print("\nTesting TR_MA")
+    # result_filename_header = result_filename_folder + "TR_MA_"
+    # algo3_TR_MA(perturbation_stepsize, starting_point, initial_trust_radius,max_trust_radius,\
+    #            noise_filename, solver_executable, print_iter_data, max_iter, \
+    #            result_filename_header)
+    #
     # # ------------------------------------
-    print("\nTesting TR_MA")
-    result_filename_header = result_filename_folder + "TR_MA_"
-    algo3_TR_MA(perturbation_stepsize, starting_point, initial_trust_radius,max_trust_radius,\
-               noise_filename, solver_executable, print_iter_data, max_iter, \
-               result_filename_header)
-
-    # ------------------------------------
-    print("\nTesting Penalty_TR_MA")
-    result_filename_header = result_filename_folder + "Penalty_TR_MA_"
-    algo2_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius,max_trust_radius,\
-                noise_filename, solver_executable, print_iter_data, max_iter, \
-                result_filename_header)
-
-    # ------------------------------------
-    print("\nTesting CompoStep_TR_MA")
-    result_filename_header = result_filename_folder + "CompoStep_TR_MA_"
-    algo1_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,\
-                xi_N,\
-                noise_filename, solver_executable, print_iter_data, max_iter, \
-                result_filename_header)
+    # print("\nTesting Penalty_TR_MA")
+    # result_filename_header = result_filename_folder + "Penalty_TR_MA_"
+    # algo2_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius,max_trust_radius,\
+    #             noise_filename, solver_executable, print_iter_data, max_iter, \
+    #             result_filename_header)
+    #
+    # # ------------------------------------
+    # print("\nTesting CompoStep_TR_MA")
+    # result_filename_header = result_filename_folder + "CompoStep_TR_MA_"
+    # algo1_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,\
+    #             xi_N,\
+    #             noise_filename, solver_executable, print_iter_data, max_iter, \
+    #             result_filename_header)
 
     # ------------------------------------
     print("\nTesting Original_MA")
@@ -649,9 +705,24 @@ def do_batch_test():
                            test_algo3=False)
             batch_plot_profile(i, j)
 
+
+def rearrange_pic():
+    import shutil
+
+    initial_trust_radius_options = [0.001, 0.005, 0.01, 0.05, 0.1, 0.5]
+    sigma_options = [0, 1, 2, 5, 1e1, 2e1, 5e1, 1e2, 2e2, 5e2, 1e3, 2e3, 5e3]
+    for i, initial_trust_radius in enumerate(initial_trust_radius_options):
+        for j, sigma in enumerate(sigma_options):
+            batch_prefix = "%d_%d_" % (i, j)
+            shutil.copyfile("pic/wo-example/batch/"+batch_prefix+"profile.png", \
+                            "pic/wo-example/selected_pic/"+"%dS_"%j+batch_prefix+"profile.png")
+
+
 if __name__ == "__main__":
     # generate_noise_file()
-    # do_test()
-    # plot_profile()
+    do_test()
+    plot_profile()
 
-    do_batch_test()
+    # do_batch_test()
+
+    # rearrange_pic()

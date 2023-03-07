@@ -2,10 +2,12 @@
 #-*- coding:utf-8 -*-
 from rtolib.model.quadratic_con import quadratic_con_problem_plant, quadratic_con_problem_model,\
     quadratic_con_problem_description, quadr_obj_con_wrong_curv_model,\
-    quadr_con_wrong_curv_model,quadr_obj_wrong_curv_model,quadr_obj_wrong_curv_model2
+    quadr_con_wrong_curv_model,quadr_obj_wrong_curv_model,quadr_obj_wrong_curv_model2,\
+    quadr_con_wrong_curv_model2
 from rtolib.core import NoiseGenerator, ModifierType,\
                     SimpleFiniteDiffPerturbation
-from rtolib.core.algo import ModifierAdaptationTR, ModifierAdaptationPenaltyTR, ModifierAdaptationCompoStepTR
+from rtolib.core.algo import ModifierAdaptationTR, ModifierAdaptationPenaltyTR, \
+    ModifierAdaptationCompoStepTR, ModifierAdaptation, ModifierAdaptationMaxTR
 import copy
 from rtolib.util.misc import save_iteration_data_in_dict
 import os
@@ -29,7 +31,8 @@ def generate_noise_file():
     noise_generator.generate_noise(max_iter, 5)
     noise_generator.save_noise("noise/noise_0.txt")
 
-def algo3_TR_MA(model_name, perturbation_stepsize, starting_point, initial_trust_radius, max_trust_radius,\
+def original_MA_with_max_tr(model_name, perturbation_stepsize, starting_point, max_trust_radius,\
+                            filtering_factor,\
                noise_filename, solver_executable, print_iter_data, max_iter,\
                result_filename_header):
     '''
@@ -37,6 +40,77 @@ def algo3_TR_MA(model_name, perturbation_stepsize, starting_point, initial_trust
     :param perturbation_stepsize: dict
     :param starting_point: dict
     :param filtering_factor: double within [0,1]
+    :param noise_filename: string
+    :param solver_executable: string
+    :param print_iter_data: bool
+    :param max_iter: int, e.g. 20
+    :param result_filename_header: string
+    :return:
+    '''
+    problem_description = copy.deepcopy(quadratic_con_problem_description)
+
+    rto_algorithm = ModifierAdaptationMaxTR()
+    options = {
+        "homotopy_simulation": False,
+        "homotopy_optimization": False,
+        "noise_adding_fashion": "added",
+        "filtering_factor": filtering_factor,
+        "max_trust_radius": max_trust_radius,
+    }
+    rto_algorithm.set_algorithm_option(options)
+
+    ffd_perturb = SimpleFiniteDiffPerturbation(perturbation_stepsize, problem_description)
+
+    noise_generator = NoiseGenerator()
+    noise_generator.load_noise(noise_filename)
+
+    if model_name == "norminal":
+        model = quadratic_con_problem_model()
+    elif model_name == "obj_wrong_curv":
+        model = quadr_obj_wrong_curv_model()
+    elif model_name == "obj_partial_wrong_curv":
+        model = quadr_obj_wrong_curv_model2()
+    elif model_name == "con_wrong_curv":
+        model = quadr_con_wrong_curv_model()
+    elif model_name == "con_wrong_curv2":
+        model = quadr_con_wrong_curv_model2()
+    elif model_name == "obj_con_wrong_curv":
+        model = quadr_obj_con_wrong_curv_model()
+    else:
+        raise ValueError("Wrong model name.")
+
+    rto_algorithm.set_problem(
+        problem_description=problem_description,
+        plant=quadratic_con_problem_plant(),
+        model=model,
+        perturbation_method=ffd_perturb,
+        noise_generator=noise_generator,
+        solver_executable=solver_executable,
+        spec_function=None,
+        modifier_type=ModifierType.RTO,
+        )
+
+    rto_algorithm.initialize_simulation(starting_point, initial_parameter_value={})
+
+    while rto_algorithm.iter_count <= max_iter:
+        rto_algorithm.one_step_simulation()
+        if print_iter_data:
+            print(rto_algorithm.model_history_data)
+            print(rto_algorithm.plant_history_data)
+            print(rto_algorithm.input_history_data)
+
+    # save data
+    save_iteration_data_in_dict(rto_algorithm.model_history_data, result_filename_header + "model_data.txt")
+    save_iteration_data_in_dict(rto_algorithm.plant_history_data, result_filename_header + "plant_data.txt")
+    save_iteration_data_in_dict(rto_algorithm.input_history_data, result_filename_header + "input_data.txt")
+
+def algo3_TR_MA(model_name, perturbation_stepsize, starting_point, initial_trust_radius, max_trust_radius,\
+               noise_filename, solver_executable, print_iter_data, max_iter,\
+               result_filename_header):
+    '''
+
+    :param perturbation_stepsize: dict
+    :param starting_point: dict
     :param noise_filename: string
     :param solver_executable: string
     :param print_iter_data: bool
@@ -231,6 +305,8 @@ def algo1_TR_MA(model_name, perturbation_stepsize, starting_point, sigma, initia
         model = quadr_obj_wrong_curv_model2()
     elif model_name == "con_wrong_curv":
         model = quadr_con_wrong_curv_model()
+    elif model_name == "con_wrong_curv2":
+        model = quadr_con_wrong_curv_model2()
     elif model_name == "obj_con_wrong_curv":
         model = quadr_obj_con_wrong_curv_model()
     else:
@@ -478,6 +554,109 @@ def do_batch_test_algo12_main(model_name):
     do_batch_test_algo12(model_name, batch_prefix + "XRIF", 4, -1.1, -0.1, default_r_0/10, \
                          default_r_max/10, default_sigma, 0.9)
 
+def do_batch_test_CCE_paper():
+    feasible_u1_0 = 2
+    feasible_u2_0 = -2
+    infeasible_u1_0 = -1
+    infeasible_u2_0 = 0
+    default_r_0 = 1
+    default_sigma = 1
+    default_xi_N = 0.5
+    default_r_max = 2
+
+    model_name = "norminal"
+    batch_prefix = "CCE_N_"
+
+    do_batch_test_algo12(model_name, batch_prefix+"RF", 0, feasible_u1_0, feasible_u2_0, default_r_0, \
+                         default_r_max, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix+"RF", 1, feasible_u1_0, feasible_u2_0, default_r_0/2, \
+                         default_r_max/2, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix+"RF", 2, feasible_u1_0, feasible_u2_0, default_r_0 / 5, \
+                         default_r_max / 5, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix+"RF", 3, feasible_u1_0, feasible_u2_0, default_r_0 / 10, \
+                         default_r_max / 10, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix+"RF", 4, feasible_u1_0, feasible_u2_0, default_r_0 / 20, \
+                         default_r_max / 20, default_sigma, default_xi_N)
+
+    do_batch_test_algo12(model_name, batch_prefix + "RIF", 0, infeasible_u1_0, infeasible_u2_0, default_r_0, \
+                         default_r_max, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix + "RIF", 1, infeasible_u1_0, infeasible_u2_0, default_r_0 / 2, \
+                         default_r_max / 2, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix + "RIF", 2, infeasible_u1_0, infeasible_u2_0, default_r_0 / 5, \
+                         default_r_max / 5, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix + "RIF", 3, infeasible_u1_0, infeasible_u2_0, default_r_0 / 10, \
+                         default_r_max / 10, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix + "RIF", 4, infeasible_u1_0, infeasible_u2_0, default_r_0 / 20, \
+                         default_r_max / 20, default_sigma, default_xi_N)
+
+    do_batch_test_algo12(model_name, batch_prefix+"XF", 0, feasible_u1_0, feasible_u2_0, default_r_0, \
+                         default_r_max, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix+"XF", 1, feasible_u1_0, feasible_u2_0, default_r_0, \
+                         default_r_max, default_sigma, 0.1)
+    do_batch_test_algo12(model_name, batch_prefix+"XF", 2, feasible_u1_0, feasible_u2_0, default_r_0, \
+                         default_r_max, default_sigma, 0.3)
+    do_batch_test_algo12(model_name, batch_prefix + "XF", 3, feasible_u1_0, feasible_u2_0, default_r_0, \
+                         default_r_max, default_sigma, 0.7)
+    do_batch_test_algo12(model_name, batch_prefix + "XF", 4, feasible_u1_0, feasible_u2_0, default_r_0, \
+                         default_r_max, default_sigma, 0.9)
+
+    do_batch_test_algo12(model_name, batch_prefix + "XIF", 0, infeasible_u1_0, infeasible_u2_0, default_r_0, \
+                         default_r_max, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix + "XIF", 1, infeasible_u1_0, infeasible_u2_0, default_r_0, \
+                         default_r_max, default_sigma, 0.1)
+    do_batch_test_algo12(model_name, batch_prefix + "XIF", 2, infeasible_u1_0, infeasible_u2_0, default_r_0, \
+                         default_r_max, default_sigma, 0.3)
+    do_batch_test_algo12(model_name, batch_prefix + "XIF", 3, infeasible_u1_0, infeasible_u2_0, default_r_0, \
+                         default_r_max, default_sigma, 0.7)
+    do_batch_test_algo12(model_name, batch_prefix + "XIF", 4, infeasible_u1_0, infeasible_u2_0, default_r_0, \
+                         default_r_max, default_sigma, 0.9)
+
+    do_batch_test_algo12(model_name, batch_prefix + "XRF", 0, feasible_u1_0, feasible_u2_0, default_r_0/10, \
+                         default_r_max/10, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix + "XRF", 1, feasible_u1_0, feasible_u2_0, default_r_0/10, \
+                         default_r_max/10, default_sigma, 0.1)
+    do_batch_test_algo12(model_name, batch_prefix + "XRF", 2, feasible_u1_0, feasible_u2_0, default_r_0/10, \
+                         default_r_max/10, default_sigma, 0.3)
+    do_batch_test_algo12(model_name, batch_prefix + "XRF", 3, feasible_u1_0, feasible_u2_0, default_r_0/10, \
+                         default_r_max/10, default_sigma, 0.7)
+    do_batch_test_algo12(model_name, batch_prefix + "XRF", 4, feasible_u1_0, feasible_u2_0, default_r_0/10, \
+                         default_r_max/10, default_sigma, 0.9)
+
+    do_batch_test_algo12(model_name, batch_prefix + "XRIF", 0, infeasible_u1_0, infeasible_u2_0, default_r_0/10, \
+                         default_r_max/10, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix + "XRIF", 1, infeasible_u1_0, infeasible_u2_0, default_r_0/10, \
+                         default_r_max/10, default_sigma, 0.1)
+    do_batch_test_algo12(model_name, batch_prefix + "XRIF", 2, infeasible_u1_0, infeasible_u2_0, default_r_0/10, \
+                         default_r_max/10, default_sigma, 0.3)
+    do_batch_test_algo12(model_name, batch_prefix + "XRIF", 3, infeasible_u1_0, infeasible_u2_0, default_r_0/10, \
+                         default_r_max/10, default_sigma, 0.7)
+    do_batch_test_algo12(model_name, batch_prefix + "XRIF", 4, infeasible_u1_0, infeasible_u2_0, default_r_0/10, \
+                         default_r_max/10, default_sigma, 0.9)
+
+    model_name = "obj_partial_wrong_curv"
+    batch_prefix = "CCE_O2_"
+
+    do_batch_test_algo12(model_name, batch_prefix + "RF", 0, feasible_u1_0, feasible_u2_0, default_r_0, \
+                         default_r_max, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix + "RF", 1, feasible_u1_0, feasible_u2_0, default_r_0 / 2, \
+                         default_r_max / 2, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix + "RF", 2, feasible_u1_0, feasible_u2_0, default_r_0 / 5, \
+                         default_r_max / 5, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix + "RF", 3, feasible_u1_0, feasible_u2_0, default_r_0 / 10, \
+                         default_r_max / 10, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix + "RF", 4, feasible_u1_0, feasible_u2_0, default_r_0 / 20, \
+                         default_r_max / 20, default_sigma, default_xi_N)
+
+    do_batch_test_algo12(model_name, batch_prefix + "RIF", 0, infeasible_u1_0, infeasible_u2_0, default_r_0, \
+                         default_r_max, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix + "RIF", 1, infeasible_u1_0, infeasible_u2_0, default_r_0 / 2, \
+                         default_r_max / 2, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix + "RIF", 2, infeasible_u1_0, infeasible_u2_0, default_r_0 / 5, \
+                         default_r_max / 5, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix + "RIF", 3, infeasible_u1_0, infeasible_u2_0, default_r_0 / 10, \
+                         default_r_max / 10, default_sigma, default_xi_N)
+    do_batch_test_algo12(model_name, batch_prefix + "RIF", 4, infeasible_u1_0, infeasible_u2_0, default_r_0 / 20, \
+                         default_r_max / 20, default_sigma, default_xi_N)
 
 def do_batch_test_algo13_main(model_name):
     default_u1_0 = 1.1
@@ -603,5 +782,6 @@ if __name__ == "__main__":
     # generate_noise_file()
     # do_test()
     # do_all_batches_for_all_model()
+    do_batch_test_CCE_paper()
 
-    study_certain_case()
+    # study_certain_case()

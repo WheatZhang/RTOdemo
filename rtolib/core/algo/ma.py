@@ -116,7 +116,7 @@ class ModifierAdaptation(MA_type_Algorithm):
         filtered_input = self.filter_mv(optimized_input, mv_bounds)
 
         # set specification and store input data
-        self.set_current_point(optimized_input)
+        self.set_current_point(filtered_input)
 
         # iter count
         self.iter_count += 1
@@ -312,6 +312,58 @@ class ModifierAdaptationTR(ModifierAdaptation):
                 self.trust_radius = self.options['max_trust_radius']
                 self.model_history_data[self.iter_count - 1]['event'] = "trust region too large"
             self.model_history_data[self.iter_count - 1]['tr_adjusted'] = self.trust_radius
+
+class ModifierAdaptationMaxTR(ModifierAdaptation):
+
+    def set_problem(self, problem_description,
+                    plant,
+                    model,
+                    perturbation_method,
+                    noise_generator,
+                    solver_executable,
+                    spec_function,
+                    modifier_type,
+                    skipped_modifiers=[],
+                    ):
+        self.problem_description = problem_description
+        self.plant_simulator = PyomoSimulator(plant)
+        mvs = self.problem_description.symbol_list['MV']
+        if modifier_type == ModifierType.RTO:
+            cvs = [self.problem_description.symbol_list['OBJ']]
+            for cv in self.problem_description.symbol_list['CON']:
+                cvs.append(cv)
+        elif modifier_type == ModifierType.OUTPUT:
+            cvs = self.problem_description.symbol_list['CV']
+        else:
+            raise ValueError("Not applicable")
+        self.model_simulator = PyomoSimulator(PyomoModelWithModifiers(model, modifier_type, mvs, cvs))
+        self.model_optimizer = TrustRegionOptimizer(PyomoModelWithModifiers(model, modifier_type, mvs, cvs))
+        self.perturbation_method = perturbation_method
+        self.noise_generator = noise_generator
+        self.solver_executable = solver_executable
+        self.spec_function = spec_function
+        self.skipped_modifiers = skipped_modifiers
+
+    def register_option(self):
+        super().register_option()
+        self.available_options["max_iter"] = ("[1, inf]", 100)
+        self.available_options["max_trust_radius"] = ("positive float", 10)
+
+    def optimize_for_u(self):
+        input_values = {}
+        if self.spec_function is not None:
+            for k, v in self.current_spec.items():
+                input_values[k] = v
+        tr_base = {}
+        for k,v in self.current_point.items():
+            if k in self.problem_description.symbol_list['MV']:
+                tr_base[k]=v
+        optimized_input, solve_status = self.model_optimizer.optimize(input_values, self.options['max_trust_radius'], tr_base,
+                                                                      param_values=self.current_parameter_value,
+                                                                      use_homo=self.options["homotopy_optimization"])
+        # TODO:deal with solve status, fallback strategy
+        return optimized_input, solve_status
+
 
 
 class ModifierAdaptationPenaltyTR(ModifierAdaptationTR):

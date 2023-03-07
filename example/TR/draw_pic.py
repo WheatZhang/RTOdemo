@@ -305,6 +305,18 @@ def draw_batch_pic_algo12():
             draw_algo_12_input_on_contour(batch_prefix+data_prefix)
             plot_algo12_profile(batch_prefix+data_prefix)
 
+def draw_batch_pic_for_CCE():
+    path = r'F:\Research\RTOdemo\example\TR\data\batch12'
+    # Get all directory names in the specified directory
+    dirs = [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
+    batch_names = []
+    for d in dirs:
+        if d.startswith("CCE_"):
+            batch_names.append(d)
+    for data_prefix in batch_names:
+        draw_algo_12_input_on_contour(data_prefix)
+        plot_algo12_profile(data_prefix)
+
 def draw_batch_pic_algo13():
     batch_prefixes = ["N_", "O1_", "O2_", "C_", "OC_"]
     batch_names = [
@@ -346,4 +358,6 @@ if __name__ == "__main__":
     # draw_algo_13_input_on_contour("O2_U0")
     # plot_algo13_profile("O2_U0")
 
-    select_pic()
+    # select_pic()
+
+    draw_batch_pic_for_CCE()

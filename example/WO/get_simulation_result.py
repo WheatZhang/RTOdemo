@@ -43,11 +43,11 @@ if composition_noise_level <= 0:
     composition_noise_level=1e-6
 
 #------------------------------------
-# print("\nTesting MA")
-# result_filename_header=result_filename_folder+"MA_"
-# do_test_MA(perturbation_stepsize, starting_point, filtering_factor, \
-#                noise_filename, solver_executable, print_iter_data, max_iter,\
-#                result_filename_header)
+print("\nTesting MA")
+result_filename_header=result_filename_folder+"MA_"
+do_test_MA(perturbation_stepsize, starting_point, filtering_factor, \
+               noise_filename, solver_executable, print_iter_data, max_iter,\
+               result_filename_header)
 #
 # print("\nTesting MAy")
 # result_filename_header=result_filename_folder+"MAy_"
