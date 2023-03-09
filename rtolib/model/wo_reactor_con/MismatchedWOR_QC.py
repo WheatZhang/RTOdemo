@@ -102,7 +102,6 @@ class RTO_Mismatched_WO_reactor_QC(PyomoModel):
             #          25.92 * m.Fr * cv_func['XFr_E'].__call__(m) -\
             #          76.23 * m.Fa - 114.34 * m.Fb)+\
             #        74.38/2*(m.Fa**2+m.Fb**2+m.Tr**2)
-
             return -(1143.38 * m.Fr * cv_func['XFr_P'].__call__(m) + \
                      25.92 * m.Fr * cv_func['XFr_E'].__call__(m) - \
                      76.23 * m.Fa - 114.34 * m.Fb) + \

@@ -21,10 +21,10 @@ bounds = {
         "XFr_G":(0, 1),
     }
 scaling_factors = {
-        "Fa":10,
-        "Fb":10,
-        "Tr":100,
-        "cost":10,
+        "Fa":1.5,#10
+        "Fb":5,#10
+        "Tr":25,#100
+        "cost":10,#10
         "con":0.1,
         "XFr_A":1,
         "XFr_B":1,

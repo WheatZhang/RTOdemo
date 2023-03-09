@@ -221,10 +221,10 @@ def do_test():
     # ------------------------------------
     print_iter_data = False
     max_iter = 40
-    initial_trust_radius = 0.1
+    initial_trust_radius = 0.1#0.1
     sigma = 100
     xi_N = 0.5
-    max_trust_radius=1
+    max_trust_radius=0.5 #1
 
 
     print("\nTesting CompoStep_TR_MA")
@@ -235,18 +235,18 @@ def do_test():
                 result_filename_header)
 
     # ------------------------------------
-    print("\nTesting Original_MA")
-    result_filename_header = result_filename_folder + "Original_MA_"
-    original_MA(perturbation_stepsize, starting_point, \
-                noise_filename, solver_executable, print_iter_data, max_iter, \
-                result_filename_header)
-
-    # ------------------------------------
-    print("\nTesting Original_MAQC")
-    result_filename_header = result_filename_folder + "Original_MAQC_"
-    original_MA_with_QC(perturbation_stepsize, starting_point, \
-                noise_filename, solver_executable, print_iter_data, max_iter, \
-                result_filename_header)
+    # print("\nTesting Original_MA")
+    # result_filename_header = result_filename_folder + "Original_MA_"
+    # original_MA(perturbation_stepsize, starting_point, \
+    #             noise_filename, solver_executable, print_iter_data, max_iter, \
+    #             result_filename_header)
+    #
+    # # ------------------------------------
+    # print("\nTesting Original_MAQC")
+    # result_filename_header = result_filename_folder + "Original_MAQC_"
+    # original_MA_with_QC(perturbation_stepsize, starting_point, \
+    #             noise_filename, solver_executable, print_iter_data, max_iter, \
+    #             result_filename_header)
 
 def plot_profile():
     max_iter=30
@@ -279,12 +279,16 @@ def plot_profile():
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
              linestyle='--')
     plt.plot(range(1,max_iter+1), compo_step_plant_data.loc[1:max_iter, 'cost'], \
-             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
-    plt.plot(range(1, max_iter + 1), QC_ma_plant_data.loc[1:max_iter, 'cost'], \
-             marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
+             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2,\
+             label="composite-step TR")
     plt.plot(range(1, max_iter + 1), original_ma_plant_data.loc[1:max_iter, 'cost'], \
-             marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
+             marker='o', c='green', markersize=global_marker_size, linewidth=linewidth, \
+             label="MA")
+    plt.plot(range(1, max_iter + 1), QC_ma_plant_data.loc[1:max_iter, 'cost'], \
+             marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth,\
+             label="MA with convex model")
     plt.ylabel("plant cost")
+    plt.legend()
     plt.subplot(512)
     optimal = 0 * numpy.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -330,7 +334,8 @@ def plot_profile():
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel(r"Tr")
 
-    plt.savefig("pic/CCE_wo_0306/profile", dpi=600)
+    plt.tight_layout(pad=0.5, w_pad=0.5, h_pad=0.5)
+    plt.savefig("pic/CCE_wo_0306/wo_profile", dpi=600)
     plt.close()
 
 if __name__ == "__main__":

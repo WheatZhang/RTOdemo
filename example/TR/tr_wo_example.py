@@ -20,7 +20,7 @@ global_parameter={
         "gamma1": 0.5,
         "gamma2": 1,
         "gamma3": 2,
-        "MA_filtering": 1, #0.2
+        "MA_filtering": 0.2, #0.2
 }
 
 def generate_noise_file():
@@ -359,6 +359,11 @@ def do_test():
         "Fb": 10,
         "Tr": 85,
     }
+    # starting_point = {
+    #     "Fa": 3.8,
+    #     "Fb": 9.3,
+    #     "Tr": 91,
+    # }
 
     # ------------------------------------
     perturbation_stepsize = {
@@ -375,12 +380,12 @@ def do_test():
     max_trust_radius=1
 
     # # # ------------------------------------
-    # print("\nTesting TR_MA")
-    # result_filename_header = result_filename_folder + "TR_MA_"
-    # algo3_TR_MA(perturbation_stepsize, starting_point, initial_trust_radius,max_trust_radius,\
-    #            noise_filename, solver_executable, print_iter_data, max_iter, \
-    #            result_filename_header)
-    #
+    print("\nTesting TR_MA")
+    result_filename_header = result_filename_folder + "TR_MA_"
+    algo3_TR_MA(perturbation_stepsize, starting_point, initial_trust_radius,max_trust_radius,\
+               noise_filename, solver_executable, print_iter_data, max_iter, \
+               result_filename_header)
+
     # # ------------------------------------
     # print("\nTesting Penalty_TR_MA")
     # result_filename_header = result_filename_folder + "Penalty_TR_MA_"

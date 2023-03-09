@@ -130,6 +130,32 @@ def generate_all_contour_data(resolution):
         func = lambda u1, u2: model_simulation_callback(model_name, u1, u2, {}, 'con')
         generate_contour_data(u1_points, u2_points, func, get_data_path('con_model_'+model_name))
 
+def generate_all_contour_data_for_CCE_xi(resolution):
+    datafile_folder = "data/contour_data/CCE_xi_res%d" % resolution
+    if not os.path.exists("data/contour_data"):
+        os.makedirs("data/contour_data")
+    def get_data_path(name):
+        return datafile_folder + "_" + name+ ".txt"
+
+    u1_points = numpy.linspace(start=-2, stop=2, num=resolution, endpoint=True)
+    u2_points = numpy.linspace(start=-2, stop=2, num=resolution, endpoint=True)
+
+    # ---------------------------
+    func = lambda u1, u2: plant_simulation_callback(u1, u2, 'cost')
+    generate_contour_data(u1_points, u2_points, func, get_data_path('cost_plant'))
+
+    func = lambda u1, u2: plant_simulation_callback(u1, u2, 'con')
+    generate_contour_data(u1_points, u2_points, func, get_data_path('con_plant'))
+
+    model_names = ["norminal", "obj_wrong_curv", "obj_partial_wrong_curv", "con_wrong_curv",\
+            "obj_con_wrong_curv"]
+    for model_name in model_names:
+        func = lambda u1, u2: model_simulation_callback(model_name, u1, u2, {}, 'cost')
+        generate_contour_data(u1_points, u2_points, func, get_data_path('cost_model_'+model_name))
+
+        func = lambda u1, u2: model_simulation_callback(model_name, u1, u2, {}, 'con')
+        generate_contour_data(u1_points, u2_points, func, get_data_path('con_model_'+model_name))
+
 def draw_contour_of_certain_function():
     global_font_size = 20
     contour_linewidth = 1.5
@@ -167,4 +193,5 @@ def draw_contour_of_certain_function():
     plt.show()
 
 if __name__ == "__main__":
-    draw_contour_of_certain_function()
+    # draw_contour_of_certain_function()
+    generate_all_contour_data_for_CCE_xi(40)
