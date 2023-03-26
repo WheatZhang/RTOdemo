@@ -5,7 +5,7 @@ import os
 class RTO_Mismatched_WO_reactor(PyomoModel):
     def __init__(self):
         self.output_variables = {
-            'profit': (lambda m: m.profit),
+            'cost': (lambda m: m.cost),
             'XFr_A': (lambda m: m.XFr['A']),
             'XFr_B': (lambda m: m.XFr['B']),
             'XFr_E': (lambda m: m.XFr['E']),
@@ -91,10 +91,10 @@ class RTO_Mismatched_WO_reactor(PyomoModel):
         wocstr.kinetic_coff = Constraint(wocstr.Reactions, rule=kinetic_coff)
 
     def build_rto(self, wocstr, cv_func):
-        def profit(m):
+        def cost(m):
             # return -(1143.38 * m.Fr * m.XFr['P'] + 25.92 * m.Fr * m.XFr[
             #     'E'] - 76.23 * m.Fa - 114.34 * m.Fb)
             return -(1143.38 * m.Fr * cv_func['XFr_P'].__call__(m) +\
                      25.92 * m.Fr * cv_func['XFr_E'].__call__(m) -\
                      76.23 * m.Fa - 114.34 * m.Fb)
-        wocstr.profit = Expression(rule=profit)
+        wocstr.cost = Expression(rule=cost)

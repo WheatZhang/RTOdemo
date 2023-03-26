@@ -8,7 +8,7 @@ solver_executable=r"F:\Research\RTOdemo\external\bin\ipopt.exe"
 result_filename_folder="data/1/"
 
 #------------------------------------
-profit_noise_level=0.6
+cost_noise_level=0.6
 composition_noise_level=1e-4
 starting_point={
         "Fb": 4,
@@ -36,9 +36,9 @@ max_iter=20
 
 #------------------------------------
 if not os.path.exists(noise_filename):
-    generate_noise_file(profit_noise_level, composition_noise_level, noise_filename)
-if profit_noise_level <= 0:
-    profit_noise_level=0.01
+    generate_noise_file(cost_noise_level, composition_noise_level, noise_filename)
+if cost_noise_level <= 0:
+    cost_noise_level=0.01
 if composition_noise_level <= 0:
     composition_noise_level=1e-6
 
@@ -68,7 +68,7 @@ do_test_MA(perturbation_stepsize, starting_point, filtering_factor, \
 # result_filename_header=result_filename_folder+"GPE_"
 # do_test_GPE(perturbation_stepsize, starting_point, filtering_factor, \
 #                noise_filename, solver_executable, print_iter_data, max_iter,\
-#                result_filename_header,profit_noise_level,composition_noise_level,\
+#                result_filename_header,cost_noise_level,composition_noise_level,\
 #                 ka_relative_uncertainty,kb_relative_uncertainty,factor_n,\
 #             fixed_parameter_values)
 
@@ -85,7 +85,7 @@ print_iter_data=True
 result_filename_header=result_filename_folder+"GPEAW_"
 do_test_GPE_AW(perturbation_stepsize, starting_point, filtering_factor, \
                noise_filename, solver_executable, print_iter_data, max_iter,\
-               result_filename_header,profit_noise_level,composition_noise_level,\
+               result_filename_header,cost_noise_level,composition_noise_level,\
                 ka_relative_uncertainty,kb_relative_uncertainty,factor_n,\
             fixed_parameter_values)
 

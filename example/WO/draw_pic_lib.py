@@ -22,7 +22,7 @@ def draw_overall_pic(folder, pic_filename):
 
     max_iter=20
     # #----------Optimal-------------
-    ori_plant_profit = 190.98 * np.ones(max_iter+1)
+    ori_plant_cost = 190.98 * np.ones(max_iter+1)
     ori_FB = 4.7874 * np.ones(max_iter+1)
     ori_TR = 89.704 * np.ones(max_iter+1)
     # =======================================
@@ -54,17 +54,17 @@ def draw_overall_pic(folder, pic_filename):
     plt.rcParams['ytick.direction'] = 'in'
 
     plt.subplot(3, 1, 1)
-    Optimal, = plt.plot(range(max_iter+1), ori_plant_profit, linewidth=global_linewidth, label='Optimal', color='gray',
+    Optimal, = plt.plot(range(max_iter+1), ori_plant_cost, linewidth=global_linewidth, label='Optimal', color='gray',
                         linestyle='--')
-    MA, = plt.plot(range(max_iter), MA_plant_data.loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label='MA', linestyle='-',
+    MA, = plt.plot(range(max_iter), MA_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='MA', linestyle='-',
                    marker='o', markersize=global_point_size)
-    MAy, = plt.plot(range(max_iter), MAy_plant_data.loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label='MAy', linestyle='-',
+    MAy, = plt.plot(range(max_iter), MAy_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='MAy', linestyle='-',
                     marker='o', markersize=global_point_size)
-    PA, = plt.plot(range(max_iter), PE_plant_data.loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label='PE',
+    PA, = plt.plot(range(max_iter), PE_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='PE',
                    linestyle='-', marker='o', markersize=global_point_size)
-    ISOPE, = plt.plot(range(max_iter), ISOPE_plant_data.loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label='PE+MA',
+    ISOPE, = plt.plot(range(max_iter), ISOPE_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='PE+MA',
                       linestyle='-', marker='o', markersize=global_point_size)
-    GPE, = plt.plot(range(max_iter), GPE_plant_data.loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label='GPE',
+    GPE, = plt.plot(range(max_iter), GPE_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='GPE',
                       linestyle='-', marker='o', markersize=global_point_size)
 
     plt.legend(handles=[MA, MAy, PA, ISOPE, GPE, Optimal], prop=font1)
@@ -76,7 +76,7 @@ def draw_overall_pic(folder, pic_filename):
                facecolor='w',
                framealpha=1.0,
                prop={'family': 'Times New Roman', 'size': global_tick_size})
-    plt.ylabel('(a) Plant Profit', font2)
+    plt.ylabel('(a) Plant cost', font2)
     plt.xticks([0, 3, 6, 9, 12, 15, 18])
     plt.rcParams['xtick.direction'] = 'in'
     plt.rcParams['ytick.direction'] = 'in'
@@ -173,7 +173,7 @@ def draw_overall_pic_with_GPEAW(folder, pic_filename):
 
     max_iter=20
     # #----------Optimal-------------
-    ori_plant_profit = 190.98 * np.ones(max_iter+1)
+    ori_plant_cost = 190.98 * np.ones(max_iter+1)
     ori_FB = 4.7874 * np.ones(max_iter+1)
     ori_TR = 89.704 * np.ones(max_iter+1)
     # =======================================
@@ -205,17 +205,17 @@ def draw_overall_pic_with_GPEAW(folder, pic_filename):
     plt.rcParams['ytick.direction'] = 'in'
 
     plt.subplot(3, 1, 1)
-    Optimal, = plt.plot(range(max_iter+1), ori_plant_profit, linewidth=global_linewidth, label='Optimal', color='gray',
+    Optimal, = plt.plot(range(max_iter+1), ori_plant_cost, linewidth=global_linewidth, label='Optimal', color='gray',
                         linestyle='--')
-    MA, = plt.plot(range(max_iter), MA_plant_data.loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label='MA', linestyle='-',
+    MA, = plt.plot(range(max_iter), MA_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='MA', linestyle='-',
                    marker='o', markersize=global_point_size)
-    GPEAW, = plt.plot(range(max_iter), GPEAW_plant_data.loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label='GPEAW', linestyle='-',
+    GPEAW, = plt.plot(range(max_iter), GPEAW_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='GPEAW', linestyle='-',
                     marker='o', markersize=global_point_size)
-    PA, = plt.plot(range(max_iter), PE_plant_data.loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label='PE',
+    PA, = plt.plot(range(max_iter), PE_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='PE',
                    linestyle='-', marker='o', markersize=global_point_size)
-    ISOPE, = plt.plot(range(max_iter), ISOPE_plant_data.loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label='PE+MA',
+    ISOPE, = plt.plot(range(max_iter), ISOPE_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='PE+MA',
                       linestyle='-', marker='o', markersize=global_point_size)
-    GPE, = plt.plot(range(max_iter), GPE_plant_data.loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label='GPE',
+    GPE, = plt.plot(range(max_iter), GPE_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='GPE',
                       linestyle='-', marker='o', markersize=global_point_size)
 
     plt.legend(handles=[MA, GPEAW, PA, ISOPE, GPE, Optimal], prop=font1)
@@ -227,7 +227,7 @@ def draw_overall_pic_with_GPEAW(folder, pic_filename):
                facecolor='w',
                framealpha=1.0,
                prop={'family': 'Times New Roman', 'size': global_tick_size})
-    plt.ylabel('(a) Plant Profit', font2)
+    plt.ylabel('(a) Plant cost', font2)
     plt.xticks([0, 3, 6, 9, 12, 15, 18])
     plt.rcParams['xtick.direction'] = 'in'
     plt.rcParams['ytick.direction'] = 'in'
@@ -321,7 +321,7 @@ def draw_overall_pic_no_MAy(folder, pic_filename):
 
     max_iter=20
     # #----------Optimal-------------
-    ori_plant_profit = 190.98 * np.ones(max_iter+1)
+    ori_plant_cost = 190.98 * np.ones(max_iter+1)
     ori_FB = 4.7874 * np.ones(max_iter+1)
     ori_TR = 89.704 * np.ones(max_iter+1)
     # =======================================
@@ -353,15 +353,15 @@ def draw_overall_pic_no_MAy(folder, pic_filename):
     plt.rcParams['ytick.direction'] = 'in'
 
     plt.subplot(3, 1, 1)
-    Optimal, = plt.plot(range(max_iter+1), ori_plant_profit, linewidth=global_linewidth, label='Optimal', color='gray',
+    Optimal, = plt.plot(range(max_iter+1), ori_plant_cost, linewidth=global_linewidth, label='Optimal', color='gray',
                         linestyle='--')
-    MA, = plt.plot(range(max_iter), MA_plant_data.loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label='MA', linestyle='-',
+    MA, = plt.plot(range(max_iter), MA_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='MA', linestyle='-',
                    marker='o', markersize=global_point_size)
-    PA, = plt.plot(range(max_iter), PE_plant_data.loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label='PE',
+    PA, = plt.plot(range(max_iter), PE_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='PE',
                    linestyle='-', marker='o', markersize=global_point_size)
-    ISOPE, = plt.plot(range(max_iter), ISOPE_plant_data.loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label='PE+MA',
+    ISOPE, = plt.plot(range(max_iter), ISOPE_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='PE+MA',
                       linestyle='-', marker='o', markersize=global_point_size)
-    GPE, = plt.plot(range(max_iter), GPE_plant_data.loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label='GPE',
+    GPE, = plt.plot(range(max_iter), GPE_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='GPE',
                       linestyle='-', marker='o', markersize=global_point_size)
 
     plt.legend(handles=[MA, PA, ISOPE, GPE, Optimal], prop=font1)
@@ -373,7 +373,7 @@ def draw_overall_pic_no_MAy(folder, pic_filename):
                facecolor='w',
                framealpha=1.0,
                prop={'family': 'Times New Roman', 'size': global_tick_size})
-    plt.ylabel('(a) Plant Profit', font2)
+    plt.ylabel('(a) Plant cost', font2)
     plt.xticks([0, 3, 6, 9, 12, 15, 18])
     plt.rcParams['xtick.direction'] = 'in'
     plt.rcParams['ytick.direction'] = 'in'
@@ -461,7 +461,7 @@ def draw_GPE_different_weight():
 
     max_iter=20
     # #----------Optimal-------------
-    ori_plant_profit = 190.98 * np.ones(max_iter+1)
+    ori_plant_cost = 190.98 * np.ones(max_iter+1)
     ori_FB = 4.7874 * np.ones(max_iter+1)
     ori_TR = 89.704 * np.ones(max_iter+1)
     # =======================================
@@ -493,17 +493,17 @@ def draw_GPE_different_weight():
     plt.rcParams['ytick.direction'] = 'in'
 
     plt.subplot(3, 1, 1)
-    Optimal, = plt.plot(range(max_iter+1), ori_plant_profit, linewidth=global_linewidth, label='Optimal', color='gray',
+    Optimal, = plt.plot(range(max_iter+1), ori_plant_cost, linewidth=global_linewidth, label='Optimal', color='gray',
                         linestyle='--')
-    GPE1, = plt.plot(range(max_iter), plant_data[0].loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label=str(weights[0]), linestyle='-',
+    GPE1, = plt.plot(range(max_iter), plant_data[0].loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label=str(weights[0]), linestyle='-',
                    marker='o', markersize=global_point_size)
-    GPE2, = plt.plot(range(max_iter), plant_data[1].loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label=str(weights[1]), linestyle='-',
+    GPE2, = plt.plot(range(max_iter), plant_data[1].loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label=str(weights[1]), linestyle='-',
                     marker='o', markersize=global_point_size)
-    GPE3, = plt.plot(range(max_iter), plant_data[2].loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label=str(weights[2]),
+    GPE3, = plt.plot(range(max_iter), plant_data[2].loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label=str(weights[2]),
                    linestyle='-', marker='o', markersize=global_point_size)
-    GPE4, = plt.plot(range(max_iter), plant_data[3].loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label=str(weights[3]),
+    GPE4, = plt.plot(range(max_iter), plant_data[3].loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label=str(weights[3]),
                       linestyle='-', marker='o', markersize=global_point_size)
-    GPE5, = plt.plot(range(max_iter), plant_data[4].loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label=str(weights[4]),
+    GPE5, = plt.plot(range(max_iter), plant_data[4].loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label=str(weights[4]),
                       linestyle='-', marker='o', markersize=global_point_size)
 
     plt.legend(handles=[GPE1, GPE2, GPE3, GPE4, GPE5, Optimal], prop=font1)
@@ -515,7 +515,7 @@ def draw_GPE_different_weight():
                facecolor='w',
                framealpha=1.0,
                prop={'family': 'Times New Roman', 'size': global_tick_size})
-    plt.ylabel('(a) Plant Profit', font2)
+    plt.ylabel('(a) Plant cost', font2)
     plt.xticks([0, 3, 6, 9, 12, 15, 18])
     plt.rcParams['xtick.direction'] = 'in'
     plt.rcParams['ytick.direction'] = 'in'
@@ -615,7 +615,7 @@ def draw_GPES2_different_weight():
 
     max_iter=20
     # #----------Optimal-------------
-    ori_plant_profit = 190.98 * np.ones(max_iter+1)
+    ori_plant_cost = 190.98 * np.ones(max_iter+1)
     ori_FB = 4.7874 * np.ones(max_iter+1)
     ori_TR = 89.704 * np.ones(max_iter+1)
     # =======================================
@@ -647,17 +647,17 @@ def draw_GPES2_different_weight():
     plt.rcParams['ytick.direction'] = 'in'
 
     plt.subplot(3, 1, 1)
-    Optimal, = plt.plot(range(max_iter+1), ori_plant_profit, linewidth=global_linewidth, label='Optimal', color='gray',
+    Optimal, = plt.plot(range(max_iter+1), ori_plant_cost, linewidth=global_linewidth, label='Optimal', color='gray',
                         linestyle='--')
-    GPE1, = plt.plot(range(max_iter), plant_data[0].loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label=str(weights[0]), linestyle='-',
+    GPE1, = plt.plot(range(max_iter), plant_data[0].loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label=str(weights[0]), linestyle='-',
                    marker='o', markersize=global_point_size)
-    GPE2, = plt.plot(range(max_iter), plant_data[1].loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label=str(weights[1]), linestyle='-',
+    GPE2, = plt.plot(range(max_iter), plant_data[1].loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label=str(weights[1]), linestyle='-',
                     marker='o', markersize=global_point_size)
-    GPE3, = plt.plot(range(max_iter), plant_data[2].loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label=str(weights[2]),
+    GPE3, = plt.plot(range(max_iter), plant_data[2].loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label=str(weights[2]),
                    linestyle='-', marker='o', markersize=global_point_size)
-    GPE4, = plt.plot(range(max_iter), plant_data[3].loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label=str(weights[3]),
+    GPE4, = plt.plot(range(max_iter), plant_data[3].loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label=str(weights[3]),
                       linestyle='-', marker='o', markersize=global_point_size)
-    GPE5, = plt.plot(range(max_iter), plant_data[4].loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label=str(weights[4]),
+    GPE5, = plt.plot(range(max_iter), plant_data[4].loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label=str(weights[4]),
                       linestyle='-', marker='o', markersize=global_point_size)
 
     plt.legend(handles=[GPE1, GPE2, GPE3, GPE4, GPE5, Optimal], prop=font1)
@@ -669,7 +669,7 @@ def draw_GPES2_different_weight():
                facecolor='w',
                framealpha=1.0,
                prop={'family': 'Times New Roman', 'size': global_tick_size})
-    plt.ylabel('(a) Plant Profit', font2)
+    plt.ylabel('(a) Plant cost', font2)
     plt.xticks([0, 3, 6, 9, 12, 15, 18])
     plt.rcParams['xtick.direction'] = 'in'
     plt.rcParams['ytick.direction'] = 'in'
@@ -768,7 +768,7 @@ def draw_para_set_comp_pic(folder, pic_filename):
 
     max_iter=20
     # #----------Optimal-------------
-    ori_plant_profit = 190.98 * np.ones(max_iter+1)
+    ori_plant_cost = 190.98 * np.ones(max_iter+1)
     ori_FB = 4.7874 * np.ones(max_iter+1)
     ori_TR = 89.704 * np.ones(max_iter+1)
     # =======================================
@@ -800,13 +800,13 @@ def draw_para_set_comp_pic(folder, pic_filename):
     plt.rcParams['ytick.direction'] = 'in'
 
     plt.subplot(3, 1, 1)
-    Optimal, = plt.plot(range(max_iter+1), ori_plant_profit, linewidth=global_linewidth, label='Optimal', color='gray',
+    Optimal, = plt.plot(range(max_iter+1), ori_plant_cost, linewidth=global_linewidth, label='Optimal', color='gray',
                         linestyle='--')
-    PA, = plt.plot(range(max_iter), PE_plant_data.loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label='PE',
+    PA, = plt.plot(range(max_iter), PE_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='PE',
                    linestyle='-', marker='o', markersize=global_point_size)
-    ISOPE, = plt.plot(range(max_iter), ISOPE_plant_data.loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label='PE+MA',
+    ISOPE, = plt.plot(range(max_iter), ISOPE_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='PE+MA',
                       linestyle='-', marker='o', markersize=global_point_size)
-    GPE, = plt.plot(range(max_iter), GPE_plant_data.loc[1:(max_iter+1),"profit"].multiply(-1), linewidth=global_linewidth, label='GPE',
+    GPE, = plt.plot(range(max_iter), GPE_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='GPE',
                       linestyle='-', marker='o', markersize=global_point_size)
 
     plt.legend(handles=[PA, ISOPE, GPE, Optimal], prop=font1)
@@ -818,7 +818,7 @@ def draw_para_set_comp_pic(folder, pic_filename):
                facecolor='w',
                framealpha=1.0,
                prop={'family': 'Times New Roman', 'size': global_tick_size})
-    plt.ylabel('(a) Plant Profit', font2)
+    plt.ylabel('(a) Plant cost', font2)
     plt.xticks([0, 3, 6, 9, 12, 15, 18])
     plt.rcParams['xtick.direction'] = 'in'
     plt.rcParams['ytick.direction'] = 'in'

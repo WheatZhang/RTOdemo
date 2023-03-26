@@ -12,15 +12,15 @@ ISOPE_model_data = pandas.read_csv(folder + "ISOPE_model_data.txt", sep='\t', in
 
 with open("data/comp_modifiers/synthesis.txt", 'w') as fp:
     fp.write("method\tepsilon_data\tlambda_Fb_data\tlambda_Tr_data\n")
-    fp.write("MA\t%.2f\t%.2f\t%.2f\n"%(numpy.log10(MA_model_data.loc[:,'profit_eps'].abs().mean()),\
-                                     numpy.log10(MA_model_data.loc[:,'Fb_profit_lam'].abs().mean()),\
-                                     numpy.log10(MA_model_data.loc[:,'Tr_profit_lam'].abs().mean())))
-    fp.write("PE+MA\t%.2f\t%.2f\t%.2f\n" % (numpy.log10(ISOPE_model_data.loc[:, 'profit_eps'].abs().mean()), \
-                                         numpy.log10(ISOPE_model_data.loc[:, 'Fb_profit_lam'].abs().mean()), \
-                                         numpy.log10(ISOPE_model_data.loc[:, 'Tr_profit_lam'].abs().mean())))
-    fp.write("GPE(n=10)\t%.2f\t%.2f\t%.2f\n" % (numpy.log10(GPE10_model_data.loc[:, 'profit_eps'].abs().mean()), \
-                                         numpy.log10(GPE10_model_data.loc[:, 'Fb_profit_lam'].abs().mean()), \
-                                         numpy.log10(GPE10_model_data.loc[:, 'Tr_profit_lam'].abs().mean())))
-    fp.write("GPE(n=1)\t%.2f\t%.2f\t%.2f\n" % (numpy.log10(GPE1_model_data.loc[:, 'profit_eps'].abs().mean()), \
-                                         numpy.log10(GPE1_model_data.loc[:, 'Fb_profit_lam'].abs().mean()), \
-                                         numpy.log10(GPE1_model_data.loc[:, 'Tr_profit_lam'].abs().mean())))
+    fp.write("MA\t%.2f\t%.2f\t%.2f\n"%(numpy.log10(MA_model_data.loc[:,'cost_eps'].abs().mean()),\
+                                     numpy.log10(MA_model_data.loc[:,'Fb_cost_lam'].abs().mean()),\
+                                     numpy.log10(MA_model_data.loc[:,'Tr_cost_lam'].abs().mean())))
+    fp.write("PE+MA\t%.2f\t%.2f\t%.2f\n" % (numpy.log10(ISOPE_model_data.loc[:, 'cost_eps'].abs().mean()), \
+                                         numpy.log10(ISOPE_model_data.loc[:, 'Fb_cost_lam'].abs().mean()), \
+                                         numpy.log10(ISOPE_model_data.loc[:, 'Tr_cost_lam'].abs().mean())))
+    fp.write("GPE(n=10)\t%.2f\t%.2f\t%.2f\n" % (numpy.log10(GPE10_model_data.loc[:, 'cost_eps'].abs().mean()), \
+                                         numpy.log10(GPE10_model_data.loc[:, 'Fb_cost_lam'].abs().mean()), \
+                                         numpy.log10(GPE10_model_data.loc[:, 'Tr_cost_lam'].abs().mean())))
+    fp.write("GPE(n=1)\t%.2f\t%.2f\t%.2f\n" % (numpy.log10(GPE1_model_data.loc[:, 'cost_eps'].abs().mean()), \
+                                         numpy.log10(GPE1_model_data.loc[:, 'Fb_cost_lam'].abs().mean()), \
+                                         numpy.log10(GPE1_model_data.loc[:, 'Tr_cost_lam'].abs().mean())))

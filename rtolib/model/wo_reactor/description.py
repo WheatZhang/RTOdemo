@@ -4,14 +4,14 @@ from rtolib.core import ProblemDescription
 symbol_list = {
                 'MV': ("Fb","Tr"),# input
                 'CV': ('XFr_A','XFr_B','XFr_E','XFr_P','XFr_G'),# output
-                'OBJ': "profit",# objective function
+                'OBJ': "cost",# objective function
                 'CON': (),  # inequality constraint
                 'SPEC': None,  # specification
             }
 bounds = {
         "Fb":(3, 6),
         "Tr":(70, 100),
-        "profit":(None, None),
+        "cost":(None, None),
         "XFr_A":(0, 1),
         "XFr_B":(0, 1),
         "XFr_E":(0, 1),
@@ -21,7 +21,7 @@ bounds = {
 scaling_factors = {
         "Fb":10,
         "Tr":100,
-        "profit":100,
+        "cost":100,
         "XFr_A":1,
         "XFr_B":1,
         "XFr_E":1,
@@ -31,7 +31,7 @@ scaling_factors = {
 default_values = {
         "Fb":5,
         "Tr":80,
-        "profit":170,
+        "cost":170,
         "XFr_A":0.109,
         "XFr_B":0.447,
         "XFr_E":0.252,

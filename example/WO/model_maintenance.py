@@ -39,13 +39,13 @@ def generate_all_contour_data(algo_results_folder,resolution):
     def plant_simulation_callback(Fb, Tr):
         outputs, solve_status = plant_simulator.simulate({'Tr':Tr,'Fb':Fb}, param_values=None,
                                                              use_homo=False)
-        return -outputs['profit']
+        return -outputs['cost']
 
     # TODO: homotopy simulation unexpectedly fails for 1 simulation
     def model_simulation_callback(Fb, Tr,param_values):
         outputs, solve_status = model_simulator.simulate({'Tr':Tr,'Fb':Fb}, param_values=param_values,
                                                              use_homo=False)
-        return -outputs['profit']
+        return -outputs['cost']
 
     #---------------------------
     func = lambda Fb, Tr: plant_simulation_callback(Fb, Tr)
