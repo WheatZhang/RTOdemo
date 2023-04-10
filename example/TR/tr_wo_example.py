@@ -38,7 +38,7 @@ def generate_noise_file():
     noise_generator.generate_noise(max_iter, 5)
     noise_generator.save_noise("noise/noise_0_wo.txt")
 
-def algo3_TR_MA(perturbation_stepsize, starting_point, initial_trust_radius, max_trust_radius,\
+def inf_averse_TR_MA(perturbation_stepsize, starting_point, initial_trust_radius, max_trust_radius,\
                noise_filename, solver_executable, print_iter_data, max_iter,\
                result_filename_header):
     '''
@@ -102,7 +102,7 @@ def algo3_TR_MA(perturbation_stepsize, starting_point, initial_trust_radius, max
     save_iteration_data_in_dict(rto_algorithm.input_history_data, result_filename_header + "input_data.txt")
 
 
-def algo2_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,\
+def penalty_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,\
                noise_filename, solver_executable, print_iter_data, max_iter,\
                result_filename_header):
     '''
@@ -166,7 +166,7 @@ def algo2_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radi
     save_iteration_data_in_dict(rto_algorithm.plant_history_data, result_filename_header + "plant_data.txt")
     save_iteration_data_in_dict(rto_algorithm.input_history_data, result_filename_header + "input_data.txt")
 
-def algo1_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,xi_N,\
+def compo_step_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,xi_N,\
                noise_filename, solver_executable, print_iter_data, max_iter,\
                result_filename_header):
     '''
@@ -382,21 +382,21 @@ def do_test():
     # # # ------------------------------------
     print("\nTesting TR_MA")
     result_filename_header = result_filename_folder + "TR_MA_"
-    algo3_TR_MA(perturbation_stepsize, starting_point, initial_trust_radius,max_trust_radius,\
+    inf_averse_TR_MA(perturbation_stepsize, starting_point, initial_trust_radius,max_trust_radius,\
                noise_filename, solver_executable, print_iter_data, max_iter, \
                result_filename_header)
 
     # # ------------------------------------
     # print("\nTesting Penalty_TR_MA")
     # result_filename_header = result_filename_folder + "Penalty_TR_MA_"
-    # algo2_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius,max_trust_radius,\
+    # penalty_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius,max_trust_radius,\
     #             noise_filename, solver_executable, print_iter_data, max_iter, \
     #             result_filename_header)
     #
     # # ------------------------------------
     # print("\nTesting CompoStep_TR_MA")
     # result_filename_header = result_filename_folder + "CompoStep_TR_MA_"
-    # algo1_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,\
+    # compo_step_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,\
     #             xi_N,\
     #             noise_filename, solver_executable, print_iter_data, max_iter, \
     #             result_filename_header)
@@ -408,7 +408,7 @@ def do_test():
                 noise_filename, solver_executable, print_iter_data, max_iter, \
                 result_filename_header)
 
-def batch_test(batch_name, initial_trust_radius, sigma, test_algo3=True):
+def batch_test(batch_name, initial_trust_radius, sigma, test_inf_averse=True):
     # ------------------------------------
     noise_filename = "noise/noise_0_wo.txt"
     solver_executable = r"F:\Research\RTOdemo\external\bin\ipopt.exe"
@@ -436,24 +436,24 @@ def batch_test(batch_name, initial_trust_radius, sigma, test_algo3=True):
     xi_N=0.5
 
     # # ------------------------------------
-    if test_algo3:
+    if test_inf_averse:
         print("\nTesting TR_MA")
         result_filename_header = result_filename_folder + batch_name+"_"+"TR_MA_"
-        algo3_TR_MA(perturbation_stepsize, starting_point, initial_trust_radius,max_trust_radius,\
+        inf_averse_TR_MA(perturbation_stepsize, starting_point, initial_trust_radius,max_trust_radius,\
                    noise_filename, solver_executable, print_iter_data, max_iter, \
                    result_filename_header)
 
     # ------------------------------------
     print("\nTesting Penalty_TR_MA")
     result_filename_header = result_filename_folder + batch_name+"_"+ "Penalty_TR_MA_"
-    algo2_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius,max_trust_radius,\
+    penalty_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius,max_trust_radius,\
                 noise_filename, solver_executable, print_iter_data, max_iter, \
                 result_filename_header)
 
     # ------------------------------------
     print("\nTesting CompoStep_TR_MA")
     result_filename_header = result_filename_folder + batch_name+"_"+ "CompoStep_TR_MA_"
-    algo1_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,\
+    compo_step_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,\
                 xi_N,\
                 noise_filename, solver_executable, print_iter_data, max_iter, \
                 result_filename_header)
@@ -582,12 +582,12 @@ def batch_plot_profile(batch_i, batch_j):
     global_marker_size = 2
     linewidth=1
     batch_prefix = "%d_%d_"%(batch_i, batch_j)
-    batch_prefix_for_algo3 = "%d_0_"%(batch_i)
+    batch_prefix_for_inf_averse = "%d_0_"%(batch_i)
     compo_step_plant_data = pandas.read_csv("data/wo_example/batch/"+batch_prefix+"CompoStep_TR_MA_plant_data.txt", \
                                       index_col=0, header=0, sep='\t')
     penalty_plant_data = pandas.read_csv("data/wo_example/batch/"+batch_prefix+"Penalty_TR_MA_plant_data.txt", \
                                    index_col=0, header=0, sep='\t')
-    inf_averse_plant_data = pandas.read_csv("data/wo_example/batch/"+batch_prefix_for_algo3+"TR_MA_plant_data.txt", \
+    inf_averse_plant_data = pandas.read_csv("data/wo_example/batch/"+batch_prefix_for_inf_averse+"TR_MA_plant_data.txt", \
                                          index_col=0, header=0, sep='\t')
     original_ma_plant_data = pandas.read_csv("data/wo_example/Original_MA_plant_data.txt", \
                                             index_col=0, header=0, sep='\t')
@@ -596,7 +596,7 @@ def batch_plot_profile(batch_i, batch_j):
                                       index_col=0, header=0, sep='\t')
     penalty_model_data = pandas.read_csv("data/wo_example/batch/"+batch_prefix+"Penalty_TR_MA_model_data.txt", \
                                    index_col=0, header=0, sep='\t')
-    inf_averse_model_data = pandas.read_csv("data/wo_example/batch/"+batch_prefix_for_algo3+"TR_MA_model_data.txt", \
+    inf_averse_model_data = pandas.read_csv("data/wo_example/batch/"+batch_prefix_for_inf_averse+"TR_MA_model_data.txt", \
                                             index_col=0, header=0, sep='\t')
     original_ma_model_data = pandas.read_csv("data/wo_example/Original_MA_model_data.txt", \
                                              index_col=0, header=0, sep='\t')
@@ -605,7 +605,7 @@ def batch_plot_profile(batch_i, batch_j):
                                             index_col=0, header=0, sep='\t')
     penalty_input_data = pandas.read_csv("data/wo_example/batch/"+batch_prefix+"Penalty_TR_MA_input_data.txt", \
                                          index_col=0, header=0, sep='\t')
-    inf_averse_input_data = pandas.read_csv("data/wo_example/batch/"+batch_prefix_for_algo3+"TR_MA_input_data.txt", \
+    inf_averse_input_data = pandas.read_csv("data/wo_example/batch/"+batch_prefix_for_inf_averse+"TR_MA_input_data.txt", \
                                             index_col=0, header=0, sep='\t')
     original_ma_input_data = pandas.read_csv("data/wo_example/Original_MA_input_data.txt", \
                                              index_col=0, header=0, sep='\t')
@@ -704,10 +704,10 @@ def do_batch_test():
         for j, sigma in enumerate(sigma_options):
             if j == 0:
                 batch_test("%d_%d"%(i,j), initial_trust_radius=initial_trust_radius, sigma=sigma,\
-                           test_algo3=True)
+                           test_inf_averse=True)
             else:
                 batch_test("%d_%d"%(i,j), initial_trust_radius=initial_trust_radius, sigma=sigma,\
-                           test_algo3=False)
+                           test_inf_averse=False)
             batch_plot_profile(i, j)
 
 

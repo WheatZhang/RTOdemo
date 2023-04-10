@@ -84,7 +84,7 @@ def draw_algo_12_input_on_contour(data_prefix):
                  marker='o', c='red', markersize=global_marker_size / 3)
     plt.ylabel("")
 
-    plt.savefig("pic/batch12/"+data_prefix+"_algo12_input_iterates", dpi=600)
+    plt.savefig("pic/batch12/"+data_prefix+"_compo_step2_input_iterates", dpi=600)
     plt.close()
 
 def draw_algo_13_input_on_contour(data_prefix):
@@ -139,10 +139,10 @@ def draw_algo_13_input_on_contour(data_prefix):
                  marker='o', c='darkorange', markersize=global_marker_size / 3)
     plt.ylabel("")
 
-    plt.savefig("pic/batch13/"+data_prefix+"_algo13_input_iterates", dpi=600)
+    plt.savefig("pic/batch13/"+data_prefix+"_compo_step3_input_iterates", dpi=600)
     plt.close()
 
-def plot_algo12_profile(data_prefix):
+def plot_compo_step2_profile(data_prefix):
     max_iter=30
     global_marker_size = 2
     linewidth=1
@@ -210,10 +210,10 @@ def plot_algo12_profile(data_prefix):
     plt.ylabel("radius")
     plt.xlabel("#iteration")
 
-    plt.savefig("pic/batch12/"+data_prefix+"_algo12_profile", dpi=600)
+    plt.savefig("pic/batch12/"+data_prefix+"_compo_step2_profile", dpi=600)
     plt.close()
 
-def plot_algo13_profile(data_prefix):
+def plot_compo_step3_profile(data_prefix):
     max_iter=30
     global_marker_size = 2
     linewidth=1
@@ -281,11 +281,11 @@ def plot_algo13_profile(data_prefix):
     plt.ylabel("radius")
     plt.xlabel("#iteration")
 
-    plt.savefig("pic/batch13/"+data_prefix+"_algo13_profile", dpi=600)
+    plt.savefig("pic/batch13/"+data_prefix+"_compo_step3_profile", dpi=600)
     plt.close()
 
 
-def draw_batch_pic_algo12():
+def draw_batch_pic_compo_step_penalty_main():
     batch_prefixes = ["N_", "O1_", "O2_", "C_", "OC_"]
     batch_names = [
         "U0","U1","U2","U3","U4","U5","U6","U7",
@@ -303,7 +303,7 @@ def draw_batch_pic_algo12():
     for batch_prefix in batch_prefixes:
         for data_prefix in batch_names:
             draw_algo_12_input_on_contour(batch_prefix+data_prefix)
-            plot_algo12_profile(batch_prefix+data_prefix)
+            plot_compo_step2_profile(batch_prefix+data_prefix)
 
 def draw_batch_pic_for_CCE():
     path = r'F:\Research\RTOdemo\example\TR\data\batch12'
@@ -315,9 +315,9 @@ def draw_batch_pic_for_CCE():
             batch_names.append(d)
     for data_prefix in batch_names:
         draw_algo_12_input_on_contour(data_prefix)
-        plot_algo12_profile(data_prefix)
+        plot_compo_step2_profile(data_prefix)
 
-def draw_batch_pic_algo13():
+def draw_batch_pic_compo_step_inf_averse_main():
     batch_prefixes = ["N_", "O1_", "O2_", "C_", "OC_"]
     batch_names = [
         "U0","U1","U2","U3","U4",
@@ -325,7 +325,7 @@ def draw_batch_pic_algo13():
     for batch_prefix in batch_prefixes:
         for data_prefix in batch_names:
             draw_algo_13_input_on_contour(batch_prefix+data_prefix)
-            plot_algo13_profile(batch_prefix+data_prefix)
+            plot_compo_step3_profile(batch_prefix+data_prefix)
 
 
 def select_pic():
@@ -339,10 +339,10 @@ def select_pic():
     with open('data/report/case_list.txt') as f:
         for line in f.readlines():
             case_name = line.strip()
-            shutil.copyfile('pic/batch12/'+case_name+"_algo12_input_iterates.png",\
-                            'pic/selected_pic/'+case_name+"_algo12_input_iterates.png")
-            shutil.copyfile('pic/batch12/' + case_name + "_algo12_profile.png", \
-                            'pic/selected_pic/' + case_name + "_algo12_profile.png")
+            shutil.copyfile('pic/batch12/'+case_name+"_compo_step2_input_iterates.png",\
+                            'pic/selected_pic/'+case_name+"_compo_step2_input_iterates.png")
+            shutil.copyfile('pic/batch12/' + case_name + "_compo_step2_profile.png", \
+                            'pic/selected_pic/' + case_name + "_compo_step2_profile.png")
 
 
 if __name__ == "__main__":
@@ -352,12 +352,12 @@ if __name__ == "__main__":
     # draw_all_contour()
     #
     # do_all_batches_for_all_model()
-    # draw_batch_pic_algo12()
-    # draw_batch_pic_algo13()
+    draw_batch_pic_compo_step_penalty_main()
+    # draw_batch_pic_compo_step_inf_averse_main()
 
     # draw_algo_13_input_on_contour("O2_U0")
-    # plot_algo13_profile("O2_U0")
+    # plot_compo_step3_profile("O2_U0")
 
     # select_pic()
 
-    draw_batch_pic_for_CCE()
+    # draw_batch_pic_for_CCE()

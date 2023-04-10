@@ -38,7 +38,7 @@ def calculate_indices(data, optimal):
     return devi, devi10, aver5, devi25, aver25, speed, monoto
 
 
-def algo12_test_report():
+def compo_step2_test_report():
     optimal = {
         "cost" : 1.453659e-01,
         "con" : 0,
@@ -128,11 +128,11 @@ def algo12_test_report():
             this_test_data[test_algo+"_last_r"] = penalty_model_data.loc[26:31, "tr"].mean()
 
             algo_report = algo_report.append(pandas.DataFrame(data=this_test_data, index=[data_prefix]))
-    algo_report.to_csv("data/report/algo12_report.txt", sep='\t', header=True, index=True)
+    algo_report.to_csv("data/report/compo_step2_report.txt", sep='\t', header=True, index=True)
 
 
-def synthesize_algo12_report():
-    original_report = pandas.read_csv("data/report/algo12_report.txt", sep='\t', header=0, index_col=0)
+def synthesize_compo_step2_report():
+    original_report = pandas.read_csv("data/report/compo_step2_report.txt", sep='\t', header=0, index_col=0)
     synthesized_report = pandas.DataFrame(index=original_report.index, \
                                           columns=["Converged", "Monotone", "Algo12Diff", "LastTR",\
                                                    "ObjSpeed", "ConSpeed"])
@@ -209,8 +209,8 @@ def synthesize_algo12_report():
             synthesized_report.loc[index, "ConSpeed"] = "Similar"
 
     synthesized_report.index.name = "Case"
-    synthesized_report.to_csv("data/report/algo12_synthesized_report.txt", sep='\t', header=True, index=True)
+    synthesized_report.to_csv("data/report/compo_step2_synthesized_report.txt", sep='\t', header=True, index=True)
 
 if __name__ == "__main__":
-    algo12_test_report()
-    synthesize_algo12_report()
+    compo_step2_test_report()
+    synthesize_compo_step2_report()

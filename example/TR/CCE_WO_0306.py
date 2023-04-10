@@ -18,7 +18,7 @@ global_parameter={
         "gamma3": 2,
 }
 
-def algo1_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,xi_N,\
+def compo_step_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,xi_N,\
                noise_filename, solver_executable, print_iter_data, max_iter,\
                result_filename_header):
     '''
@@ -229,7 +229,7 @@ def do_test():
 
     print("\nTesting CompoStep_TR_MA")
     result_filename_header = result_filename_folder + "CompoStep_TR_MA_"
-    algo1_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,\
+    compo_step_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,\
                 xi_N,\
                 noise_filename, solver_executable, print_iter_data, max_iter, \
                 result_filename_header)

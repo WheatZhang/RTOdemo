@@ -117,7 +117,7 @@ def original_MA_with_max_tr(model_name, perturbation_stepsize, starting_point, m
     save_iteration_data_in_dict(rto_algorithm.input_history_data, result_filename_header + "input_data.txt")
 
 
-def algo2_TR_MA(model_name, perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,\
+def penalty_TR_MA(model_name, perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,\
                noise_filename, solver_executable, print_iter_data, max_iter,\
                result_filename_header):
     '''
@@ -194,7 +194,7 @@ def algo2_TR_MA(model_name, perturbation_stepsize, starting_point, sigma, initia
     save_iteration_data_in_dict(rto_algorithm.plant_history_data, result_filename_header + "plant_data.txt")
     save_iteration_data_in_dict(rto_algorithm.input_history_data, result_filename_header + "input_data.txt")
 
-def algo1_TR_MA(model_name, perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,xi_N,\
+def compo_step_TR_MA(model_name, perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,xi_N,\
                noise_filename, solver_executable, print_iter_data, max_iter,\
                result_filename_header):
     '''
@@ -320,7 +320,7 @@ def do_test_global_convergence():
         # ------------------------------------
         print("\nTesting CompoStep_TR_MA")
         result_filename_header = result_filename_folder + model_name+"_CompoStep_"
-        algo1_TR_MA(model_name, perturbation_stepsize, starting_point, sigma, initial_trust_radius,r_max, xi_N, \
+        compo_step_TR_MA(model_name, perturbation_stepsize, starting_point, sigma, initial_trust_radius,r_max, xi_N, \
                     noise_filename, solver_executable, print_iter_data, max_iter, \
                     result_filename_header)
 
@@ -359,13 +359,13 @@ def do_test_sigma():
     for no,sigma in enumerate([1,0.1,0.01]):
         print("\nTesting Penalty_MA")
         result_filename_header = result_filename_folder + name[no]+"Penalty_"
-        algo2_TR_MA(model_name, perturbation_stepsize, feasible_starting_point, sigma, initial_trust_radius, r_max, \
+        penalty_TR_MA(model_name, perturbation_stepsize, feasible_starting_point, sigma, initial_trust_radius, r_max, \
                     noise_filename, solver_executable, print_iter_data, max_iter, \
                     result_filename_header)
 
         print("\nTesting CompoStep_TR_MA")
         result_filename_header = result_filename_folder + name[no]+"CompoStep_"
-        algo1_TR_MA(model_name, perturbation_stepsize, feasible_starting_point, sigma, initial_trust_radius,r_max, xi_N, \
+        compo_step_TR_MA(model_name, perturbation_stepsize, feasible_starting_point, sigma, initial_trust_radius,r_max, xi_N, \
                     noise_filename, solver_executable, print_iter_data, max_iter, \
                     result_filename_header)
 
@@ -402,7 +402,7 @@ def do_test_xi():
     # ------------------------------------
     print("\nTesting Penalty_MA")
     result_filename_header = result_filename_folder + "Penalty_"
-    algo2_TR_MA(model_name, perturbation_stepsize, infeasible_starting_point, sigma, initial_trust_radius, r_max, \
+    penalty_TR_MA(model_name, perturbation_stepsize, infeasible_starting_point, sigma, initial_trust_radius, r_max, \
                 noise_filename, solver_executable, print_iter_data, max_iter, \
                 result_filename_header)
 
@@ -410,7 +410,7 @@ def do_test_xi():
     for no,xi_N in enumerate([0.3,0.6,0.9]):
         print("\nTesting CompoStep_TR_MA")
         result_filename_header = result_filename_folder + name[no]+"CompoStep_"
-        algo1_TR_MA(model_name, perturbation_stepsize, infeasible_starting_point, sigma, initial_trust_radius,r_max, xi_N, \
+        compo_step_TR_MA(model_name, perturbation_stepsize, infeasible_starting_point, sigma, initial_trust_radius,r_max, xi_N, \
                     noise_filename, solver_executable, print_iter_data, max_iter, \
                     result_filename_header)
 
@@ -449,7 +449,7 @@ def do_test_trust_radius():
     for no,coeff in enumerate([1,2,5,10]):
         print("\nTesting CompoStep_TR_MA")
         result_filename_header = result_filename_folder + name[no]+"CompoStep_"
-        algo1_TR_MA(model_name, perturbation_stepsize, feasible_starting_point,\
+        compo_step_TR_MA(model_name, perturbation_stepsize, feasible_starting_point,\
                     sigma, initial_trust_radius/coeff,r_max/coeff, xi_N, \
                     noise_filename, solver_executable, print_iter_data, max_iter, \
                     result_filename_header)

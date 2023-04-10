@@ -1,4 +1,4 @@
-from example.TR.tr_quadr_eg import original_MA_with_max_tr, algo2_TR_MA, algo1_TR_MA
+from example.TR.tr_quadr_eg import original_MA_with_max_tr, penalty_TR_MA, compo_step_TR_MA
 import os
 import matplotlib.pyplot as plt
 from example.TR.draw_lib import plot_contour
@@ -70,7 +70,7 @@ def do_test_global_convergence():
         # ------------------------------------
         print("\nTesting CompoStep_TR_MA")
         result_filename_header = result_filename_folder + model_name+"_CompoStep_"
-        algo1_TR_MA(model_name, perturbation_stepsize, starting_point, sigma, initial_trust_radius,r_max, xi_N, \
+        compo_step_TR_MA(model_name, perturbation_stepsize, starting_point, sigma, initial_trust_radius,r_max, xi_N, \
                     noise_filename, solver_executable, print_iter_data, max_iter, \
                     result_filename_header)
 
@@ -117,25 +117,25 @@ def do_test_penalty():
     for no,sigma in enumerate([1,0.1,0.01]):
         print("\nTesting Penalty_MA")
         result_filename_header = result_filename_folder + name[no]+"F_Penalty_"
-        algo2_TR_MA(model_name, perturbation_stepsize, feasible_starting_point, sigma, initial_trust_radius, r_max, \
+        penalty_TR_MA(model_name, perturbation_stepsize, feasible_starting_point, sigma, initial_trust_radius, r_max, \
                     noise_filename, solver_executable, print_iter_data, max_iter, \
                     result_filename_header)
 
         print("\nTesting CompoStep_TR_MA")
         result_filename_header = result_filename_folder + name[no]+"F_CompoStep_"
-        algo1_TR_MA(model_name, perturbation_stepsize, feasible_starting_point, sigma, initial_trust_radius,r_max, xi_N, \
+        compo_step_TR_MA(model_name, perturbation_stepsize, feasible_starting_point, sigma, initial_trust_radius,r_max, xi_N, \
                     noise_filename, solver_executable, print_iter_data, max_iter, \
                     result_filename_header)
         # ------------------------------------
         # print("\nTesting Penalty_MA")
         # result_filename_header = result_filename_folder + name[no] + "INF_Penalty_"
-        # algo2_TR_MA(model_name, perturbation_stepsize, infeasible_starting_point, sigma, initial_trust_radius, r_max, \
+        # penalty_TR_MA(model_name, perturbation_stepsize, infeasible_starting_point, sigma, initial_trust_radius, r_max, \
         #             noise_filename, solver_executable, print_iter_data, max_iter, \
         #             result_filename_header)
         #
         # print("\nTesting CompoStep_TR_MA")
         # result_filename_header = result_filename_folder + name[no] +"INF_CompoStep_"
-        # algo1_TR_MA(model_name, perturbation_stepsize, infeasible_starting_point, sigma, initial_trust_radius, r_max, xi_N, \
+        # compo_step_TR_MA(model_name, perturbation_stepsize, infeasible_starting_point, sigma, initial_trust_radius, r_max, xi_N, \
         #             noise_filename, solver_executable, print_iter_data, max_iter, \
         #             result_filename_header)
 
