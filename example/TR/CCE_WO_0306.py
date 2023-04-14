@@ -18,6 +18,25 @@ global_parameter={
         "gamma3": 2,
 }
 
+
+pic_constant = 0.39370
+font_factor = numpy.sqrt(1/pic_constant)
+font_legend = {'family': 'Times New Roman',
+         'weight': 'normal',
+         'size': 17/font_factor/1.2,
+         }
+font_title = {'family': 'Times New Roman',
+              'size': 17/font_factor,
+              'weight': 'normal'
+              }
+font_label = {'family': 'Times New Roman',
+             'weight': 'normal',
+             'size': 17/font_factor,
+             }
+global_tick_size=17/font_factor
+plt.rcParams['xtick.direction'] = 'in'
+plt.rcParams['ytick.direction'] = 'in'
+
 def compo_step_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius,xi_N,\
                noise_filename, solver_executable, print_iter_data, max_iter,\
                result_filename_header):
@@ -48,6 +67,7 @@ def compo_step_TR_MA(perturbation_stepsize, starting_point, sigma, initial_trust
         "gamma3": global_parameter["gamma3"],
         "max_iter": max_iter,
         "sigma": sigma,
+        "adaptive_sigma": True,
         "max_trust_radius":max_trust_radius,
         "initial_trust_radius":initial_trust_radius,
     }
@@ -235,23 +255,23 @@ def do_test():
                 result_filename_header)
 
     # ------------------------------------
-    # print("\nTesting Original_MA")
-    # result_filename_header = result_filename_folder + "Original_MA_"
-    # original_MA(perturbation_stepsize, starting_point, \
-    #             noise_filename, solver_executable, print_iter_data, max_iter, \
-    #             result_filename_header)
-    #
-    # # ------------------------------------
-    # print("\nTesting Original_MAQC")
-    # result_filename_header = result_filename_folder + "Original_MAQC_"
-    # original_MA_with_QC(perturbation_stepsize, starting_point, \
-    #             noise_filename, solver_executable, print_iter_data, max_iter, \
-    #             result_filename_header)
+    print("\nTesting Original_MA")
+    result_filename_header = result_filename_folder + "Original_MA_"
+    original_MA(perturbation_stepsize, starting_point, \
+                noise_filename, solver_executable, print_iter_data, max_iter, \
+                result_filename_header)
+
+    # ------------------------------------
+    print("\nTesting Original_MAQC")
+    result_filename_header = result_filename_folder + "Original_MAQC_"
+    original_MA_with_QC(perturbation_stepsize, starting_point, \
+                noise_filename, solver_executable, print_iter_data, max_iter, \
+                result_filename_header)
 
 def plot_profile():
     max_iter=30
-    global_marker_size = 2
-    linewidth=1
+    global_marker_size = 2/2
+    linewidth=1/2
     compo_step_plant_data = pandas.read_csv("data/CCE_wo_0306/CompoStep_TR_MA_plant_data.txt", \
                                       index_col=0, header=0, sep='\t')
     QC_ma_plant_data = pandas.read_csv("data/CCE_wo_0306/Original_MAQC_plant_data.txt", \
@@ -273,7 +293,7 @@ def plot_profile():
     original_ma_input_data = pandas.read_csv("data/CCE_wo_0306/Original_MA_input_data.txt", \
                                              index_col=0, header=0, sep='\t')
 
-    fig = plt.figure(figsize=(6,12))
+    fig = plt.figure(figsize=(10.5 * pic_constant, 18 * pic_constant))
     plt.subplot(511)
     optimal = -210.33 * numpy.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -282,13 +302,13 @@ def plot_profile():
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2,\
              label="composite-step TR")
     plt.plot(range(1, max_iter + 1), original_ma_plant_data.loc[1:max_iter, 'cost'], \
-             marker='o', c='green', markersize=global_marker_size, linewidth=linewidth, \
+             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth, \
              label="MA")
     plt.plot(range(1, max_iter + 1), QC_ma_plant_data.loc[1:max_iter, 'cost'], \
              marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth,\
              label="MA with convex model")
-    plt.ylabel("plant cost")
-    plt.legend()
+    plt.ylabel("plant cost", font_label)
+    plt.legend(loc='upper right', prop=font_legend)
     plt.subplot(512)
     optimal = 0 * numpy.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -298,8 +318,8 @@ def plot_profile():
     plt.plot(range(1, max_iter + 1), QC_ma_plant_data.loc[1:max_iter, 'con'], \
              marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), original_ma_plant_data.loc[1:max_iter, 'con'], \
-             marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel("plant constraints")
+             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
+    plt.ylabel("plant constraint", font_label)
     plt.subplot(513)
     optimal = 3.887 * numpy.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -309,8 +329,8 @@ def plot_profile():
     plt.plot(range(1, max_iter + 1), QC_ma_input_data.loc[1:max_iter, 'Fa'], \
              marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), original_ma_input_data.loc[1:max_iter, 'Fa'], \
-             marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel(r"Fa")
+             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
+    plt.ylabel("Fa", font_label)
     plt.subplot(514)
     optimal = 9.369 * numpy.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -320,8 +340,8 @@ def plot_profile():
     plt.plot(range(1, max_iter + 1), QC_ma_input_data.loc[1:max_iter, 'Fb'], \
              marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), original_ma_input_data.loc[1:max_iter, 'Fb'], \
-             marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel(r"Fb")
+             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
+    plt.ylabel("Fb", font_label)
     plt.subplot(515)
     optimal = 91.2 * numpy.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -331,8 +351,16 @@ def plot_profile():
     plt.plot(range(1, max_iter + 1), QC_ma_input_data.loc[1:max_iter, 'Tr'], \
              marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), original_ma_input_data.loc[1:max_iter, 'Tr'], \
-             marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel(r"Tr")
+             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
+    plt.ylabel("Tr", font_label)
+    plt.xlabel("RTO iteration", font_label)
+
+    for i in range(1, 5):
+        plt.subplot(5, 1, i)
+        ax = plt.gca()
+        plt.tick_params(labelsize=global_tick_size)
+        labels = ax.get_xticklabels() + ax.get_yticklabels()
+        [label.set_fontname('Times New Roman') for label in labels]
 
     plt.tight_layout(pad=0.5, w_pad=0.5, h_pad=0.5)
     plt.savefig("pic/CCE_wo_0306/wo_profile", dpi=600)

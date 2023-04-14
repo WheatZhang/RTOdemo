@@ -796,8 +796,8 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
                     pass
                 elif (base_merit - merit)/(base_infeasibility-infeasibility)/self.sigma < self.options["sigma_kappa"]:
                     # in this case, it must be that (base_obj-obj_after_optimization)<0
-                    self.sigma = (base_obj-obj_after_optimization)/(self.options["sigma_kappa"]-1)/\
-                                 (base_infeasibility - infeasibility)+1
+                    self.sigma = max(self.sigma,(base_obj-obj_after_optimization)/(self.options["sigma_kappa"]-1)/\
+                                 (base_infeasibility - infeasibility)+1)
                     print("self.sigma=%f"%self.sigma)
 
             plant_trial_point_output = self.get_plant_simulation_result([filtered_input])[0]
