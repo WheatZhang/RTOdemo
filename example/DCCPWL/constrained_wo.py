@@ -178,22 +178,22 @@ def algo_test_main():
     }
     # ------------------------------------
     print_iter_data = False
-    max_iter = 30
+    max_iter = 10
 
     # ------------------------------------
-    # print("\nTesting CPWL-MA")
-    # result_filename_header = result_filename_folder + "CPWL_MA_"
-    # do_test_CPWL_MA(perturbation_stepsize, starting_point, filtering_factor, \
-    #            noise_filename, nlp_solver_executable, qcqp_solver_executable,\
-    #            print_iter_data, max_iter, \
-    #            result_filename_header)
+    print("\nTesting CPWL-MA")
+    result_filename_header = result_filename_folder + "CPWL_MA_"
+    do_test_CPWL_MA(perturbation_stepsize, starting_point, filtering_factor, \
+               noise_filename, nlp_solver_executable, qcqp_solver_executable,\
+               print_iter_data, max_iter, \
+               result_filename_header)
 
-    print("\nTesting QCPWL-MA")
-    result_filename_header = result_filename_folder + "QCPWL_MA_"
-    do_test_QCPWL_MA(perturbation_stepsize, starting_point, filtering_factor, \
-                     noise_filename, nlp_solver_executable, qcqp_solver_executable, \
-                     print_iter_data, max_iter, \
-                     result_filename_header)
+    # print("\nTesting QCPWL-MA")
+    # result_filename_header = result_filename_folder + "QCPWL_MA_"
+    # do_test_QCPWL_MA(perturbation_stepsize, starting_point, filtering_factor, \
+    #                  noise_filename, nlp_solver_executable, qcqp_solver_executable, \
+    #                  print_iter_data, max_iter, \
+    #                  result_filename_header)
 
 if __name__ == "__main__":
     # generate_noise_file()

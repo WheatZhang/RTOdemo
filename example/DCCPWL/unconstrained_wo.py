@@ -370,5 +370,5 @@ def draw_overall_pic(folder, pic_filename):
 
 
 if __name__ == "__main__":
-    # algo_test_main()
+    algo_test_main()
     draw_overall_pic("data/uncon-wo/","pic/uncon-wo")

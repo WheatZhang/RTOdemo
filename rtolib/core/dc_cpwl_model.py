@@ -51,7 +51,7 @@ class QuadraticBoostedDCCPWLFunction(object):
         self.neg_quadratic_b = np.zeros((self.dimension,))
         self.neg_quadratic_c = 0
 
-    def simulate(self, input):
+    def simulate(self, input, with_modifier=False, model=None):
         input_vector = np.zeros((self.dimension, 1))
         for i, k in enumerate(self.input_variables):
             input_vector[i, 0] = input[k]
@@ -84,7 +84,12 @@ class QuadraticBoostedDCCPWLFunction(object):
         neg_quadr_value = np.transpose(input_vector) @ self.neg_quadratic_A @ input_vector + \
                        np.dot(input_vector.reshape((self.dimension, )), self.neg_quadratic_b) + self.neg_quadratic_c
 
-        return pos_cpwl_value[0]+pos_quadr_value[0,0]-neg_cpwl_value[0]-neg_quadr_value[0,0]
+        ret_original_model_value = pos_cpwl_value[0]+pos_quadr_value[0,0]-neg_cpwl_value[0]-neg_quadr_value[0,0]
+        if not with_modifier:
+            return ret_original_model_value
+        else:
+            linear_correction_k, linear_correction_b = self.get_linear_correction(model)
+            return ret_original_model_value+np.dot(input_vector, linear_correction_k)+linear_correction_b
 
     def build_optimizer(self, model, input):
         '''
@@ -103,8 +108,8 @@ class QuadraticBoostedDCCPWLFunction(object):
         model.quadr_pos = Var()
         model.quadr_neg = Var()
         model.linear_correction = Var()
-        model.linear_correction_k = Param(model.Dimension, mutable=True)
-        model.linear_correction_b = Param(mutable=True)
+        model.linear_correction_k = Param(model.Dimension, initialize=0, mutable=True)
+        model.linear_correction_b = Param(initialize=0, mutable=True)
         model.cpwl_neg_k = Param(model.Dimension, mutable=True)
         model.cpwl_neg_b = Param(mutable=True)
         model.quadr_neg_k = Param(model.Dimension, mutable=True)
@@ -139,6 +144,14 @@ class QuadraticBoostedDCCPWLFunction(object):
                                        input[self.input_variables[i]] for i in m.Dimension]) + \
                    m.linear_correction_b
         model.linear_correction_calc = Constraint(rule=linear_correction_calc)
+
+    def get_linear_correction(self, model):
+        linear_correction_k = np.zeros((len(model.Dimension),))
+        linear_correction_b = 0
+        for i in model.Dimension:
+            linear_correction_k[i] = value(model.linear_correction_k[i])
+        linear_correction_b = value(model.linear_correction_b)
+        return linear_correction_k, linear_correction_b
 
     def set_optimizer_concave_majorization(self, model, input):
         input_vector = np.zeros((self.dimension,1))
@@ -213,6 +226,27 @@ class QuadraticBoostedDCCPWL_RTOObject(object):
         optimizer_model.obj = Objective(rule=obj, sense=minimize)
         self.optimizer_model = optimizer_model
 
+        feasibility_problem_model = ConcreteModel()
+        feasibility_problem_model.InputIndex = Set(initialize=self.mvs)
+        feasibility_problem_model.OutputIndex = Set(initialize=self.cvs)
+        feasibility_problem_model.input = Var(feasibility_problem_model.InputIndex)
+        feasibility_problem_model.output = Block(feasibility_problem_model.OutputIndex)
+        feasibility_problem_model.slack = Var(feasibility_problem_model.OutputIndex, within=NonNegativeReals)
+        for name, dc_cpwl in self.dc_cpwl_functions.items():
+            dc_cpwl.build_optimizer(feasibility_problem_model.output[name], feasibility_problem_model.input)
+
+        # TODO: direction of inequality_constraint, and scaling
+        def inequality_constraint(m):
+            for con_name in self.cvs[1:]:
+                yield m.output[con_name].f-m.slack[con_name] <= 0
+        feasibility_problem_model.inequality_constraint = ConstraintList(rule=inequality_constraint)
+
+        # TODO: direction of obj, and scaling
+        def obj(m):
+            return sum([m.slack[con_name] for con_name in self.cvs[1:]])
+        feasibility_problem_model.obj = Objective(rule=obj, sense=minimize)
+        self.feasibility_problem_model = feasibility_problem_model
+
     def update_modifiers(self, modifiers, base_point):
         print(modifiers)
         for cv in self.cvs:
@@ -223,11 +257,25 @@ class QuadraticBoostedDCCPWL_RTOObject(object):
                 modifier_lambda[mv] = modifiers[(cv, mv)]
             self.dc_cpwl_functions[cv].set_linear_correction(output_model, \
                                 modifier_epsilon, modifier_lambda, base_point)
-    
+        for cv in self.cvs:
+            output_model = self.feasibility_problem_model.output[cv]
+            modifier_epsilon = modifiers[(cv, None)]
+            modifier_lambda = {}
+            for mv in self.mvs:
+                modifier_lambda[mv] = modifiers[(cv, mv)]
+            self.dc_cpwl_functions[cv].set_linear_correction(output_model, \
+                                                             modifier_epsilon, modifier_lambda, base_point)
+
     def get_input_vector(self):
         input_vector = np.zeros((len(self.mvs),))
         for i,mv in enumerate(self.mvs):
             input_vector[i] = value(self.optimizer_model.input[mv])
+        return input_vector
+
+    def get_input_vector_from_feas_problem(self):
+        input_vector = np.zeros((len(self.mvs),))
+        for i,mv in enumerate(self.mvs):
+            input_vector[i] = value(self.feasibility_problem_model.input[mv])
         return input_vector
 
     def optimize(self, spec_values, starting_point):
@@ -240,10 +288,34 @@ class QuadraticBoostedDCCPWL_RTOObject(object):
         for k,v in spec_values.items():
             whole_input[k] = v
             self.optimizer_model.input[k].fix(v)
+            self.feasibility_problem_model.input[k].fix(v)
         for k,v in starting_point.items():
             whole_input[k] = v
-            self.optimizer_model.input[k] = v
-            
+            self.feasibility_problem_model.input[k] = v
+
+        #-------------- solve feasibility problem ----------------
+        if len(self.cvs) > 1:
+            prev_u = self.get_input_vector_from_feas_problem()
+            solve_status = False
+            for i in range(self.subproblem_max_iter):
+                for name, dc_cpwl in self.dc_cpwl_functions.items():
+                    dc_cpwl.set_optimizer_concave_majorization(self.feasibility_problem_model.output[name], whole_input)
+                results = self.solver.solve(self.feasibility_problem_model, tee=self.tee)
+                if not ((results.solver.status == SolverStatus.ok) and (
+                        results.solver.termination_condition == TerminationCondition.optimal)):
+                    print(results.solver.termination_condition)
+                    raise Exception("QCQP solving fails.")
+                for mv in self.mvs:
+                    whole_input[mv] = value(self.feasibility_problem_model.input[mv])
+                this_u = self.get_input_vector_from_feas_problem()
+                if np.linalg.norm(this_u - prev_u) < self.tol:
+                    solve_status = True
+                    break
+                prev_u = this_u
+        print(value(self.feasibility_problem_model.obj))
+        # -------------- solve optimization problem ----------------
+        for k,v in whole_input.items():
+             self.optimizer_model.input[k] = v
         prev_u = self.get_input_vector()
         solve_status = False
         for i in range(self.subproblem_max_iter):
@@ -263,10 +335,10 @@ class QuadraticBoostedDCCPWL_RTOObject(object):
             prev_u = this_u
         return whole_input, solve_status
 
-    def simulate(self, point):
+    def simulate(self, point, with_modifier=False):
         ret = {}
         for cv in self.cvs:
-            ret[cv]=self.dc_cpwl_functions[cv].simulate(point)
+            ret[cv]=self.dc_cpwl_functions[cv].simulate(point, with_modifier, self.optimizer_model.output[cv])
         solve_status = True
         return ret, solve_status
 
