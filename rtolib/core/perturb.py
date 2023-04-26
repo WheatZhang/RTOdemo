@@ -77,3 +77,12 @@ class SimpleFiniteDiffPerturbation(PerturbationMethod):
                 ret[(cv, mv)] = (plant_output_data[idx+1][cv] - plant_output_data[0][cv])/self.ffd_step[mv]- \
                                 (model_output_data[idx + 1][cv] - model_output_data[0][cv]) / self.ffd_step[mv]
         return ret
+
+    def calculate_plant_y_and_k(self, plant_output_data):
+        ret = {}
+        cvs = plant_output_data[0].keys()
+        for cv in cvs:
+            ret[(cv, None)] = plant_output_data[0][cv]
+            for idx, mv in enumerate(self.mvs):
+                ret[(cv, mv)] = (plant_output_data[idx + 1][cv] - plant_output_data[0][cv]) / self.ffd_step[mv]
+        return ret

@@ -9,6 +9,7 @@ class QuadraticBoostedDCCPWLFunction(object):
         self.no_neg_segment = 0
         self.input_variables = []
         self.parameters = []
+        self.no_parameter = 0
         self.pos_cpwl_coeff = np.array([[]])
         self.neg_cpwl_coeff = np.array([[]])
         self.pos_quadratic_A = np.array([])
@@ -52,6 +53,13 @@ class QuadraticBoostedDCCPWLFunction(object):
         self.neg_quadratic_c = 0
 
     def simulate(self, input, with_modifier=False, model=None):
+        '''
+
+        :param input: RTO inputs and parameters
+        :param with_modifier:
+        :param model:
+        :return:
+        '''
         input_vector = np.zeros((self.dimension, 1))
         for i, k in enumerate(self.input_variables):
             input_vector[i, 0] = input[k]
@@ -187,147 +195,470 @@ class QuadraticBoostedDCCPWLFunction(object):
             model.linear_correction_k[i] = modifier_lambda_vector[i]
         model.linear_correction_b = modifier_epsilon - np.dot(modifier_lambda_vector,base_point_vector)
         
-    def build_parameter_estimator(self, model):
-        pass
-    
+    def build_parameter_estimator(self, model, alpha, n_samples):
+        '''
+
+        :param model:
+        :param alpha: list of pyomo obj, must be consistent with parameters stated
+        in QuadraticBoostedDCCPWLFunction initialization
+        :param n_samples:
+        :return:
+        '''
+        model.Dimension = Set(initialize=range(self.dimension))
+        model.Samples = Set(initialize=range(n_samples))
+        model.PosSeg = Set(initialize=range(self.no_pos_segment))
+        model.NegSeg = Set(initialize=range(self.no_neg_segment))
+        model.Parameters = Set(initialize=range(self.no_parameter))
+        # bounded alpha and beta needed for convergence
+        model.alpha = Var(model.Parameters, initialize=0)  # , bounds=(-100,100)
+        model.error_pos = Var(model.Samples)
+        model.error_neg = Var(model.Samples)
+        model.beta = Param(model.Parameters, mutable=True)
+        model.ineq1_u_diff_u = Param(model.Samples, model.PosSeg, model.Parameters, mutable=True)
+        model.ineq2_u_diff_v = Param(model.Samples, model.PosSeg, model.Parameters, mutable=True)
+        model.ineq3_v_diff_u = Param(model.Samples, model.NegSeg, model.Parameters, mutable=True)
+        model.ineq4_v_diff_v = Param(model.Samples, model.NegSeg, model.Parameters, mutable=True)
+        def ineq1(m, sample, pos_seg):
+            return m.error_pos[sample] >= \
+                   sum([m.alpha[p] * m.ineq1_u_diff_u[sample, pos_seg, p] for p in m.Parameters])
+        model.ineq1 = Constraint(model.Samples, model.PosSeg, rule=ineq1)
+        def ineq2(m, sample, pos_seg):
+            return m.error_pos[sample] >= \
+                   sum([m.alpha[p] * m.ineq2_u_diff_v[sample, pos_seg, p] for p in m.Parameters]) - \
+                   f_samples[sample]
+        model.ineq2 = Constraint(model.Samples, model.PosSeg, rule=ineq2)
+        def ineq3(m, sample, neg_seg):
+            return m.error_neg[sample] >= \
+                   sum([m.alpha[p] * m.ineq3_v_diff_u[sample, neg_seg, p] for p in m.Parameters]) + \
+                   f_samples[sample]
+        model.ineq3 = Constraint(model.Samples, model.NegSeg, rule=ineq3)
+        def ineq4(m, sample, neg_seg):
+            return m.error_neg[sample] >= \
+                   sum([m.alpha[p] * m.ineq4_v_diff_v[sample, neg_seg, p] for p in m.Parameters])
+        model.ineq4 = Constraint(model.Samples, model.NegSeg, rule=ineq4)
+        def obj(m):
+            return 2 * sum([m.error_pos[sample] ** 2 for sample in model.Samples]) + \
+                   2 * sum([m.error_neg[sample] ** 2 for sample in model.Samples]) - \
+                   sum([m.beta[p] * m.alpha[p] for p in m.Parameters])
+        model.obj = Expression(rule=obj)
+
+    def update_parameter_estimation_model(self, model, alpha_value, x_samples, f_samples):
+        '''
+        Set beta, ineq1_u_diff_u, ineq2_u_diff_v, ineq3_v_diff_u, ineq4_v_diff_v
+        :param model:
+        :param alpha_value: list
+        :param x_samples: ndarray n_sample*n_dim
+        :param f_samples: ndarray n_sample
+        :return:
+        '''
+        n_pos = self.no_pos_segment
+        n_neg = self.no_neg_segment
+        n_dim = self.dimension
+        n_samples = x_samples.shape[0]
+
+        alpha = np.zeros(shape=(self.no_parameter,))
+        for i in range(n_para):
+            alpha[i] = value(alpha_value[i])
+        u = np.zeros(shape=(n_samples, n_pos, n_para))
+        v = np.zeros(shape=(n_samples, n_neg, n_para))
+        f = np.zeros(shape=(n_samples))
+        g = np.zeros(shape=(n_samples))
+        h = np.zeros(shape=(n_samples))
+        error = np.zeros(shape=(n_samples))  # p_i(\alpha)
+        j = np.zeros(shape=(n_samples), dtype=int)
+        q = np.zeros(shape=(n_samples), dtype=int)
+        for s in range(n_samples):
+            for sg in range(n_pos):
+                u[s, sg, (sg * (n_dim + 1)):((sg + 1) * (n_dim + 1) - 1)] = x_samples[s, :]
+                u[s, sg, (sg + 1) * (n_dim + 1) - 1] = 1
+        for s in range(n_samples):
+            for sg in range(n_neg):
+                r = sg + n_pos
+                v[s, sg, (r * (n_dim + 1)):((r + 1) * (n_dim + 1) - 1)] = x_samples[s, :]
+                v[s, sg, (r + 1) * (n_dim + 1) - 1] = 1
+        for s in range(n_samples):
+            maximum = -np.Inf
+            maximum_index = None
+            for sg in range(n_pos):
+                val = np.dot(alpha, u[s, sg, :].reshape((n_para,)))
+                if val > maximum:
+                    maximum = val
+                    maximum_index = sg
+            g[s] = maximum
+            j[s] = maximum_index
+        for s in range(n_samples):
+            maximum = -np.Inf
+            maximum_index = None
+            for sg in range(n_neg):
+                val = np.dot(alpha, v[s, sg, :].reshape((n_para,)))
+                if val > maximum:
+                    maximum = val
+                    maximum_index = sg
+            h[s] = maximum
+            q[s] = maximum_index
+        for s in range(n_samples):
+            f[s] = g[s] - h[s]
+            error[s] = f[s] - f_samples[s]
+        for p in model.Parameters:
+            model.beta[p] = 2 * sum([error[s] * (u[s, j[s], p] - v[s, q[s], p]) for s in model.Samples])
+        # model.beta.pprint()
+        for s in model.Samples:
+            for sg in model.PosSeg:
+                for p in model.Parameters:
+                    model.ineq1_u_diff_u[s, sg, p] = u[s, sg, p] - u[s, j[s], p]
+                    model.ineq2_u_diff_v[s, sg, p] = u[s, sg, p] - v[s, q[s], p]
+        for s in model.Samples:
+            for sg in model.NegSeg:
+                for p in model.Parameters:
+                    model.ineq3_v_diff_u[s, sg, p] = v[s, sg, p] - u[s, j[s], p]
+                    model.ineq4_v_diff_v[s, sg, p] = v[s, sg, p] - v[s, q[s], p]
+        return f, error
+
+
+class QuadraticBoostedDCCPWLFunctionSubgrad(QuadraticBoostedDCCPWLFunction):
+    def build_optimizer(self, model, input):
+        '''
+
+        :param input: the input variable of the parent model
+        :param model: assumes to be a block
+        :param output_name:
+        :return:
+        '''
+        model.PosSeg = Set(initialize=range(self.no_pos_segment))
+        model.Dimension = Set(initialize=range(self.dimension))
+
+        model.f = Var()
+        model.cpwl_pos = Var()
+        model.cpwl_neg = Var()
+        model.quadr_pos = Var()
+        model.quadr_neg = Var()
+        model.linear_correction = Var()
+        model.active_vex_seg_index = Set(initialize=range(1))
+        def func_init(m, i):
+            if i == 0:
+                return 1
+            else:
+                return 0
+        model.active_vex_seg = Var(model.active_vex_seg_index, initialize=func_init, bounds=(0,1))
+        model.active_vex_seg_k = Param(model.active_vex_seg_index, model.Dimension,\
+                                       initialize=0, mutable=True)
+        model.linear_correction_k = Var(model.Dimension, initialize=0)
+        model.plant_k = Param(model.Dimension, initialize=0, mutable=True)
+        model.concave_k = Param(model.Dimension, initialize=0, mutable=True)
+        model.base_point = Param(model.Dimension, initialize=0, mutable=True)
+        model.linear_correction_b = Param(initialize=0, mutable=True)
+        model.cpwl_neg_k = Param(model.Dimension, mutable=True)
+        model.cpwl_neg_b = Param(mutable=True)
+        model.quadr_neg_k = Param(model.Dimension, mutable=True)
+        model.quadr_neg_b = Param(mutable=True)
+        def f_con(m):
+            return model.f == model.cpwl_pos - model.cpwl_neg + model.quadr_pos - \
+                   model.quadr_neg + model.linear_correction
+        model.f_con=Constraint(rule=f_con)
+        def s_con(m):
+            return sum([m.active_vex_seg[s] for s in m.active_vex_seg_index]) == 1
+        model.s_con = Constraint(rule=s_con)
+        def subgradient_matching(m, d):
+            return sum([m.active_vex_seg_k[s,d]*m.active_vex_seg[s] \
+                        for s in m.active_vex_seg_index]) - m.concave_k[d]+\
+                   m.linear_correction_k[d] == m.plant_k[d]
+        model.subgradient_matching = Constraint(model.Dimension, rule=subgradient_matching)
+        def cpwl_pos_calc(m, s):
+            return m.cpwl_pos >= sum([self.pos_cpwl_coeff[s,i]* \
+                                     input[self.input_variables[i]] for i in m.Dimension])+ \
+                   self.pos_cpwl_coeff[s,self.dimension]
+        model.cpwl_pos_calc=Constraint(model.PosSeg, rule=cpwl_pos_calc)
+        def cpwl_neg_calc(m):
+            return m.cpwl_neg == sum([m.cpwl_neg_k[i]* \
+                                     input[self.input_variables[i]] for i in m.Dimension])+ \
+                                    m.cpwl_neg_b
+        model.cpwl_neg_calc = Constraint(rule=cpwl_neg_calc)
+        def quadr_pos_calc(m):
+            return m.quadr_pos == sum([self.pos_quadratic_A[i,j]*input[self.input_variables[i]]*\
+                                       input[self.input_variables[j]] for j in m.Dimension for i in m.Dimension])+\
+                           sum([self.pos_quadratic_b[i]* input[self.input_variables[i]] for i in m.Dimension])+\
+                  self.pos_quadratic_c
+        model.quadr_pos_calc = Constraint(rule=quadr_pos_calc)
+        def quadr_neg_calc(m):
+            return m.quadr_neg == sum([m.quadr_neg_k[i] * \
+                                      input[self.input_variables[i]] for i in m.Dimension]) + \
+                   m.quadr_neg_b
+        model.quadr_neg_calc = Constraint(rule=quadr_neg_calc)
+        def linear_correction_calc(m):
+            return m.linear_correction == sum([m.linear_correction_k[i] * \
+                (input[self.input_variables[i]]-m.base_point[i]) for i in m.Dimension]) + \
+                   m.linear_correction_b
+        model.linear_correction_calc = Constraint(rule=linear_correction_calc)
+
+    def set_linear_correction(self, model, plant_y, plant_k, base_point):
+        # dictionary to ndarray
+        plant_k_vector = np.zeros((self.dimension,))
+        base_point_vector = np.zeros((self.dimension, ))
+        for i, k in enumerate(self.input_variables):
+            plant_k_vector[i] = plant_k[k]
+            base_point_vector[i] = base_point[k]
+
+        # set base point, plant_k and linear_correction_b
+        for i in range(self.dimension):
+            model.plant_k[i] = plant_k_vector[i]
+            model.base_point[i] = base_point_vector[i]
+        model.linear_correction_b = plant_y - self.simulate(base_point) # correct
+
+        # set subgradient of concave part
+        input_vector = base_point_vector.reshape((self.dimension, 1))
+        max_val = -np.Inf
+        max_no = None
+        for i in range(self.no_neg_segment):
+            val = np.dot(self.neg_cpwl_coeff[i, :self.dimension] \
+                         , input_vector) + self.neg_cpwl_coeff[i, self.dimension]
+            if val > max_val:
+                max_no = i
+                max_val = val
+        neg_cpwl_grad = self.neg_cpwl_coeff[i, :self.dimension].reshape((self.dimension,))
+        neg_quadr_grad = 2*self.neg_quadratic_A @ base_point_vector + self.neg_quadratic_b
+        neg_grad = neg_cpwl_grad+neg_quadr_grad
+        for i in range(self.dimension):
+            model.concave_k[i] = neg_grad[i]
+
+        # get the current active convex segments
+        max_val = -np.Inf
+        max_no = None
+        eps_tol = 1e-4
+        for i in range(self.no_pos_segment):
+            val = np.dot(self.pos_cpwl_coeff[i, :self.dimension] \
+                         , input_vector) + self.pos_cpwl_coeff[i, self.dimension]
+            if val > max_val+eps_tol:
+                max_no = [i]
+                max_val = val
+            elif val > max_val-eps_tol:
+                max_no.append(i)
+        no_of_active_vex_segment = len(max_no)
+        pos_grad = np.zeros((no_of_active_vex_segment, self.dimension))
+        for i in range(no_of_active_vex_segment):
+            no = max_no[i]
+            pos_cpwl_grad = self.pos_cpwl_coeff[no, :self.dimension].reshape((self.dimension,))
+            pos_quadr_grad = 2 * self.pos_quadratic_A @ base_point_vector + self.pos_quadratic_b
+            pos_grad[i,:] = pos_cpwl_grad + pos_quadr_grad
+
+        # reconstruct pyomo object
+        model.active_vex_seg_index.set_value([i for i in range(no_of_active_vex_segment)])
+        model.active_vex_seg.clear()
+        model.active_vex_seg._constructed = False
+        model.active_vex_seg.construct()
+        model.active_vex_seg_k.clear()
+        model.active_vex_seg_k._constructed = False
+        model.active_vex_seg_k.construct()
+        model.s_con.clear()
+        model.s_con._constructed = False
+        model.s_con.construct()
+        model.subgradient_matching.clear()
+        model.subgradient_matching._constructed = False
+        model.subgradient_matching.construct()
+
+        # set subgradient of convex part
+        print(pos_grad)
+        for i in range(no_of_active_vex_segment):
+            for d in range(self.dimension):
+                model.active_vex_seg_k[i,d] = pos_grad[i,d]
+        # model.display("temp.txt")
+
+    def get_linear_correction(self, model):
+        '''
+        return value linear_correction_b compatible with QuadraticBoostedDCCPWLFunction
+        :param model:
+        :return:
+        '''
+        linear_correction_k = np.zeros((len(model.Dimension),))
+        base_point = np.zeros((len(model.Dimension),))
+        linear_correction_b = 0
+        for i in model.Dimension:
+            linear_correction_k[i] = value(model.linear_correction_k[i])
+            base_point[i] = value(model.base_point[i])
+        linear_correction_b = value(model.linear_correction_b) - \
+            np.dot(linear_correction_k, base_point)
+        return linear_correction_k, linear_correction_b
 
 
 class QuadraticBoostedDCCPWL_RTOObject(object):
-    def __init__(self, dc_cpwl_functions, mvs, cvs):
+    def __init__(self, dc_cpwl_functions, inputs, cvs, parameters):
         '''
 
         :param dc_cpwl_functions:
-        :param mvs:  subset of all inputs
-        :param cvs:
+        :param inputs:  tuple or list, subset of all inputs, including parameters
+        :param cvs: tuple or list
+        :param parameters: tuple or list
         '''
         self.dc_cpwl_functions = dc_cpwl_functions
-        self.mvs = mvs
+        self.inputs = inputs
         self.cvs = cvs
+        self.parameters = parameters
         self.tol = 1e-5
         self.subproblem_max_iter = 100
 
     def build(self, problem_description):
-        optimizer_model = ConcreteModel()
-        optimizer_model.InputIndex = Set(initialize=self.mvs)
-        optimizer_model.OutputIndex = Set(initialize=self.cvs)
-        optimizer_model.input = Var(optimizer_model.InputIndex)
-        optimizer_model.output = Block(optimizer_model.OutputIndex)
+        # TODO: scaling of inequality_constraint, obj
+        subproblem_model = ConcreteModel()
+        subproblem_model.InputIndex = Set(initialize=self.inputs)
+        subproblem_model.OutputIndex = Set(initialize=self.cvs)
+        subproblem_model.input = Var(subproblem_model.InputIndex)
+        subproblem_model.output = Block(subproblem_model.OutputIndex)
+        subproblem_model.slack = Var(subproblem_model.OutputIndex, within=NonNegativeReals)
         for name, dc_cpwl in self.dc_cpwl_functions.items():
-            dc_cpwl.build_optimizer(optimizer_model.output[name],optimizer_model.input)
-        #TODO: direction of inequality_constraint, and scaling
-        def inequality_constraint(m):
+            dc_cpwl.build_optimizer(subproblem_model.output[name], subproblem_model.input)
+
+        def optimization_constraint(m):
             for con_name in self.cvs[1:]:
                 yield m.output[con_name].f <= 0
-        optimizer_model.inequality_constraint=ConstraintList(rule=inequality_constraint)
 
-        # TODO: direction of obj, and scaling
-        def obj(m):
+        subproblem_model.optimization_constraint = ConstraintList(rule=optimization_constraint)
+
+        def optimization_obj(m):
             return m.output[self.cvs[0]].f
-        optimizer_model.obj = Objective(rule=obj, sense=minimize)
-        self.optimizer_model = optimizer_model
 
-        feasibility_problem_model = ConcreteModel()
-        feasibility_problem_model.InputIndex = Set(initialize=self.mvs)
-        feasibility_problem_model.OutputIndex = Set(initialize=self.cvs)
-        feasibility_problem_model.input = Var(feasibility_problem_model.InputIndex)
-        feasibility_problem_model.output = Block(feasibility_problem_model.OutputIndex)
-        feasibility_problem_model.slack = Var(feasibility_problem_model.OutputIndex, within=NonNegativeReals)
-        for name, dc_cpwl in self.dc_cpwl_functions.items():
-            dc_cpwl.build_optimizer(feasibility_problem_model.output[name], feasibility_problem_model.input)
+        subproblem_model.optimization_obj = Objective(rule=optimization_obj, sense=minimize)
 
-        # TODO: direction of inequality_constraint, and scaling
-        def inequality_constraint(m):
+        def feasibility_constraint(m):
             for con_name in self.cvs[1:]:
-                yield m.output[con_name].f-m.slack[con_name] <= 0
-        feasibility_problem_model.inequality_constraint = ConstraintList(rule=inequality_constraint)
+                yield m.output[con_name].f - m.slack[con_name] <= 0
 
-        # TODO: direction of obj, and scaling
-        def obj(m):
+        subproblem_model.feasibility_constraint = ConstraintList(rule=feasibility_constraint)
+
+        def feasibility_obj(m):
             return sum([m.slack[con_name] for con_name in self.cvs[1:]])
-        feasibility_problem_model.obj = Objective(rule=obj, sense=minimize)
-        self.feasibility_problem_model = feasibility_problem_model
+
+        subproblem_model.feasibility_obj = Objective(rule=feasibility_obj, sense=minimize)
+        self.subproblem_model = subproblem_model
+
+    def build_parameter_estimation(self, n_samples, scaling_factor):
+        self.no_pe_samples = n_samples
+        pe_model = ConcreteModel()
+        pe_model.ParameterIndex = Set(initialize=self.parameters)
+        pe_model.OutputIndex = Set(initialize=self.cvs)
+        pe_model.parameter = Var(pe_model.ParameterIndex)
+        pe_model.output = Block(pe_model.OutputIndex)
+        for name, dc_cpwl in self.dc_cpwl_functions.items():
+            dc_cpwl.build_parameter_estimator(pe_model.output[name], pe_model.parameter, n_samples)
+        def obj(m):
+            return sum([m.output[name].submodel_obj/scaling_factor[name]**2 \
+                        for name in pe_model.OutputIndex])
+        pe_model.obj = Objective(rule=obj, sense=minimize)
+        self.pe_model = pe_model
+
+    def estimate_parameter(self, plant_data):
+        '''
+
+        :param plant_data: list of dict, every dictionary includes both input variable value
+        and output variable value
+        :param scaling_factor:
+        :return:
+        '''
+        last_rmse = np.Inf
+        tol = 1e-4
+        # initializing parameter
+        for para_name in self.parameters:
+            self.DC_CPWL_RTO_model.pe_model[para_name] = parameter_value[para_name]
+        alpha_value, x_samples, f_samples
+
+        # parameter estimation
+        # TODO: update for each output
+        f_fit, f_error = self.update_parameter_estimation_model(self.pe_model, \
+                        alpha_value, x_samples, f_samples)
+        results = self.solver.solve(self.pe_model, tee=self.tee)
+        if not ((results.solver.status == SolverStatus.ok) and (
+                results.solver.termination_condition == TerminationCondition.optimal)):
+            print(results.solver.termination_condition)
+            raise Exception("QCQP solving fails.")
+        rmse = np.linalg.norm(f_error) / self.no_pe_samples
+
+        iter_count = 0
+        while abs(rmse - last_rmse) >= tol or iter_count < self.subproblem_max_iter:
+            iter_count += 1
+            last_rmse = rmse
+            f_fit, f_error = self.update_parameter_estimation_model(self.pe_model, \
+                        alpha_value, x_samples, f_samples)
+            results = self.solver.solve(self.pe_model, tee=self.tee)
+            if not ((results.solver.status == SolverStatus.ok) and (
+                    results.solver.termination_condition == TerminationCondition.optimal)):
+                print(results.solver.termination_condition)
+                raise Exception("QCQP solving fails.")
+            rmse = np.linalg.norm(f_error) / self.no_pe_samples
+        return f_error
+
 
     def update_modifiers(self, modifiers, base_point):
         print(modifiers)
         for cv in self.cvs:
-            output_model = self.optimizer_model.output[cv]
+            output_model = self.subproblem_model.output[cv]
             modifier_epsilon = modifiers[(cv, None)]
             modifier_lambda = {}
-            for mv in self.mvs:
+            for mv in self.inputs:
                 modifier_lambda[mv] = modifiers[(cv, mv)]
             self.dc_cpwl_functions[cv].set_linear_correction(output_model, \
                                 modifier_epsilon, modifier_lambda, base_point)
-        for cv in self.cvs:
-            output_model = self.feasibility_problem_model.output[cv]
-            modifier_epsilon = modifiers[(cv, None)]
-            modifier_lambda = {}
-            for mv in self.mvs:
-                modifier_lambda[mv] = modifiers[(cv, mv)]
-            self.dc_cpwl_functions[cv].set_linear_correction(output_model, \
-                                                             modifier_epsilon, modifier_lambda, base_point)
 
     def get_input_vector(self):
-        input_vector = np.zeros((len(self.mvs),))
-        for i,mv in enumerate(self.mvs):
-            input_vector[i] = value(self.optimizer_model.input[mv])
-        return input_vector
-
-    def get_input_vector_from_feas_problem(self):
-        input_vector = np.zeros((len(self.mvs),))
-        for i,mv in enumerate(self.mvs):
-            input_vector[i] = value(self.feasibility_problem_model.input[mv])
+        input_vector = np.zeros((len(self.inputs),))
+        for i,mv in enumerate(self.inputs):
+            input_vector[i] = value(self.subproblem_model.input[mv])
         return input_vector
 
     def optimize(self, spec_values, starting_point):
         '''
 
-        :param input_values: fixed input
+        :param spec_values: specification and parameters
+        :param starting_point: other inputs
         :return:
         '''
         whole_input = {}
         for k,v in spec_values.items():
-            whole_input[k] = v
-            self.optimizer_model.input[k].fix(v)
-            self.feasibility_problem_model.input[k].fix(v)
+            if k not in self.parameters:
+                whole_input[k] = v
+                self.subproblem_model.input[k].fix(v)
         for k,v in starting_point.items():
             whole_input[k] = v
-            self.feasibility_problem_model.input[k] = v
+            self.subproblem_model.input[k] = v
 
         #-------------- solve feasibility problem ----------------
+        self.subproblem_model.optimization_constraint.deactivate()
+        self.subproblem_model.optimization_obj.deactivate()
+        self.subproblem_model.feasibility_constraint.activate()
+        self.subproblem_model.feasibility_obj.activate()
         if len(self.cvs) > 1:
-            prev_u = self.get_input_vector_from_feas_problem()
+            prev_u = self.get_input_vector()
             solve_status = False
             for i in range(self.subproblem_max_iter):
                 for name, dc_cpwl in self.dc_cpwl_functions.items():
-                    dc_cpwl.set_optimizer_concave_majorization(self.feasibility_problem_model.output[name], whole_input)
-                results = self.solver.solve(self.feasibility_problem_model, tee=self.tee)
+                    dc_cpwl.set_optimizer_concave_majorization(self.subproblem_model.output[name], whole_input)
+                results = self.solver.solve(self.subproblem_model, tee=self.tee)
                 if not ((results.solver.status == SolverStatus.ok) and (
                         results.solver.termination_condition == TerminationCondition.optimal)):
                     print(results.solver.termination_condition)
                     raise Exception("QCQP solving fails.")
-                for mv in self.mvs:
-                    whole_input[mv] = value(self.feasibility_problem_model.input[mv])
-                this_u = self.get_input_vector_from_feas_problem()
+                for mv in self.inputs:
+                    whole_input[mv] = value(self.subproblem_model.input[mv])
+                this_u = self.get_input_vector()
                 if np.linalg.norm(this_u - prev_u) < self.tol:
                     solve_status = True
                     break
                 prev_u = this_u
-        print(value(self.feasibility_problem_model.obj))
+        print(value(self.subproblem_model.feasibility_obj))
         # -------------- solve optimization problem ----------------
-        for k,v in whole_input.items():
-             self.optimizer_model.input[k] = v
+        self.subproblem_model.optimization_constraint.activate()
+        self.subproblem_model.optimization_obj.activate()
+        self.subproblem_model.feasibility_constraint.deactivate()
+        self.subproblem_model.feasibility_obj.deactivate()
         prev_u = self.get_input_vector()
         solve_status = False
         for i in range(self.subproblem_max_iter):
             for name, dc_cpwl in self.dc_cpwl_functions.items():
-                dc_cpwl.set_optimizer_concave_majorization(self.optimizer_model.output[name], whole_input)
-            results = self.solver.solve(self.optimizer_model, tee=self.tee)
+                dc_cpwl.set_optimizer_concave_majorization(self.subproblem_model.output[name], whole_input)
+            results = self.solver.solve(self.subproblem_model, tee=self.tee)
             if not ((results.solver.status == SolverStatus.ok) and (
                     results.solver.termination_condition == TerminationCondition.optimal)):
                 print(results.solver.termination_condition)
                 raise Exception("QCQP solving fails.")
-            for mv in self.mvs:
-                whole_input[mv] = value(self.optimizer_model.input[mv])
+            for mv in self.inputs:
+                whole_input[mv] = value(self.subproblem_model.input[mv])
             this_u = self.get_input_vector()
             if np.linalg.norm(this_u - prev_u) < self.tol:
                 solve_status = True
@@ -338,15 +669,32 @@ class QuadraticBoostedDCCPWL_RTOObject(object):
     def simulate(self, point, with_modifier=False):
         ret = {}
         for cv in self.cvs:
-            ret[cv]=self.dc_cpwl_functions[cv].simulate(point, with_modifier, self.optimizer_model.output[cv])
+            ret[cv]=self.dc_cpwl_functions[cv].simulate(point, with_modifier, self.subproblem_model.output[cv])
         solve_status = True
         return ret, solve_status
 
     def set_model_parameters(self, parameter_value):
-        pass
+        '''
+
+        :param parameter_value: dict
+        :return:
+        '''
+        for para_name in self.parameters:
+            self.DC_CPWL_RTO_model.pe_model[para_name] = parameter_value[para_name]
 
     def set_solver(self, solver, tee, default_options):
         self.solver = solver
         self.tee = tee
         for k, v in default_options.items():
             self.solver.options[k] = v
+
+class QuadraticBoostedDCCPWL_RTOObjectSubgrad(QuadraticBoostedDCCPWL_RTOObject):
+    def update_modifiers(self, plant_y_and_k, base_point):
+        for cv in self.cvs:
+            output_model = self.subproblem_model.output[cv]
+            plant_y = plant_y_and_k[(cv, None)]
+            plant_k = {}
+            for mv in self.inputs:
+                plant_k[mv] = plant_y_and_k[(cv, mv)]
+            self.dc_cpwl_functions[cv].set_linear_correction(output_model, \
+                                plant_y, plant_k, base_point)

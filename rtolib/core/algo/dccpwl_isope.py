@@ -81,6 +81,12 @@ class DCCPWL_ModifierAdaptation(ModifierAdaptation):
         self.DC_CPWL_RTO_model.build(self.problem_description)
         # solver2 = SolverFactory('cplex', executable=self.qcqp_solver_executable)
         # solver2 = SolverFactory('gurobi')
+        n_samples = self.perturbation_method.number_of_data_points
+        scaling_factor = {}
+        for cv_name in self.problem_description.symbol_list['CV']:
+            scaling_factor[cv_name] = self.problem_description.scaling_factors[cv_name]
+        self.DC_CPWL_RTO_model.build_parameter_estimation(n_samples, scaling_factor)
+        self.DC_CPWL_RTO_model.set_model_parameters(self.current_parameter_value)
         solver2 = SolverFactory('ipopt', executable=self.nlp_solver_executable)
         self.DC_CPWL_RTO_model.set_solver(solver2, tee=False, default_options=default_options)
 
@@ -89,14 +95,15 @@ class DCCPWL_ModifierAdaptation(ModifierAdaptation):
         model_output_data = [{} for i in range(len(trial_points))]
         for i, p in enumerate(trial_points):
             outputs, solve_status = self.DC_CPWL_RTO_model.simulate(p)
-            # TODO:deal with solve status
-            if i == 0:
-                for k, v in outputs.items():
-                    self.model_history_data[self.iter_count][k] = v
-
             for k in self.available_measurements():
                 model_output_data[i][k] = outputs[k]
         return model_output_data
+
+    def current_point_model_simulation(self, current_point):
+        outputs, solve_status = self.DC_CPWL_RTO_model.simulate(current_point)
+        # TODO:deal with solve status
+        for k, v in outputs.items():
+            self.model_history_data[self.iter_count][k] = v
 
     def update_modifiers(self, plant_output_data, model_output_data):
         print(plant_output_data)
@@ -118,6 +125,19 @@ class DCCPWL_ModifierAdaptation(ModifierAdaptation):
         # TODO:deal with solve status, fallback strategy
         return optimized_input, solve_status
 
+    def estimate_parameter(self, plant_data):
+        '''
+
+        :param plant_data: list of dict, every dictionary includes both input variable value
+        and output variable value
+        :return: current_parameter_value
+        '''
+        f_error = self.DC_CPWL_RTO_model.estimate_parameter(plant_data)
+        para_ret = {}
+        for para_name in self.parameter_set:
+            para_ret[para_name] = value(getattr(self.DC_CPWL_RTO_model.pe_model, para_name))
+        para_ret["$residue"] = f_error
+        return para_ret
 
     def one_step_simulation(self):
         print("Iteration %d"%self.iter_count)
@@ -132,6 +152,17 @@ class DCCPWL_ModifierAdaptation(ModifierAdaptation):
 
         # get plant simulation result
         plant_output_data = self.get_plant_simulation_result(trial_points)
+        plant_data = [{} for i in range(len(trial_points))]
+        for i, p in enumerate(trial_points):
+            for k, v in plant_output_data[i].items():
+                plant_data[i][k] = v
+            for k, v in p.items():
+                plant_data[i][k] = v
+
+        self.current_point_model_simulation(trial_points[0])
+
+        # parameter estimation
+        self.current_parameter_value = self.estimate_parameter(plant_data)
 
         # get model simulation result with and without modifiers
         model_output_data = self.get_model_simulation_result(trial_points)
