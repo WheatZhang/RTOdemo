@@ -33,7 +33,8 @@ class constrained_quadratic_problem_plant(PyomoModel):
 
     def build_rto(self, model, cv_func):
         def cost(m):
-            return 1/50*(m.u1+1)**4+m.cost_var**2-m.cost_var2**2
+            # return 1/50*(m.u1+1)**4+m.cost_var**2-m.cost_var2**2
+            return 1/2*(m.u1+1)**2+m.cost_var**2-m.cost_var2**2
         model.cost = Expression(rule=cost)
         def con(m):
             return 1/50*(m.u1-2)**4-10

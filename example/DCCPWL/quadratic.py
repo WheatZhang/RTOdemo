@@ -14,6 +14,7 @@ import os
 import copy
 from rtolib.util.misc import save_iteration_data_in_dict
 import matplotlib.pyplot as plt
+from pyomo.environ import value
 
 class cost_QCPWL(QuadraticBoostedDCCPWLFunction):
     def __init__(self):
@@ -70,6 +71,7 @@ class cost_QCPWL_subgrad(QuadraticBoostedDCCPWLFunctionSubgrad):
         self.neg_quadratic_A = np.array([[0]])
         self.neg_quadratic_b = np.zeros((self.dimension,))
         self.neg_quadratic_c = 0
+        self.active_vex_seg_index = [0]
 
 class con_QCPWL_subgrad(QuadraticBoostedDCCPWLFunctionSubgrad):
     def __init__(self):
@@ -86,6 +88,7 @@ class con_QCPWL_subgrad(QuadraticBoostedDCCPWLFunctionSubgrad):
         self.neg_quadratic_A = np.array([[0]])
         self.neg_quadratic_b = np.zeros((self.dimension,))
         self.neg_quadratic_c = 0
+        self.active_vex_seg_index = [0]
 
 def generate_noise_file():
     noise_level = {
@@ -317,7 +320,7 @@ def algo_test_main_con():
                       }
 
     # ------------------------------------
-    perturbation_stepsize = {'u1': 0.01,
+    perturbation_stepsize = {'u1': 0.0001,
                 }
     # ------------------------------------
     print_iter_data = False
@@ -403,6 +406,25 @@ def do_test_QCPWL_MA_subgrad_con(perturbation_stepsize, starting_point, filterin
             print(rto_algorithm.model_history_data)
             print(rto_algorithm.plant_history_data)
             print(rto_algorithm.input_history_data)
+        modifier_k = np.array([value(rto_algorithm.DC_CPWL_RTO_model.subproblem_model.output['cost'].linear_correction_k[0]),\
+               value(rto_algorithm.DC_CPWL_RTO_model.subproblem_model.output['con'].linear_correction_k[0])])
+        plant_k = np.array([value(rto_algorithm.DC_CPWL_RTO_model.subproblem_model.output['cost'].plant_k[0]), \
+               value(rto_algorithm.DC_CPWL_RTO_model.subproblem_model.output['con'].plant_k[0])])
+        concave_k = np.array([value(rto_algorithm.DC_CPWL_RTO_model.subproblem_model.output['cost'].concave_k[0]), \
+               value(rto_algorithm.DC_CPWL_RTO_model.subproblem_model.output['con'].concave_k[0])])
+        convex_k = np.array([value(rto_algorithm.DC_CPWL_RTO_model.subproblem_model.output['cost'].active_vex_seg_k[0,0]), \
+               value(rto_algorithm.DC_CPWL_RTO_model.subproblem_model.output['con'].active_vex_seg_k[0,0])])
+        base_point = np.array(
+            [value(rto_algorithm.DC_CPWL_RTO_model.subproblem_model.output['cost'].base_point[0]), \
+             value(rto_algorithm.DC_CPWL_RTO_model.subproblem_model.output['con'].base_point[0])])
+        # print(convex_k)
+        # print(concave_k)
+        # print(modifier_k)
+        # print(plant_k)
+        # print(base_point)
+        print("gradient matching error")
+        print(convex_k-concave_k+modifier_k-plant_k)
+        # rto_algorithm.DC_CPWL_RTO_model.subproblem_model.display("temp.txt")
         for i in range(num_point):
             y, _ = rto_algorithm.DC_CPWL_RTO_model.simulate({"u1": x_points[i]}, with_modifier=True)
             model_cost[i] = y['cost']
@@ -411,6 +433,7 @@ def do_test_QCPWL_MA_subgrad_con(perturbation_stepsize, starting_point, filterin
         plt.subplot(211)
         plt.plot(x_points, plant_cost, label="plant")
         plt.plot(x_points, model_cost, label="model")
+        plt.ylim([-2,15])
         plt.scatter(rto_algorithm.input_history_data[iter_no]['u1'], 0, s=5, c='black')
         plt.scatter(rto_algorithm.input_history_data[iter_no+1]['u1'], 0, s=5, c='black')
         plt.legend()
@@ -461,5 +484,5 @@ def algo_test_subgrad_main_con():
 if __name__ == "__main__":
     # generate_noise_file()
     # algo_test_main_uncon()
-    # algo_test_main_con()
-    algo_test_subgrad_main_con()
+    algo_test_main_con()
+    # algo_test_subgrad_main_con()

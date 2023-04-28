@@ -31,7 +31,8 @@ class RTO_Plant_HPC(PyomoModel):
         self.input_variables = {
             'TA_Flow': (lambda m: m.FeedTaMFlow),
             'MA_Flow': (lambda m: m.FeedMaMFlow),
-            #'GAN_Flow': (lambda m: m.GNSplitterOutAMFlow),
+            'GAN_Flow': (lambda m: m.GNSplitterOutAMFlow),
+            'LN_Flow': (lambda m: m.CondensorPrdtMFlow),
         }
         self.parameters = {
         }

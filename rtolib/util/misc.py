@@ -1,3 +1,6 @@
+import scipy.stats.qmc
+import numpy as np
+
 def is_value_dict_same(dict1, dict2):
     for k in dict1:
         if abs(dict1[k]-dict2[k]) > 1e-6:
@@ -34,3 +37,12 @@ def modified_output_function(pyomo_model, cv, mvs):
                           getattr(m,mv + "_" + cv + "_lam") for mv in mvs])
     # return lambda m:pyomo_model.output_variables[cv].__call__(m)+getattr(m,cv+"_eps")+\
     #                 sum([(pyomo_model.input_variables[mv].__call__(m)-getattr(m,mv+"_base"))*getattr(m,mv+"_"+cv+"_lam") for mv in mvs])
+
+def get_hypercube_sampling(dimension, n_data, lb, ub, seed=1):
+    engine = scipy.stats.qmc.LatinHypercube(d=dimension, seed=seed)
+    samples = engine.random(n_data)
+    sample_X = np.zeros((n_data,dimension))
+    for i, s in enumerate(samples):
+        for j in range(dimension):
+            sample_X[i,j] = s[j] * (ub[j] - lb[j]) + lb[j]
+    return sample_X

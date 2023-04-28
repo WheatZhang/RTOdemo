@@ -34,17 +34,27 @@ class DCCPWL_ModifierAdaptation(ModifierAdaptation):
                     spec_function,
                     modifier_type,
                     parameter_set,
+                    model_mvs=None,
                     ):
         self.problem_description = problem_description
         self.plant_simulator = PyomoSimulator(plant)
-        mvs = self.problem_description.symbol_list['MV']
+        if model_mvs is None:
+            mvs = self.problem_description.symbol_list['MV']
+        else:
+            mvs = model_mvs
         if modifier_type == ModifierType.RTO:
             cvs = [self.problem_description.symbol_list['OBJ']]
             for cv in self.problem_description.symbol_list['CON']:
                 cvs.append(cv)
+            cvs.append("validity_con")
         else:
             raise ValueError("Not applicable")
         self.DC_CPWL_RTO_model = QuadraticBoostedDCCPWL_RTOObject(model_dc_cpwl_functions, mvs, cvs, [])
+        bounds = {}
+        for k, v in self.problem_description.bounds.items():
+            if k in mvs:
+                bounds[k] = v
+        self.DC_CPWL_RTO_model.set_input_bounds(bounds)
         self.perturbation_method = perturbation_method
         self.noise_generator = noise_generator
         self.nlp_solver_executable = nlp_solver_executable
@@ -78,7 +88,7 @@ class DCCPWL_ModifierAdaptation(ModifierAdaptation):
 
         self.model_history_data[0] = {}
 
-        self.DC_CPWL_RTO_model.build(self.problem_description)
+        self.DC_CPWL_RTO_model.build()
         # solver2 = SolverFactory('cplex', executable=self.qcqp_solver_executable)
         # solver2 = SolverFactory('gurobi')
         solver2 = SolverFactory('ipopt', executable=self.nlp_solver_executable)
