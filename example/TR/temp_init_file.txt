@@ -1,0 +1,84 @@
+Fa	3.2707215546196173
+
+Fa_base	3.2707215546196173
+
+Fa_con_lam	-0.18381368876857482
+
+Fa_con_lam_homo	0
+
+Fa_cost_lam	-284.31556800114777
+
+Fa_cost_lam_homo	0
+
+Fa_homo	0
+
+Fb	7.408582578429941
+
+Fb_base	7.408582578429941
+
+Fb_con_lam	-0.41739803627316435
+
+Fb_con_lam_homo	0
+
+Fb_cost_lam	-513.0979322416351
+
+Fb_cost_lam_homo	0
+
+Fb_homo	0
+
+Fr	10.679304133049559
+
+K
+Reactions
+1	0.039778508112285504
+2	0.043228594291774926
+
+Ka
+Reactions
+1	218900000.0
+2	43100000000000.0
+
+Ka1_homo	0
+
+Ka2_homo	0
+
+Kb
+Reactions
+1	8077.6
+2	12438
+
+Kb1_homo	0
+
+Kb2_homo	0
+
+Tr	86.99804940131506
+
+Tr_base	86.99803940131505
+
+Tr_con_lam	-4.898831007860149
+
+Tr_con_lam_homo	0
+
+Tr_cost_lam	-6484.10490803144
+
+Tr_cost_lam_homo	0
+
+Tr_homo	0
+
+XFr
+Components
+A	0.12667141930657824
+B	0.37469518834033466
+C	6.970075304278027e-18
+E	0.27888329492651376
+G	0.12046267494497459
+P	0.09928742248159869
+
+con_eps	-214.8703496256832
+
+con_eps_homo	0
+
+cost_eps	-283831.58281753364
+
+cost_eps_homo	0
+

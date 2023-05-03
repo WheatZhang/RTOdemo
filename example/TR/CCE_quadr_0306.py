@@ -581,8 +581,8 @@ def do_test_trust_radius():
     initial_trust_radius = r_0
     model_name = "obj_partial_wrong_curv"
 
-    name=["1","2","5","10"]
-    for no,coeff in enumerate([1,2,5,10]):
+    name=["0_2","1","2","10"]
+    for no,coeff in enumerate([0.2,1,2,10]):
         print("\nTesting CompoStep_TR_MA")
         result_filename_header = result_filename_folder + name[no]+"CompoStep_"
         compo_step_TR_MA_adapted_sigma(model_name, perturbation_stepsize, feasible_starting_point,\
@@ -619,14 +619,14 @@ def draw_profile_global_convergence():
         plt.plot(range(1, max_iter + 1), compo_step_data.loc[1:max_iter, 'cost'], \
                  marker='o', c='black', markersize=global_marker_size, linewidth=linewidth, label="Composite-step")
         plt.plot(range(1, max_iter + 1), origin_ma_data.loc[1:max_iter, 'cost'], \
-                 marker='o', c='red', markersize=global_marker_size / 3, linewidth=linewidth / 3, label="Modifier adaptation")
+                 marker='^', c='red', markersize=global_marker_size, linewidth=linewidth / 3, label="Modifier adaptation")
         if no == 0:
             plt.ylabel("cost", font_label)
-            plt.title(r"Model with correct curvatures", fontdict=font_title)
+            plt.title(r"Model (84) - Correct curvatures", fontdict=font_title)
         elif no == 1:
-            plt.title(r"Model with wrong objective curvature", fontdict=font_title)
+            plt.title(r"Model (85) - Wrong objective curvature", fontdict=font_title)
         elif no == 2:
-            plt.title(r"Model with wrong constraint curvature", fontdict=font_title)
+            plt.title(r"Model (86) - Wrong constraint curvature", fontdict=font_title)
             plt.legend(loc='upper right', prop=font_legend)
         plt.xticks([0, 5, 10, 15, 20])
         plt.yticks([-1, 1, 3, 5])
@@ -636,7 +636,7 @@ def draw_profile_global_convergence():
         plt.plot(range(1, max_iter + 1), compo_step_data.loc[1:max_iter, 'con'], \
                  marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
         plt.plot(range(1, max_iter + 1), origin_ma_data.loc[1:max_iter, 'con'], \
-                 marker='o', c='red', markersize=global_marker_size / 3, linewidth=linewidth / 3)
+                 marker='^', c='red', markersize=global_marker_size, linewidth=linewidth / 3)
         if no == 0:
             plt.ylabel("constraint", font_label)
         plt.xlabel("RTO iteration", font_label)
@@ -683,12 +683,12 @@ def draw_profile_sigma():
                                        index_col=0, header=0, sep='\t')
         plt.subplot(2,3,no+1)
         plt.plot(range(1, max_iter + 1), compo_step_data_fixed_sigma.loc[1:max_iter, 'cost'], \
-                 marker='o', c='black', markersize=global_marker_size, linewidth=linewidth,label="Composite-step Fixed $\sigma$")
+                 marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth/3,label="Composite-step Fixed $\sigma$")
         plt.plot(range(1, max_iter + 1), compo_step_data_adapted_sigma.loc[1:max_iter, 'cost'], \
-                 marker='o', c='blue', markersize=global_marker_size/3, linewidth=linewidth/3,
+                 marker='s', c='black', markersize=global_marker_size, linewidth=linewidth,
                  label="Composite-step Adaptive $\sigma$")
         plt.plot(range(1, max_iter + 1), penalty_tr_data.loc[1:max_iter, 'cost'], \
-                 marker='o', c='red', markersize=global_marker_size/3, linewidth=linewidth/3,label="Penalty")
+                 marker='^', c='red', markersize=global_marker_size, linewidth=linewidth/3,label="Penalty")
         if no ==0:
             plt.ylabel("cost",font_label)
             plt.title(r"$\sigma=1$", fontdict=font_title)
@@ -703,11 +703,11 @@ def draw_profile_sigma():
 
         plt.subplot(2,3, no + 4)
         plt.plot(range(1, max_iter + 1), compo_step_data_fixed_sigma.loc[1:max_iter, 'con'], \
-                 marker='o', c='black', markersize=global_marker_size, linewidth=linewidth)
+                 marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth/3)
         plt.plot(range(1, max_iter + 1), compo_step_data_adapted_sigma.loc[1:max_iter, 'con'], \
-                 marker='o', c='blue', markersize=global_marker_size/3, linewidth=linewidth/3)
+                 marker='s', c='black', markersize=global_marker_size, linewidth=linewidth)
         plt.plot(range(1, max_iter + 1), penalty_tr_data.loc[1:max_iter, 'con'], \
-                 marker='o', c='red', markersize=global_marker_size/3, linewidth=linewidth/3)
+                 marker='^', c='red', markersize=global_marker_size, linewidth=linewidth/3)
         if no == 0:
             plt.ylabel("constraint",font_label)
         plt.xlabel("RTO iteration",font_label)
@@ -754,10 +754,10 @@ def draw_profile_trust_radius():
         plt.yticks([-2, -1, 0, 1])
         plt.tick_params(labelsize=global_tick_size)
 
-    prefixes = ['1CompoStep','2CompoStep','5CompoStep','10CompoStep']
-    labels = [r"$\Delta_0=1,\Delta_{max}=2$",\
+    prefixes = ['0_2CompoStep','1CompoStep','2CompoStep','10CompoStep']
+    labels = [r"$\Delta_0=5,\Delta_{max}=10$",\
+        r"$\Delta_0=1,\Delta_{max}=2$",\
               r"$\Delta_0=0.5,\Delta_{max}=1$",\
-              r"$\Delta_0=0.2,\Delta_{max}=0.4$",\
               r"$\Delta_0=0.1,\Delta_{max}=0.2$"]
     colors = ['red', 'darkgreen', 'black', 'blue']
     for no,prefix in enumerate(prefixes):
@@ -838,6 +838,7 @@ def draw_contour_xi():
     prefixes = ['Penalty','3CompoStep', '6CompoStep', '9CompoStep']
     labels = [r"Penalty", r"$\xi=0.3$", r"$\xi=0.6$", r"$\xi=0.9$"]
     colors = ['red', 'darkgreen', 'black', 'blue']
+    marker = ['o', '^', 's', 'p']
     for no, prefix in enumerate(prefixes):
         input_data = pandas.read_csv("data/CCE_quadr_0306/xi/"+ prefix+"_input_data.txt", \
                                           index_col=0, header=0, sep='\t')
@@ -850,10 +851,10 @@ def draw_contour_xi():
         for iter in range(max_iter):
             if iter == 0:
                 plt.plot(input_data.loc[iter, 'u1'], input_data.loc[iter, 'u2'], \
-                         marker='o', c=colors[no], linewidth=line_width/2,markersize=global_marker_size/2, label=labels[no])
+                         marker=marker[no], c=colors[no], linewidth=line_width/2,markersize=global_marker_size, label=labels[no])
             else:
                 plt.plot(input_data.loc[iter, 'u1'], input_data.loc[iter, 'u2'], \
-                         marker='o', c=colors[no], linewidth=line_width/2,markersize=global_marker_size / 2)
+                         marker=marker[no], c=colors[no], linewidth=line_width/2,markersize=global_marker_size)
         plt.subplot(122)
         for iter in range(max_iter - 1):
             x = [input_data.loc[iter, 'u1'], input_data.loc[iter + 1, 'u1']]
@@ -863,13 +864,12 @@ def draw_contour_xi():
         for iter in range(max_iter):
             if iter == 0:
                 plt.plot(input_data.loc[iter, 'u1'], input_data.loc[iter, 'u2'], \
-                         marker='o', c=colors[no], markersize=global_marker_size/2, label=labels[no])
+                         marker=marker[no], c=colors[no], markersize=global_marker_size, label=labels[no])
             else:
                 plt.plot(input_data.loc[iter, 'u1'], input_data.loc[iter, 'u2'], \
-                         marker='o', c=colors[no], markersize=global_marker_size/2)
+                         marker=marker[no], c=colors[no], markersize=global_marker_size)
 
     plt.subplot(121)
-    plt.title("Cost",fontdict=font_title)
     plt.legend(loc='upper left', prop=font_legend)
     plt.subplot(122)
 
@@ -898,5 +898,5 @@ def draw_all_pic():
     draw_contour_xi()
 
 if __name__ == "__main__":
-    generate_all_data()
+    # generate_all_data()
     draw_all_pic()

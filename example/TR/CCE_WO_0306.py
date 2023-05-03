@@ -234,9 +234,9 @@ def do_test():
 
     # ------------------------------------
     perturbation_stepsize = {
-        "Fa": 0.0001,
-        "Fb": 0.0001,
-        "Tr": 0.0001,
+        "Fa": 0.00001,
+        "Fb": 0.00001,
+        "Tr": 0.00001,
     }
     # ------------------------------------
     print_iter_data = False
@@ -293,7 +293,7 @@ def plot_profile():
     original_ma_input_data = pandas.read_csv("data/CCE_wo_0306/Original_MA_input_data.txt", \
                                              index_col=0, header=0, sep='\t')
 
-    fig = plt.figure(figsize=(10.5 * pic_constant, 18 * pic_constant))
+    fig = plt.figure(figsize=(10.5 * pic_constant, 20 * pic_constant))
     plt.subplot(511)
     optimal = -210.33 * numpy.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -302,10 +302,10 @@ def plot_profile():
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2,\
              label="composite-step TR")
     plt.plot(range(1, max_iter + 1), original_ma_plant_data.loc[1:max_iter, 'cost'], \
-             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth, \
+             marker='^', c='red', markersize=global_marker_size, linewidth=linewidth, \
              label="MA")
     plt.plot(range(1, max_iter + 1), QC_ma_plant_data.loc[1:max_iter, 'cost'], \
-             marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth,\
+             marker='s', c='blue', markersize=global_marker_size, linewidth=linewidth,\
              label="MA with convex model")
     plt.ylabel("plant cost", font_label)
     plt.legend(loc='upper right', prop=font_legend)
@@ -316,9 +316,9 @@ def plot_profile():
     plt.plot(range(1, max_iter + 1), compo_step_plant_data.loc[1:max_iter, 'con'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
     plt.plot(range(1, max_iter + 1), QC_ma_plant_data.loc[1:max_iter, 'con'], \
-             marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
+             marker='^', c='blue', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), original_ma_plant_data.loc[1:max_iter, 'con'], \
-             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
+             marker='s', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel("plant constraint", font_label)
     plt.subplot(513)
     optimal = 3.887 * numpy.ones(max_iter + 1)
@@ -327,9 +327,9 @@ def plot_profile():
     plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'Fa'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
     plt.plot(range(1, max_iter + 1), QC_ma_input_data.loc[1:max_iter, 'Fa'], \
-             marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
+             marker='^', c='blue', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), original_ma_input_data.loc[1:max_iter, 'Fa'], \
-             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
+             marker='s', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel("Fa", font_label)
     plt.subplot(514)
     optimal = 9.369 * numpy.ones(max_iter + 1)
@@ -338,9 +338,9 @@ def plot_profile():
     plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'Fb'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
     plt.plot(range(1, max_iter + 1), QC_ma_input_data.loc[1:max_iter, 'Fb'], \
-             marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
+             marker='^', c='blue', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), original_ma_input_data.loc[1:max_iter, 'Fb'], \
-             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
+             marker='s', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel("Fb", font_label)
     plt.subplot(515)
     optimal = 91.2 * numpy.ones(max_iter + 1)
@@ -349,9 +349,9 @@ def plot_profile():
     plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'Tr'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
     plt.plot(range(1, max_iter + 1), QC_ma_input_data.loc[1:max_iter, 'Tr'], \
-             marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
+             marker='^', c='blue', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), original_ma_input_data.loc[1:max_iter, 'Tr'], \
-             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
+             marker='s', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel("Tr", font_label)
     plt.xlabel("RTO iteration", font_label)
 
@@ -366,6 +366,71 @@ def plot_profile():
     plt.savefig("pic/CCE_wo_0306/wo_profile", dpi=600)
     plt.close()
 
+def plot_profile_output_only():
+    max_iter=30
+    global_marker_size = 2/2
+    linewidth=1/2
+    compo_step_plant_data = pandas.read_csv("data/CCE_wo_0306/CompoStep_TR_MA_plant_data.txt", \
+                                      index_col=0, header=0, sep='\t')
+    QC_ma_plant_data = pandas.read_csv("data/CCE_wo_0306/Original_MAQC_plant_data.txt", \
+                                         index_col=0, header=0, sep='\t')
+    original_ma_plant_data = pandas.read_csv("data/CCE_wo_0306/Original_MA_plant_data.txt", \
+                                            index_col=0, header=0, sep='\t')
+
+    compo_step_model_data = pandas.read_csv("data/CCE_wo_0306/CompoStep_TR_MA_model_data.txt", \
+                                      index_col=0, header=0, sep='\t')
+    QC_ma_model_data = pandas.read_csv("data/CCE_wo_0306/Original_MAQC_model_data.txt", \
+                                            index_col=0, header=0, sep='\t')
+    original_ma_model_data = pandas.read_csv("data/CCE_wo_0306/Original_MA_model_data.txt", \
+                                             index_col=0, header=0, sep='\t')
+
+    compo_step_input_data = pandas.read_csv("data/CCE_wo_0306/CompoStep_TR_MA_input_data.txt", \
+                                            index_col=0, header=0, sep='\t')
+    QC_ma_input_data = pandas.read_csv("data/CCE_wo_0306/Original_MAQC_input_data.txt", \
+                                            index_col=0, header=0, sep='\t')
+    original_ma_input_data = pandas.read_csv("data/CCE_wo_0306/Original_MA_input_data.txt", \
+                                             index_col=0, header=0, sep='\t')
+
+    fig = plt.figure(figsize=(10.5 * pic_constant, 10 * pic_constant))
+    plt.subplot(211)
+    optimal = -210.33 * numpy.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
+             linestyle='--')
+    plt.plot(range(1,max_iter+1), compo_step_plant_data.loc[1:max_iter, 'cost'], \
+             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2,\
+             label="composite-step TR")
+    plt.plot(range(1, max_iter + 1), original_ma_plant_data.loc[1:max_iter, 'cost'], \
+             marker='^', c='red', markersize=global_marker_size, linewidth=linewidth, \
+             label="MA")
+    plt.plot(range(1, max_iter + 1), QC_ma_plant_data.loc[1:max_iter, 'cost'], \
+             marker='s', c='blue', markersize=global_marker_size, linewidth=linewidth,\
+             label="MA with convex model")
+    plt.ylabel("plant cost", font_label)
+    plt.legend(loc='upper right', prop=font_legend)
+    plt.subplot(212)
+    optimal = 0 * numpy.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
+             linestyle='--')
+    plt.plot(range(1, max_iter + 1), compo_step_plant_data.loc[1:max_iter, 'con'], \
+             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
+    plt.plot(range(1, max_iter + 1), QC_ma_plant_data.loc[1:max_iter, 'con'], \
+             marker='^', c='blue', markersize=global_marker_size, linewidth=linewidth)
+    plt.plot(range(1, max_iter + 1), original_ma_plant_data.loc[1:max_iter, 'con'], \
+             marker='s', c='red', markersize=global_marker_size, linewidth=linewidth)
+    plt.ylabel("plant constraint", font_label)
+    plt.xlabel("RTO iteration", font_label)
+
+    for i in range(1, 3):
+        plt.subplot(2, 1, i)
+        ax = plt.gca()
+        plt.tick_params(labelsize=global_tick_size)
+        labels = ax.get_xticklabels() + ax.get_yticklabels()
+        [label.set_fontname('Times New Roman') for label in labels]
+
+    plt.tight_layout(pad=0.5, w_pad=0.5, h_pad=0.5)
+    plt.savefig("pic/CCE_wo_0306/wo_profile_output_only", dpi=600)
+    plt.close()
+
 if __name__ == "__main__":
     do_test()
-    plot_profile()
+    plot_profile_output_only()

@@ -98,20 +98,20 @@ class RTO_Mismatched_WO_reactor_QC(PyomoModel):
 
     def build_rto(self, wocstr, cv_func):
         def cost(m):
-            # return -(1143.38 * m.Fr * cv_func['XFr_P'].__call__(m) +\
-            #          25.92 * m.Fr * cv_func['XFr_E'].__call__(m) -\
-            #          76.23 * m.Fa - 114.34 * m.Fb)+\
-            #        74.38/2*(m.Fa**2+m.Fb**2+m.Tr**2)
-            return -(1143.38 * m.Fr * cv_func['XFr_P'].__call__(m) + \
-                     25.92 * m.Fr * cv_func['XFr_E'].__call__(m) - \
-                     76.23 * m.Fa - 114.34 * m.Fb) + \
-                   0 / 2 * (m.Fa ** 2 + m.Fb ** 2 + m.Tr ** 2) #0 #74.38
+            return -(1143.38 * m.Fr * cv_func['XFr_P'].__call__(m) +\
+                     25.92 * m.Fr * cv_func['XFr_E'].__call__(m) -\
+                     76.23 * m.Fa - 114.34 * m.Fb)+\
+                   74.38/2*(m.Fa**2+m.Fb**2+m.Tr**2)
+            # return -(1143.38 * m.Fr * cv_func['XFr_P'].__call__(m) + \
+            #          25.92 * m.Fr * cv_func['XFr_E'].__call__(m) - \
+            #          76.23 * m.Fa - 114.34 * m.Fb) + \
+            #        0 / 2 * (m.Fa ** 2 + m.Fb ** 2 + m.Tr ** 2) #0 #74.38
         wocstr.cost = Expression(rule=cost)
 
         def purity_constraint(m):
-            # return cv_func['XFr_G'].__call__(m) - 0.08+\
-            #        0.0563/2*(m.Fa**2+m.Fb**2+m.Tr**2)
+            return cv_func['XFr_G'].__call__(m) - 0.08+\
+                   0.0563/2*(m.Fa**2+m.Fb**2+m.Tr**2)
 
-            return cv_func['XFr_G'].__call__(m) - 0.08 + \
-                   0.01 / 2 * (m.Fa ** 2 + m.Fb ** 2 + m.Tr ** 2) # 0.01 # 0.0563
+            # return cv_func['XFr_G'].__call__(m) - 0.08 + \
+            #        0.01 / 2 * (m.Fa ** 2 + m.Fb ** 2 + m.Tr ** 2) # 0.01 # 0.0563
         wocstr.purity_constraint = Expression(rule=purity_constraint)

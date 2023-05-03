@@ -33,7 +33,7 @@ class PyomoOptimizer(Optimizer):
         for k, v in default_options.items():
             self.solver.options[k] = v
 
-    def build(self, problem_description, homotopy_factor=1000):
+    def build(self, problem_description, homotopy_factor=100):
         assert isinstance(problem_description, ProblemDescription)
         self.problem_description = problem_description
         self.pyomo_model.build(self.model)
@@ -115,6 +115,7 @@ class PyomoOptimizer(Optimizer):
             results = self.solver.solve(self.model, tee=self.tee)
             if not ((results.solver.status == SolverStatus.ok) and (
                     results.solver.termination_condition == TerminationCondition.optimal)):
+                print("in solving homotopy optimization problem")
                 print(results.solver.termination_condition)
                 # TODO: restore init value
 
@@ -135,6 +136,7 @@ class PyomoOptimizer(Optimizer):
 
         if not ((results.solver.status == SolverStatus.ok) and (
                 results.solver.termination_condition == TerminationCondition.optimal)):
+            print("in solving original optimization problem")
             print(results.solver.termination_condition)
             solve_status = PyomoModelSolvingStatus.OPTIMIZATION_FAILED
         else:
@@ -472,6 +474,11 @@ class CompoStepTrustRegionOptimizer(PyomoOptimizer):
         else:
             solve_status = PyomoModelSolvingStatus.OK
 
+        input_after_normal_step = {}
+        for ip in self.pyomo_model.input_variables.keys():
+            var = self.pyomo_model.input_variables[ip].__call__(self.model)
+            input_after_normal_step[ip] = value(var)
+
         # trust-region optimization - tangential step
         getattr(self.model, "tr_radius").fix(tr_radius)
 
@@ -497,4 +504,4 @@ class CompoStepTrustRegionOptimizer(PyomoOptimizer):
         for ip in self.pyomo_model.input_variables.keys():
             var = self.pyomo_model.input_variables[ip].__call__(self.model)
             inputs[ip] = value(var)
-        return inputs, solve_status
+        return inputs, input_after_normal_step, solve_status

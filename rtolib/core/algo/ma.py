@@ -7,6 +7,7 @@ from rtolib.core.pyomo_model import *
 from rtolib.core.solve import PyomoSimulator,PyomoOptimizer,TrustRegionOptimizer, PenaltyTrustRegionOptimizer,\
 CompoStepTrustRegionOptimizer
 import copy
+from rtolib.util.init_value import to_template, load_init_from_template
 
 
 class ModifierAdaptation(MA_type_Algorithm):
@@ -106,6 +107,12 @@ class ModifierAdaptation(MA_type_Algorithm):
 
         # set basepoint
         self.model_simulator.set_base_point(self.current_point)
+
+        # initialize model optimizer
+        to_template(self.model_simulator.model, "temp_init_file.txt")
+        load_init_from_template(self.model_optimizer.model, "temp_init_file.txt", \
+                                ignore_init_mismatch=True)
+
         self.model_optimizer.set_base_point(self.current_point)
 
         self.store_model_adaptation_data()
@@ -626,7 +633,7 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
         super().register_option()
         self.available_options["xi_N"] = ("[0,1]", 0.5)
         self.available_options["sigma_inc"] = ("[1,Inf]", 2)
-        self.available_options["sigma_kappa"] = ("(0,1)", 0.01)
+        self.available_options["sigma_kappa"] = ("(0,1)", 0.25)
         self.available_options['adaptive_sigma'] = ("bool", False)
 
     def initialize_simulation(self, starting_point, initial_parameter_value):
@@ -638,10 +645,10 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
         if self.spec_function is not None:
             for k, v in self.current_spec.items():
                 input_values[k] = v
-        optimized_input, solve_status = self.model_optimizer.optimize(input_values, tr_radius, tr_base, self.options['xi_N'],
+        optimized_input, input_after_normal_step, solve_status = self.model_optimizer.optimize(input_values, tr_radius, tr_base, self.options['xi_N'],
                                                                       param_values=self.current_parameter_value,
                                                                       use_homo=self.options["homotopy_optimization"])
-        return optimized_input, solve_status
+        return optimized_input, input_after_normal_step, solve_status
 
     def one_step_simulation(self):
         print("Iteration %d" % self.iter_count)
@@ -751,7 +758,7 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
         while (not iter_successful_flag):
             self.model_history_data[self.iter_count]['tr'] = self.trust_radius
             try:
-                optimized_input, solve_status = self.optimize_for_u(self.trust_radius, tr_base)
+                optimized_input, input_after_normal_step, solve_status = self.optimize_for_u(self.trust_radius, tr_base)
             except Exception as e:
                 optimized_input = self.current_point
                 self.model_history_data[self.iter_count]['event'] = "optimization failed"
@@ -791,12 +798,18 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
                 base_infeasibility = self.model_history_data[base_iteration]['base_infeasibility']
                 base_obj = self.model_history_data[base_iteration]['base_obj_for_merit']
                 base_merit =  base_obj+base_infeasibility * self.sigma
+
+                output_after_normal_step = self.get_model_simulation_result([input_after_normal_step])[0]
+                obj_after_normal_step = output_after_normal_step[obj_var_name] / \
+                        self.problem_description.scaling_factors[obj_var_name]
+
                 if (base_infeasibility-infeasibility < self.options['feasibility_tol']):
                     # in this case, the feasibility progress is insignificant
                     pass
                 elif (base_merit - merit)/(base_infeasibility-infeasibility)/self.sigma < self.options["sigma_kappa"]:
-                    # in this case, it must be that (base_obj-obj_after_optimization)<0
-                    self.sigma = max(self.sigma,(base_obj-obj_after_optimization)/(self.options["sigma_kappa"]-1)/\
+                    # in this case, if sigma increases,
+                    # it must be that (base_obj-obj_after_normal_step)<0
+                    self.sigma = max(self.sigma,(base_obj-obj_after_normal_step)/(self.options["sigma_kappa"]-1)/\
                                  (base_infeasibility - infeasibility)+1)
                     print("self.sigma=%f"%self.sigma)
 
