@@ -2,11 +2,13 @@
 #-*- coding:utf-8 -*-
 import numpy
 from rtolib.core.algo.ma import ModifierAdaptation
-from rtolib.core.dc_cpwl_model import QuadraticBoostedDCCPWL_RTOObject
+from rtolib.core.dc_cpwl_model import QuadraticBoostedDCCPWL_RTOObject,\
+        QuadraticBoostedDCCPWL_PenaltyTR_Object
 from rtolib.core.solve import PyomoSimulator
 import copy
 from rtolib.core import ModifierType
 from pyomo.environ import SolverFactory
+from subgrad import DCCPWL_ModifierAdaptationTRPenalty
 
 
 class DCCPWL_ModifierAdaptation(ModifierAdaptation):
@@ -88,7 +90,10 @@ class DCCPWL_ModifierAdaptation(ModifierAdaptation):
 
         self.model_history_data[0] = {}
 
-        self.DC_CPWL_RTO_model.build()
+        if isinstance(self, DCCPWL_ModifierAdaptationTRPenalty):
+            self.DC_CPWL_RTO_model.build(self.problem_description)
+        else:
+            self.DC_CPWL_RTO_model.build()
         # solver2 = SolverFactory('cplex', executable=self.qcqp_solver_executable)
         # solver2 = SolverFactory('gurobi')
         solver2 = SolverFactory('ipopt', executable=self.nlp_solver_executable)
@@ -161,4 +166,5 @@ class DCCPWL_ModifierAdaptation(ModifierAdaptation):
 
         # iter count
         self.iter_count += 1
+
 

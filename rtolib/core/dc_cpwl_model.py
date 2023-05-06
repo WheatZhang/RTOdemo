@@ -2,6 +2,7 @@ import numpy as np
 from pyomo.environ import *
 import pickle
 from rtolib.util.misc import get_hypercube_sampling
+from rtolib.core import ProblemDescription
 
 class QuadraticBoostedDCCPWLFunction(object):
     def __init__(self):
@@ -727,3 +728,131 @@ class QuadraticBoostedDCCPWL_RTOObjectSubgrad(QuadraticBoostedDCCPWL_RTOObject):
         for cv in self.cvs:
             output_model = self.subproblem_model.output[cv]
             self.dc_cpwl_functions[cv].set_linear_correction_parameters(output_model)
+
+class QuadraticBoostedDCCPWL_PenaltyTR_Object(QuadraticBoostedDCCPWL_RTOObjectSubgrad):
+    def build(self, problem_description, constraint_scaling=1):
+        assert isinstance(problem_description, ProblemDescription)
+        self.problem_description = problem_description
+
+        subproblem_model = ConcreteModel()
+        subproblem_model.InputIndex = Set(initialize=self.inputs)
+        subproblem_model.OutputIndex = Set(initialize=self.cvs)
+        subproblem_model.input = Var(subproblem_model.InputIndex)
+        subproblem_model.output = Block(subproblem_model.OutputIndex)
+        setattr(subproblem_model, "dummy_var_for_sqrt_c", Var(initialize=0, within=NonNegativeReals))
+        setattr(subproblem_model, "tr_penalty_coeff", Var(initialize=0))
+        getattr(subproblem_model, "tr_penalty_coeff").fixed = True
+        for name, dc_cpwl in self.dc_cpwl_functions.items():
+            dc_cpwl.build_optimizer_mainbody(subproblem_model.output[name], subproblem_model.input)
+            dc_cpwl.build_optimizer_linear_correction(subproblem_model.output[name], subproblem_model.input)
+
+        # inequality violation measure
+        for con_var_name in self.cvs[1:]:
+            setattr(subproblem_model, "con_vio_" + con_var_name, Var(initialize=0, within=NonNegativeReals))
+
+        def _violation_cons(m):
+            for con_var_name in self.cvs[1:]:
+                yield (m.output[con_name].f /
+                       self.problem_description.scaling_factors[con_var_name] \
+                       - getattr(subproblem_model, "con_vio_" + con_var_name)) * constraint_scaling <= 0
+        subproblem_model.violation_cons = ConstraintList(rule=_violation_cons)
+
+        # merit function
+        def _tr_infeasibility_sq(m):
+            ret = 0
+            for con_var_name in self.cvs[1:]:
+                ret += getattr(m, "con_vio_" + con_var_name) ** 2 / \
+                       self.problem_description.scaling_factors[con_var_name] ** 2
+            return ret
+        subproblem_model.tr_infeasibility_sq = Expression(rule=_tr_infeasibility_sq)
+
+        def c_sqrt_cons(m):
+            return (m.dummy_var_for_sqrt_c ** 2 - m.tr_infeasibility_sq) * constraint_scaling == 0
+        subproblem_model.c_sqrt_cons = Constraint(rule=c_sqrt_cons)
+
+        def _tr_merit_function(m):
+            ret = m.output[self.cvs[0]].f
+            ret += m.dummy_var_for_sqrt_c * m.tr_penalty_coeff
+            return ret
+        subproblem_model.tr_merit_function = Expression(rule=_tr_merit_function)
+
+        # set tr con
+        for ip in subproblem_model.InputIndex:
+            setattr(subproblem_model, ip + "_tr_base", Var(initialize=0))
+            getattr(subproblem_model, ip + "_tr_base").fixed = True
+        setattr(subproblem_model, "tr_radius", Var(initialize=0))
+        getattr(subproblem_model, "tr_radius").fixed = True
+
+        def _trust_region_con(m):
+            r = 0
+            for ip in m.InputIndex:
+                r += (m.input[ip] - getattr(m, ip + "_tr_base")) ** 2 / \
+                     (self.problem_description.scaling_factors[ip] ** 2)
+            return r <= m.tr_radius ** 2
+        subproblem_model.trust_region_cons = Constraint(rule=_trust_region_con)
+
+        # set obj
+        def _objective(m):
+            return m.tr_merit_function
+        subproblem_model.objective_function = Objective(rule=_objective, sense=minimize)
+        self.subproblem_model = subproblem_model
+
+    def set_penalty_coeff(self, sigma):
+        self.subproblem_model.tr_penalty_coeff.fix(sigma)
+
+    def optimize(self, spec_values, starting_point, tr_radius, tr_base):
+        '''
+
+        :param spec_values: specification and parameters
+        :param starting_point: other inputs
+        :return:
+        '''
+        print(spec_values)
+        print(starting_point)
+        whole_input = {}
+        for k,v in spec_values.items():
+            if k not in self.inputs:
+                continue
+            if k not in self.parameters:
+                whole_input[k] = v
+                self.subproblem_model.input[k].fix(v)
+        for k,v in starting_point.items():
+            if k not in self.inputs:
+                continue
+            whole_input[k] = v
+            self.subproblem_model.input[k] = v
+
+        # set trust-region
+        for var_name in self.subproblem_model.InputIndex:
+            if var_name in tr_base.keys():
+                getattr(self.subproblem_model, var_name + "_tr_base").fix(tr_base[var_name])
+            else:
+                getattr(self.subproblem_model, var_name + "_tr_base").fixed = False
+        getattr(self.subproblem_model, "tr_radius").fix(tr_radius)
+
+        # -------------- solve optimization problem ----------------
+        self.subproblem_model.optimization_constraint.activate()
+        self.subproblem_model.optimization_obj.activate()
+        self.subproblem_model.feasibility_constraint.deactivate()
+        self.subproblem_model.feasibility_obj.deactivate()
+        prev_u = self.get_input_vector()
+        # print(prev_u)
+        solve_status = False
+        for i in range(self.subproblem_max_iter):
+            for name, dc_cpwl in self.dc_cpwl_functions.items():
+                dc_cpwl.set_optimizer_concave_majorization(self.subproblem_model.output[name], whole_input)
+            results = self.solver.solve(self.subproblem_model, tee=self.tee)
+            if not ((results.solver.status == SolverStatus.ok) and (
+                    results.solver.termination_condition == TerminationCondition.optimal)):
+                print(results.solver.termination_condition)
+                raise Exception("QCQP solving fails.")
+            for mv in self.inputs:
+                whole_input[mv] = value(self.subproblem_model.input[mv])
+            this_u = self.get_input_vector()
+            if np.linalg.norm(this_u - prev_u) < self.tol:
+                solve_status = True
+                break
+            prev_u = this_u
+        print("after optimization:")
+        print(whole_input)
+        return whole_input, solve_status
