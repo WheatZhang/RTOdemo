@@ -1,0 +1,269 @@
+3 Set Declarations
+    InputIndex : Size=1, Index=None, Ordered=Insertion
+        Key  : Dimen : Domain : Size : Members
+        None :     1 :    Any :    1 : {'u1',}
+    OutputIndex : Size=1, Index=None, Ordered=Insertion
+        Key  : Dimen : Domain : Size : Members
+        None :     1 :    Any :    3 : {'cost', 'con', 'validity_con'}
+    violation_cons_index : Size=1, Index=None, Ordered=Insertion
+        Key  : Dimen : Domain : Size : Members
+        None :     1 :    Any :    2 : {1, 2}
+
+7 Var Declarations
+    con_vio_con : Size=1, Index=None
+        Key  : Lower : Value                  : Upper : Fixed : Stale : Domain
+        None :     0 : 2.5156681855887503e-09 :  None : False : False : NonNegativeReals
+    con_vio_validity_con : Size=1, Index=None
+        Key  : Lower : Value : Upper : Fixed : Stale : Domain
+        None :     0 :   0.0 :  None : False : False : NonNegativeReals
+    infeasibility_sum : Size=1, Index=None
+        Key  : Lower : Value                  : Upper : Fixed : Stale : Domain
+        None :     0 : 2.5156681855887503e-09 :  None : False : False : NonNegativeReals
+    input : Size=1, Index=InputIndex
+        Key : Lower : Value               : Upper : Fixed : Stale : Domain
+         u1 :  None : -0.9374322292799432 :  None : False : False :  Reals
+    tr_penalty_coeff : Size=1, Index=None
+        Key  : Lower : Value : Upper : Fixed : Stale : Domain
+        None :  None :    10 :  None :  True :  True :  Reals
+    tr_radius : Size=1, Index=None
+        Key  : Lower : Value : Upper : Fixed : Stale : Domain
+        None :  None :     2 :  None :  True :  True :  Reals
+    u1_tr_base : Size=1, Index=None
+        Key  : Lower : Value              : Upper : Fixed : Stale : Domain
+        None :  None : -0.874983280877816 :  None :  True :  True :  Reals
+
+1 Expression Declarations
+    tr_merit_function : Size=1, Index=None
+        Key  : Expression
+        None : (output[cost].cpwl_pos - output[cost].cpwl_neg + (input[u1]*input[u1]) - output[cost].quadr_neg + output[cost].linear_correction) + infeasibility_sum*tr_penalty_coeff
+
+1 Objective Declarations
+    objective_function : Size=1, Index=None, Active=True
+        Key  : Active : Sense    : Expression
+        None :   True : minimize : tr_merit_function
+
+3 Constraint Declarations
+    tr_infeasibility_sum : Size=1, Index=None, Active=True
+        Key  : Lower : Body                                                   : Upper : Active
+        None :   0.0 : con_vio_con + con_vio_validity_con - infeasibility_sum :   0.0 :   True
+    trust_region_cons : Size=1, Index=None, Active=True
+        Key  : Lower : Body                                       : Upper : Active
+        None :  -Inf : (input[u1] - u1_tr_base)**2 - tr_radius**2 :   0.0 :   True
+    violation_cons : Size=2, Index=violation_cons_index, Active=True
+        Key : Lower : Body                                                                                                                                                                   : Upper : Active
+          1 :  -Inf :          (output[con].cpwl_pos - output[con].cpwl_neg + (input[u1]*input[u1] - 2*input[u1] - 9) - output[con].quadr_neg + output[con].linear_correction) - con_vio_con :   0.0 :   True
+          2 :  -Inf : (output[validity_con].cpwl_pos - output[validity_con].cpwl_neg - 1.0 - output[validity_con].quadr_neg + output[validity_con].linear_correction) - con_vio_validity_con :   0.0 :   True
+
+1 Block Declarations
+    output : Size=3, Index=OutputIndex, Active=True
+        output[con] : Active=True
+            2 Set Declarations
+                Dimension : Size=1, Index=None, Ordered=Insertion
+                    Key  : Dimen : Domain : Size : Members
+                    None :     1 :    Any :    1 :    {0,}
+                PosSeg : Size=1, Index=None, Ordered=Insertion
+                    Key  : Dimen : Domain : Size : Members
+                    None :     1 :    Any :    2 : {0, 1}
+
+            7 Param Declarations
+                base_point : Size=1, Index=output[con].Dimension, Domain=Any, Default=None, Mutable=True
+                    Key : Value
+                      0 : -0.874983280877816
+                cpwl_neg_b : Size=1, Index=None, Domain=Any, Default=None, Mutable=True
+                    Key  : Value
+                    None :   0.0
+                cpwl_neg_k : Size=1, Index=output[con].Dimension, Domain=Any, Default=None, Mutable=True
+                    Key : Value
+                      0 :  -0.5
+                linear_correction_b : Size=1, Index=None, Domain=Any, Default=None, Mutable=True
+                    Key  : Value
+                    None : -3.58667459553918
+                linear_correction_k : Size=1, Index=output[con].Dimension, Domain=Any, Default=None, Mutable=True
+                    Key : Value
+                      0 : 2.348915896779265
+                quadr_neg_b : Size=1, Index=None, Domain=Any, Default=None, Mutable=True
+                    Key  : Value
+                    None :   0.0
+                quadr_neg_k : Size=1, Index=output[con].Dimension, Domain=Any, Default=None, Mutable=True
+                    Key : Value
+                      0 :   0.0
+
+            4 Var Declarations
+                cpwl_neg : Size=1, Index=None
+                    Key  : Lower : Value              : Upper : Fixed : Stale : Domain
+                    None :  None : 0.4687161146399716 :  None : False : False :  Reals
+                cpwl_pos : Size=1, Index=None
+                    Key  : Lower : Value              : Upper : Fixed : Stale : Domain
+                    None :  None : 3.5757745917194685 :  None : False : False :  Reals
+                linear_correction : Size=1, Index=None
+                    Key  : Lower : Value              : Upper : Fixed : Stale : Domain
+                    None :  None : -3.733361923178085 :  None : False : False :  Reals
+                quadr_neg : Size=1, Index=None
+                    Key  : Lower : Value : Upper : Fixed : Stale : Domain
+                    None :  None :   0.0 :  None : False : False :  Reals
+
+            2 Expression Declarations
+                f : Size=1, Index=None
+                    Key  : Expression
+                    None : output[con].cpwl_pos - output[con].cpwl_neg + (input[u1]*input[u1] - 2*input[u1] - 9) - output[con].quadr_neg + output[con].linear_correction
+                quadr_pos : Size=1, Index=None
+                    Key  : Expression
+                    None : input[u1]*input[u1] - 2*input[u1] - 9
+
+            4 Constraint Declarations
+                cpwl_neg_calc : Size=1, Index=None, Active=True
+                    Key  : Lower : Body                                                                                  : Upper : Active
+                    None :   0.0 : output[con].cpwl_neg - (output[con].cpwl_neg_k[0]*input[u1] + output[con].cpwl_neg_b) :   0.0 :   True
+                cpwl_pos_calc : Size=2, Index=output[con].PosSeg, Active=True
+                    Key : Lower : Body                                   : Upper : Active
+                      0 :  -Inf : - input[u1] + 1 - output[con].cpwl_pos :   0.0 :   True
+                      1 :  -Inf :   input[u1] - 1 - output[con].cpwl_pos :   0.0 :   True
+                linear_correction_calc : Size=1, Index=None, Active=True
+                    Key  : Lower : Body                                                                                                                                           : Upper : Active
+                    None :   0.0 : output[con].linear_correction - (output[con].linear_correction_k[0]*(input[u1] - output[con].base_point[0]) + output[con].linear_correction_b) :   0.0 :   True
+                quadr_neg_calc : Size=1, Index=None, Active=True
+                    Key  : Lower : Body                                                                                     : Upper : Active
+                    None :   0.0 : output[con].quadr_neg - (output[con].quadr_neg_k[0]*input[u1] + output[con].quadr_neg_b) :   0.0 :   True
+
+            19 Declarations: PosSeg Dimension cpwl_pos cpwl_neg quadr_neg linear_correction linear_correction_b base_point cpwl_neg_k cpwl_neg_b quadr_neg_k quadr_neg_b quadr_pos cpwl_pos_calc cpwl_neg_calc quadr_neg_calc f linear_correction_k linear_correction_calc
+        output[cost] : Active=True
+            2 Set Declarations
+                Dimension : Size=1, Index=None, Ordered=Insertion
+                    Key  : Dimen : Domain : Size : Members
+                    None :     1 :    Any :    1 :    {0,}
+                PosSeg : Size=1, Index=None, Ordered=Insertion
+                    Key  : Dimen : Domain : Size : Members
+                    None :     1 :    Any :    2 : {0, 1}
+
+            7 Param Declarations
+                base_point : Size=1, Index=output[cost].Dimension, Domain=Any, Default=None, Mutable=True
+                    Key : Value
+                      0 : -0.874983280877816
+                cpwl_neg_b : Size=1, Index=None, Domain=Any, Default=None, Mutable=True
+                    Key  : Value
+                    None :   0.0
+                cpwl_neg_k : Size=1, Index=output[cost].Dimension, Domain=Any, Default=None, Mutable=True
+                    Key : Value
+                      0 :   0.0
+                linear_correction_b : Size=1, Index=None, Domain=Any, Default=None, Mutable=True
+                    Key  : Value
+                    None : -1.6327644326634858
+                linear_correction_k : Size=1, Index=output[cost].Dimension, Domain=Any, Default=None, Mutable=True
+                    Key : Value
+                      0 : 2.874988281310384
+                quadr_neg_b : Size=1, Index=None, Domain=Any, Default=None, Mutable=True
+                    Key  : Value
+                    None :   0.0
+                quadr_neg_k : Size=1, Index=output[cost].Dimension, Domain=Any, Default=None, Mutable=True
+                    Key : Value
+                      0 :   0.0
+
+            4 Var Declarations
+                cpwl_neg : Size=1, Index=None
+                    Key  : Lower : Value : Upper : Fixed : Stale : Domain
+                    None :  None :   0.0 :  None : False : False :  Reals
+                cpwl_pos : Size=1, Index=None
+                    Key  : Lower : Value              : Upper : Fixed : Stale : Domain
+                    None :  None : 0.9374322391631323 :  None : False : False :  Reals
+                linear_correction : Size=1, Index=None
+                    Key  : Lower : Value               : Upper : Fixed : Stale : Domain
+                    None :  None : -1.8123044274997584 :  None : False : False :  Reals
+                quadr_neg : Size=1, Index=None
+                    Key  : Lower : Value : Upper : Fixed : Stale : Domain
+                    None :  None :   0.0 :  None : False : False :  Reals
+
+            2 Expression Declarations
+                f : Size=1, Index=None
+                    Key  : Expression
+                    None : output[cost].cpwl_pos - output[cost].cpwl_neg + (input[u1]*input[u1]) - output[cost].quadr_neg + output[cost].linear_correction
+                quadr_pos : Size=1, Index=None
+                    Key  : Expression
+                    None : input[u1]*input[u1]
+
+            4 Constraint Declarations
+                cpwl_neg_calc : Size=1, Index=None, Active=True
+                    Key  : Lower : Body                                                                                     : Upper : Active
+                    None :   0.0 : output[cost].cpwl_neg - (output[cost].cpwl_neg_k[0]*input[u1] + output[cost].cpwl_neg_b) :   0.0 :   True
+                cpwl_pos_calc : Size=2, Index=output[cost].PosSeg, Active=True
+                    Key : Lower : Body                                : Upper : Active
+                      0 :  -Inf : - input[u1] - output[cost].cpwl_pos :   0.0 :   True
+                      1 :  -Inf :   input[u1] - output[cost].cpwl_pos :   0.0 :   True
+                linear_correction_calc : Size=1, Index=None, Active=True
+                    Key  : Lower : Body                                                                                                                                               : Upper : Active
+                    None :   0.0 : output[cost].linear_correction - (output[cost].linear_correction_k[0]*(input[u1] - output[cost].base_point[0]) + output[cost].linear_correction_b) :   0.0 :   True
+                quadr_neg_calc : Size=1, Index=None, Active=True
+                    Key  : Lower : Body                                                                                        : Upper : Active
+                    None :   0.0 : output[cost].quadr_neg - (output[cost].quadr_neg_k[0]*input[u1] + output[cost].quadr_neg_b) :   0.0 :   True
+
+            19 Declarations: PosSeg Dimension cpwl_pos cpwl_neg quadr_neg linear_correction linear_correction_b base_point cpwl_neg_k cpwl_neg_b quadr_neg_k quadr_neg_b quadr_pos cpwl_pos_calc cpwl_neg_calc quadr_neg_calc f linear_correction_k linear_correction_calc
+        output[validity_con] : Active=True
+            2 Set Declarations
+                Dimension : Size=1, Index=None, Ordered=Insertion
+                    Key  : Dimen : Domain : Size : Members
+                    None :     1 :    Any :    1 :    {0,}
+                PosSeg : Size=1, Index=None, Ordered=Insertion
+                    Key  : Dimen : Domain : Size : Members
+                    None :     1 :    Any :    1 :    {0,}
+
+            7 Param Declarations
+                base_point : Size=1, Index=output[validity_con].Dimension, Domain=Any, Default=None, Mutable=True
+                    Key : Value
+                      0 :     0
+                cpwl_neg_b : Size=1, Index=None, Domain=Any, Default=None, Mutable=True
+                    Key  : Value
+                    None :     0
+                cpwl_neg_k : Size=1, Index=output[validity_con].Dimension, Domain=Any, Default=None, Mutable=True
+                    Key : Value
+                      0 :     0
+                linear_correction_b : Size=1, Index=None, Domain=Any, Default=None, Mutable=True
+                    Key  : Value
+                    None :     0
+                linear_correction_k : Size=1, Index=output[validity_con].Dimension, Domain=Any, Default=None, Mutable=True
+                    Key : Value
+                      0 :     0
+                quadr_neg_b : Size=1, Index=None, Domain=Any, Default=None, Mutable=True
+                    Key  : Value
+                    None :   0.0
+                quadr_neg_k : Size=1, Index=output[validity_con].Dimension, Domain=Any, Default=None, Mutable=True
+                    Key : Value
+                      0 :   0.0
+
+            4 Var Declarations
+                cpwl_neg : Size=1, Index=None
+                    Key  : Lower : Value : Upper : Fixed : Stale : Domain
+                    None :  None :   0.0 :  None : False : False :  Reals
+                cpwl_pos : Size=1, Index=None
+                    Key  : Lower : Value : Upper : Fixed : Stale : Domain
+                    None :  None :   0.0 :  None : False : False :  Reals
+                linear_correction : Size=1, Index=None
+                    Key  : Lower : Value : Upper : Fixed : Stale : Domain
+                    None :  None :   0.0 :  None : False : False :  Reals
+                quadr_neg : Size=1, Index=None
+                    Key  : Lower : Value : Upper : Fixed : Stale : Domain
+                    None :  None :   0.0 :  None : False : False :  Reals
+
+            2 Expression Declarations
+                f : Size=1, Index=None
+                    Key  : Expression
+                    None : output[validity_con].cpwl_pos - output[validity_con].cpwl_neg - 1.0 - output[validity_con].quadr_neg + output[validity_con].linear_correction
+                quadr_pos : Size=1, Index=None
+                    Key  : Expression
+                    None :       -1.0
+
+            4 Constraint Declarations
+                cpwl_neg_calc : Size=1, Index=None, Active=True
+                    Key  : Lower : Body                                                                                                             : Upper : Active
+                    None :   0.0 : output[validity_con].cpwl_neg - (output[validity_con].cpwl_neg_k[0]*input[u1] + output[validity_con].cpwl_neg_b) :   0.0 :   True
+                cpwl_pos_calc : Size=1, Index=output[validity_con].PosSeg, Active=True
+                    Key : Lower : Body                          : Upper : Active
+                      0 :   0.0 : output[validity_con].cpwl_pos :  +Inf :   True
+                linear_correction_calc : Size=1, Index=None, Active=True
+                    Key  : Lower : Body                                                                                                                                                                               : Upper : Active
+                    None :   0.0 : output[validity_con].linear_correction - (output[validity_con].linear_correction_k[0]*(input[u1] - output[validity_con].base_point[0]) + output[validity_con].linear_correction_b) :   0.0 :   True
+                quadr_neg_calc : Size=1, Index=None, Active=True
+                    Key  : Lower : Body                                                                                                                : Upper : Active
+                    None :   0.0 : output[validity_con].quadr_neg - (output[validity_con].quadr_neg_k[0]*input[u1] + output[validity_con].quadr_neg_b) :   0.0 :   True
+
+            19 Declarations: PosSeg Dimension cpwl_pos cpwl_neg quadr_neg linear_correction linear_correction_b base_point cpwl_neg_k cpwl_neg_b quadr_neg_k quadr_neg_b quadr_pos cpwl_pos_calc cpwl_neg_calc quadr_neg_calc f linear_correction_k linear_correction_calc
+
+16 Declarations: InputIndex OutputIndex input output infeasibility_sum tr_penalty_coeff con_vio_con con_vio_validity_con violation_cons_index violation_cons tr_infeasibility_sum tr_merit_function u1_tr_base tr_radius trust_region_cons objective_function

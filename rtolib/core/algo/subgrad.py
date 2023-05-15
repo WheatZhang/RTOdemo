@@ -9,8 +9,20 @@ import copy
 from rtolib.core import ModifierType
 from pyomo.environ import SolverFactory
 
+# TODO:deal with solve status, fallback strategy
 
 class DCCPWL_ModifierAdaptationSubgrad(DCCPWL_ModifierAdaptation):
+    def register_option(self):
+        super().register_option()
+        self.available_options["sigma"] = (">0", 10)
+
+    def initialize_simulation(self, starting_point, initial_parameter_value):
+        super().initialize_simulation(starting_point, initial_parameter_value)
+        self.sigma = self.options['sigma']
+        self.DC_CPWL_RTO_model.sigma = self.options['sigma']
+        self.DC_CPWL_RTO_model.set_penalty_coeff(self.DC_CPWL_RTO_model.sigma)
+
+
     def set_problem(self, problem_description,
                     plant,
                     model_dc_cpwl_functions,
@@ -21,10 +33,14 @@ class DCCPWL_ModifierAdaptationSubgrad(DCCPWL_ModifierAdaptation):
                     spec_function,
                     modifier_type,
                     parameter_set,
+                    model_mvs=None,
                     ):
         self.problem_description = problem_description
         self.plant_simulator = PyomoSimulator(plant)
-        mvs = self.problem_description.symbol_list['MV']
+        if model_mvs is None:
+            mvs = self.problem_description.symbol_list['MV']
+        else:
+            mvs = model_mvs
         if modifier_type == ModifierType.RTO:
             cvs = [self.problem_description.symbol_list['OBJ']]
             for cv in self.problem_description.symbol_list['CON']:
@@ -46,9 +62,10 @@ class DCCPWL_ModifierAdaptationSubgrad(DCCPWL_ModifierAdaptation):
         self.parameter_set = parameter_set
 
     def update_modifiers(self, plant_output_data):
-        print(plant_output_data)
+        # print(plant_output_data)
         plant_y_and_k = self.perturbation_method.calculate_plant_y_and_k(plant_output_data)
-        self.DC_CPWL_RTO_model.update_modifiers(plant_y_and_k, self.current_point)
+        self.DC_CPWL_RTO_model.update_modifiers(plant_y_and_k, self.current_point,\
+                                                self.options['sigma'])
 
 
     def one_step_simulation(self):
@@ -85,6 +102,19 @@ class DCCPWL_ModifierAdaptationSubgrad(DCCPWL_ModifierAdaptation):
         self.iter_count += 1
 
 class DCCPWL_ModifierAdaptationTRPenalty(DCCPWL_ModifierAdaptationSubgrad):
+    def register_option(self):
+        super().register_option()
+        self.available_options["eta1"] = ("[0,1]", 0.1)
+        self.available_options["eta2"] = ("[0,1]", 0.95)
+        self.available_options["gamma1"] = ("[0,1]", 0.5)
+        self.available_options["gamma2"] = ("[0,1]", 1)
+        self.available_options["gamma3"] = ("[1, inf]", 1.5)
+        self.available_options["max_iter"] = ("[1, inf]", 100)
+        self.available_options["feasibility_tol"] = ("positive float", 1e-8)
+        self.available_options["stationarity_tol"] = ("positive float", 1e-6)
+        self.available_options["max_trust_radius"] = ("positive float", 10)
+        self.available_options["initial_trust_radius"] = ("positive float", 1)
+
     def set_problem(self, problem_description,
                     plant,
                     model_dc_cpwl_functions,
@@ -99,6 +129,7 @@ class DCCPWL_ModifierAdaptationTRPenalty(DCCPWL_ModifierAdaptationSubgrad):
                     ):
         self.problem_description = problem_description
         self.plant_simulator = PyomoSimulator(plant)
+        self.model_mvs = model_mvs
         if model_mvs is None:
             mvs = self.problem_description.symbol_list['MV']
         else:
@@ -123,22 +154,18 @@ class DCCPWL_ModifierAdaptationTRPenalty(DCCPWL_ModifierAdaptationSubgrad):
         self.spec_function = spec_function
         self.parameter_set = parameter_set
 
-    def register_option(self):
-        super().register_option()
-        self.available_options["sigma"] = ("positive float", 10)
-
     def initialize_simulation(self, starting_point, initial_parameter_value):
         super().initialize_simulation(starting_point, initial_parameter_value)
-        self.sigma = self.options['sigma']
-        self.model_optimizer.set_penalty_coeff(self.sigma)
+        self.trust_radius = self.options["initial_trust_radius"]
 
     def optimize_for_u(self, tr_radius, tr_base):
         spec_values = {}
         if self.spec_function is not None:
             for k, v in self.current_spec.items():
                 spec_values[k] = v
+                tr_base[k] = v
         optimized_input, solve_status = self.DC_CPWL_RTO_model.optimize(spec_values, self.current_point, tr_radius, tr_base)
-        # TODO:deal with solve status, fallback strategy
+
         return optimized_input, solve_status
 
     def one_step_simulation(self):
@@ -173,11 +200,11 @@ class DCCPWL_ModifierAdaptationTRPenalty(DCCPWL_ModifierAdaptationSubgrad):
         obj_var_name = self.problem_description.symbol_list['OBJ']
         ret = self.plant_history_data[self.iter_count][obj_var_name] / \
               self.problem_description.scaling_factors[obj_var_name]
-        infeasibility_sq = 0
+        infeasibility_sum = 0
         for con_var_name in self.problem_description.symbol_list['CON']:
-            infeasibility_sq += max(self.plant_history_data[self.iter_count][con_var_name], 0) ** 2 / \
-                                self.problem_description.scaling_factors[con_var_name] ** 2
-        ret += numpy.sqrt(infeasibility_sq) * self.sigma
+            infeasibility_sum += max(self.plant_history_data[self.iter_count][con_var_name], 0)  / \
+                                self.problem_description.scaling_factors[con_var_name]
+        ret += infeasibility_sum * self.sigma
         self.plant_history_data[self.iter_count]['merit'] = ret
         self.plant_history_data[self.iter_count]['base_merit'] = ret
 
@@ -186,49 +213,41 @@ class DCCPWL_ModifierAdaptationTRPenalty(DCCPWL_ModifierAdaptationSubgrad):
         obj_var_name = self.problem_description.symbol_list['OBJ']
         ret = self.model_history_data[self.iter_count][obj_var_name] / \
               self.problem_description.scaling_factors[obj_var_name]
-        infeasibility_sq = 0
+        infeasibility_sum = 0
         for con_var_name in self.problem_description.symbol_list['CON']:
-            infeasibility_sq += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
-                                self.problem_description.scaling_factors[con_var_name] ** 2
-        ret += numpy.sqrt(infeasibility_sq) * self.sigma
+            infeasibility_sum += max(self.model_history_data[self.iter_count][con_var_name], 0)  / \
+                                self.problem_description.scaling_factors[con_var_name]
+        ret += infeasibility_sum * self.sigma
         self.model_history_data[self.iter_count]['merit'] = ret
 
         # update modifiers
         self.update_modifiers(plant_output_data)
+        self.DC_CPWL_RTO_model.set_penalty_coeff(self.DC_CPWL_RTO_model.sigma)
 
         self.store_model_adaptation_data()
-
-        # culculate_base_merit
-        base_model_output, solve_status = self.DC_CPWL_RTO_model.simulate(base_input)
-        obj_var_name = self.problem_description.symbol_list['OBJ']
-        ret = base_model_output[obj_var_name] / \
-              self.problem_description.scaling_factors[obj_var_name]
-        infeasibility_sq = 0
-        for con_var_name in self.problem_description.symbol_list['CON']:
-            infeasibility_sq += max(base_model_output[con_var_name], 0) ** 2 / \
-                                self.problem_description.scaling_factors[con_var_name] ** 2
-        ret += numpy.sqrt(infeasibility_sq) * self.sigma
-        base_merit = ret
-
-        self.model_history_data[self.iter_count]['base_' + obj_var_name] = base_model_output[obj_var_name]
-        for con_var_name in self.problem_description.symbol_list['CON']:
-            self.model_history_data[self.iter_count]['base_' + con_var_name] = base_model_output[con_var_name]
-        self.model_history_data[self.iter_count]['base_merit'] = base_merit
 
         iter_successful_flag = False
         rho = 100
         tr_base = {}
-        for k, v in trial_points[0].items():
-            if k in self.problem_description.symbol_list['MV']:
-                tr_base[k] = v
+        if self.model_mvs is None:
+            for k, v in trial_points[0].items():
+                if k in self.problem_description.symbol_list['MV']:
+                    tr_base[k] = v
+        else:
+            for k, v in trial_points[0].items():
+                if k in self.model_mvs:
+                    tr_base[k] = v
         while (not iter_successful_flag):
             self.model_history_data[self.iter_count]['tr'] = self.trust_radius
             try:
                 optimized_input, solve_status = self.optimize_for_u(self.trust_radius, tr_base)
             except Exception as e:
+                raise e
+                print("Exception occured in optimization: ", e)
                 optimized_input = self.current_point
                 self.model_history_data[self.iter_count]['event'] = "optimization failed"
-            if solve_status == PyomoModelSolvingStatus.OPTIMIZATION_FAILED:
+            if solve_status == False:
+                print("solve_status == False occured in optimization")
                 optimized_input = self.current_point
                 self.model_history_data[self.iter_count]['event'] = "optimization failed"
 
@@ -237,6 +256,26 @@ class DCCPWL_ModifierAdaptationTRPenalty(DCCPWL_ModifierAdaptationSubgrad):
 
             # set specification and store input data
             self.set_current_point(filtered_input)
+            if self.spec_function is not None:
+                for k, v in self.current_spec.items():
+                    filtered_input[k] = v
+
+            # culculate_base_merit
+            base_model_output, solve_status = self.DC_CPWL_RTO_model.simulate(base_input, with_modifier=True)
+            obj_var_name = self.problem_description.symbol_list['OBJ']
+            ret = base_model_output[obj_var_name] / \
+                  self.problem_description.scaling_factors[obj_var_name]
+            infeasibility_sum = 0
+            for con_var_name in self.problem_description.symbol_list['CON']:
+                infeasibility_sum += max(base_model_output[con_var_name], 0)  / \
+                                    self.problem_description.scaling_factors[con_var_name]
+            ret += infeasibility_sum * self.sigma
+            base_merit = ret
+
+            self.model_history_data[self.iter_count]['base_' + obj_var_name] = base_model_output[obj_var_name]
+            for con_var_name in self.problem_description.symbol_list['CON']:
+                self.model_history_data[self.iter_count]['base_' + con_var_name] = base_model_output[con_var_name]
+            self.model_history_data[self.iter_count]['base_merit'] = base_merit
 
             # iter count
             if self.iter_count >= self.options['max_iter']:
@@ -252,21 +291,21 @@ class DCCPWL_ModifierAdaptationTRPenalty(DCCPWL_ModifierAdaptationSubgrad):
             obj_var_name = self.problem_description.symbol_list['OBJ']
             ret = self.plant_history_data[self.iter_count][obj_var_name] / \
                   self.problem_description.scaling_factors[obj_var_name]
-            infeasibility_sq = 0
+            infeasibility_sum = 0
             for con_var_name in self.problem_description.symbol_list['CON']:
-                infeasibility_sq += max(self.plant_history_data[self.iter_count][con_var_name], 0) ** 2 / \
-                                    self.problem_description.scaling_factors[con_var_name] ** 2
-            ret += numpy.sqrt(infeasibility_sq) * self.sigma
+                infeasibility_sum += max(self.plant_history_data[self.iter_count][con_var_name], 0)  / \
+                                    self.problem_description.scaling_factors[con_var_name]
+            ret += infeasibility_sum * self.sigma
             self.plant_history_data[self.iter_count]['merit'] = ret
-            model_trial_point_output = self.get_model_simulation_result([filtered_input])[0]
+            model_trial_point_output = self.get_model_simulation_result([filtered_input], with_modifier=True)[0]
             obj_var_name = self.problem_description.symbol_list['OBJ']
             ret = self.model_history_data[self.iter_count][obj_var_name] / \
                   self.problem_description.scaling_factors[obj_var_name]
-            infeasibility_sq = 0
+            infeasibility_sum = 0
             for con_var_name in self.problem_description.symbol_list['CON']:
-                infeasibility_sq += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
-                                    self.problem_description.scaling_factors[con_var_name] ** 2
-            ret += numpy.sqrt(infeasibility_sq) * self.sigma
+                infeasibility_sum += max(self.model_history_data[self.iter_count][con_var_name], 0)  / \
+                                    self.problem_description.scaling_factors[con_var_name]
+            ret += infeasibility_sum * self.sigma
             self.model_history_data[self.iter_count]['merit'] = ret
 
             # accept the trial point

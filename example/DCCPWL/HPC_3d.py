@@ -1,9 +1,12 @@
 import numpy as np
 import pickle
 import pandas
-from rtolib.core.dc_cpwl_model import QuadraticBoostedDCCPWLFunction
+from rtolib.core.dc_cpwl_model import QuadraticBoostedDCCPWLFunction,\
+QuadraticBoostedDCCPWLFunctionSubgrad
 from rtolib.core.algo import ModifierAdaptation
 from rtolib.core.algo.dccpwl_ma import DCCPWL_ModifierAdaptation
+from rtolib.core.algo.subgrad import DCCPWL_ModifierAdaptationSubgrad,\
+            DCCPWL_ModifierAdaptationTRPenalty
 from rtolib.model.HPC import RTO_Plant_HPC, default_HPC_2d_description, RTO_Mismatched_HPC
 from rtolib.core import NoiseGenerator, ModifierType,\
                     SimpleFiniteDiffPerturbation
@@ -15,6 +18,17 @@ from rtolib.util.misc import save_iteration_data_in_dict
 from rtolib.core.pyomo_model import SolverFactory
 import matplotlib.pyplot as plt
 import pickle
+
+global_parameter={
+        "eta1": 0.01,
+        "eta2": 0.9,
+        "gamma1": 0.5,
+        "gamma2": 1,
+        "gamma3": 2,
+        "sigma": 100,
+        "max_trust_radius": 500,
+        "initial_trust_radius": 100,
+}
 
 def plant_simulator_test():
     plant_simulator = PyomoSimulator(RTO_Mismatched_HPC())
@@ -82,6 +96,59 @@ class HPC3_3d_drain_con_QCPWL(QuadraticBoostedDCCPWLFunction):
         self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
+        
+class HPC3_3d_validity_CPWL_subgrad(QuadraticBoostedDCCPWLFunctionSubgrad):
+    def __init__(self):
+        cpwl_file = "plant_data/HPC3_3d_validity.bin"
+        self.load_from_cpwl_model_file(cpwl_file)
+        self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
+        self.parameters = []
+        self.active_vex_seg_index = [0]
+
+class HPC3_3d_cost_QCPWL_subgrad(QuadraticBoostedDCCPWLFunctionSubgrad):
+    def __init__(self):
+        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_0.bin"
+        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_0.bin"
+        self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
+        self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
+        self.parameters = []
+        self.active_vex_seg_index = [0]
+
+class HPC3_3d_feed_con1_QCPWL_subgrad(QuadraticBoostedDCCPWLFunctionSubgrad):
+    def __init__(self):
+        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_1.bin"
+        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_1.bin"
+        self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
+        self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
+        self.parameters = []
+        self.active_vex_seg_index = [0]
+
+class HPC3_3d_feed_con2_QCPWL_subgrad(QuadraticBoostedDCCPWLFunctionSubgrad):
+    def __init__(self):
+        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_2.bin"
+        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_2.bin"
+        self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
+        self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
+        self.parameters = []
+        self.active_vex_seg_index = [0]
+
+class HPC3_3d_purity_con_QCPWL_subgrad(QuadraticBoostedDCCPWLFunctionSubgrad):
+    def __init__(self):
+        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_3.bin"
+        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_3.bin"
+        self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
+        self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
+        self.parameters = []
+        self.active_vex_seg_index = [0]
+
+class HPC3_3d_drain_con_QCPWL_subgrad(QuadraticBoostedDCCPWLFunctionSubgrad):
+    def __init__(self):
+        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_4.bin"
+        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_4.bin"
+        self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
+        self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
+        self.parameters = []
+        self.active_vex_seg_index = [0]
 
 def generate_noise_file():
     noise_level = {
@@ -438,6 +505,267 @@ def do_test_QCPWL_MA(perturbation_stepsize, starting_point, filtering_factor, \
     save_iteration_data_in_dict(rto_algorithm.plant_history_data, result_filename_header + "plant_data.txt")
     save_iteration_data_in_dict(rto_algorithm.input_history_data, result_filename_header + "input_data.txt")
 
+
+def do_test_QCPWL_Subgrad(perturbation_stepsize, starting_point, filtering_factor, \
+               noise_filename, nlp_solver_executable, qcqp_solver_executable,\
+                     print_iter_data, max_iter,\
+               result_filename_header):
+    problem_description = copy.deepcopy(default_HPC_2d_description)
+    problem_description.symbol_list['CV']=('obj',"feed_con1","feed_con2",\
+                                           "purity_con","drain_con")
+
+    rto_algorithm = DCCPWL_ModifierAdaptationSubgrad()
+    options = {
+        "homotopy_simulation": True,
+        "homotopy_optimization": True,
+        "filtering_factor": filtering_factor,
+        "noise_adding_fashion": "added",
+    }
+    rto_algorithm.set_algorithm_option(options)
+
+    ffd_perturb = SimpleFiniteDiffPerturbation(perturbation_stepsize, problem_description)
+
+    noise_generator = NoiseGenerator()
+    noise_generator.load_noise(noise_filename)
+
+    rto_algorithm.set_problem(
+        problem_description=problem_description,
+        plant=RTO_Plant_HPC(),
+        model_dc_cpwl_functions={'obj':HPC3_3d_cost_QCPWL_subgrad(),
+                                "feed_con1":HPC3_3d_feed_con1_QCPWL_subgrad(),
+                                "feed_con2":HPC3_3d_feed_con2_QCPWL_subgrad(),
+                                "purity_con":HPC3_3d_purity_con_QCPWL_subgrad(),
+                                "drain_con":HPC3_3d_drain_con_QCPWL_subgrad(),
+                                 "validity_con":HPC3_3d_validity_CPWL_subgrad(),
+                                 },
+        perturbation_method=ffd_perturb,
+        noise_generator=noise_generator,
+        nlp_solver_executable=nlp_solver_executable,
+        qcqp_solver_executable=qcqp_solver_executable,
+        spec_function=None,
+        modifier_type=ModifierType.RTO,
+        parameter_set=[],
+        model_mvs=['TA_Flow', 'MA_Flow', 'GAN_Flow'],
+        )
+
+    homotopy_var=['TA_Flow', 'MA_Flow', 'GAN_Flow', 'LN_Flow']
+    rto_algorithm.plant_simulator.homotopy_var = homotopy_var
+
+    # set specification
+    def specification_func(iter):
+        ret = {}
+        if iter % 30 >= 20:
+            ret['GAN_Flow'] = 770
+            ret['LN_Flow'] = 100
+        elif iter % 30 >= 10:
+            ret['GAN_Flow'] = 800
+            ret['LN_Flow'] = 100
+        else:
+            ret['GAN_Flow'] = 750
+            ret['LN_Flow'] = 100
+        return ret
+    rto_algorithm.spec_function = specification_func
+
+    rto_algorithm.initialize_simulation(starting_point, initial_parameter_value={})
+
+    # draw 2d contour
+    num_point = 40
+    x_points = np.linspace(200, 400, num_point)
+    y_points = np.linspace(1600, 2000, num_point)
+    x_points, y_points = np.meshgrid(x_points, y_points)
+    z_points = np.zeros((num_point, num_point))
+    gan_flow = specification_func(0)['GAN_Flow']
+    for i in range(num_point):
+        for j in range(num_point):
+            output, _ = rto_algorithm.DC_CPWL_RTO_model.simulate(
+                {"TA_Flow": x_points[i, j], "MA_Flow": y_points[i, j],
+                 "GAN_Flow": gan_flow}, with_modifier=True)
+            if (output["feed_con1"] <= 0) and (output["feed_con2"] <= 0) and \
+                    (output["purity_con"] <= 0) and (output["drain_con"] <= 0):
+                z_points[i, j] = output["obj"]
+            else:
+                z_points[i, j] = 3500
+    plt.figure()
+    plt.contourf(x_points, y_points, z_points, 20)
+    plt.colorbar()
+    plt.scatter(rto_algorithm.input_history_data[0]['TA_Flow'], \
+                rto_algorithm.input_history_data[0]['MA_Flow'], s=10, c='black')
+    plt.savefig("pic/HPC3_subgrad/HPC3_init.png")
+    plt.close()
+
+    for iter_no in range(max_iter):
+        rto_algorithm.one_step_simulation()
+
+        # draw 2d contour
+        num_point = 40
+        x_points = np.linspace(200, 400, num_point)
+        y_points = np.linspace(1600, 2000, num_point)
+        x_points, y_points = np.meshgrid(x_points, y_points)
+        z_points = np.zeros((num_point, num_point))
+        gan_flow = specification_func(iter_no)['GAN_Flow']
+        for i in range(num_point):
+            for j in range(num_point):
+                output, _ = rto_algorithm.DC_CPWL_RTO_model.simulate(
+                    {"TA_Flow": x_points[i, j], "MA_Flow": y_points[i, j],
+                     "GAN_Flow":gan_flow}, with_modifier=True)
+                if (output["feed_con1"] <= 0) and (output["feed_con2"] <= 0) and \
+                        (output["purity_con"] <= 0) and (output["drain_con"] <= 0):
+                    z_points[i, j] = output["obj"]
+                else:
+                    z_points[i, j] = 3500
+        plt.figure()
+        plt.contourf(x_points, y_points, z_points, 20)
+        plt.colorbar()
+        plt.scatter(rto_algorithm.input_history_data[iter_no+1]['TA_Flow'], \
+                    rto_algorithm.input_history_data[iter_no+1]['MA_Flow'], s=10, c='black')
+        plt.savefig("pic/HPC3_subgrad/HPC3_iter" + str(iter_no) + ".png")
+        plt.close()
+
+        if print_iter_data:
+            print(rto_algorithm.model_history_data)
+            print(rto_algorithm.plant_history_data)
+            print(rto_algorithm.input_history_data)
+
+    # save data
+    save_iteration_data_in_dict(rto_algorithm.model_history_data, result_filename_header + "model_data.txt")
+    save_iteration_data_in_dict(rto_algorithm.plant_history_data, result_filename_header + "plant_data.txt")
+    save_iteration_data_in_dict(rto_algorithm.input_history_data, result_filename_header + "input_data.txt")
+
+
+def do_test_QCPWL_Subgrad_PenaltyTR(perturbation_stepsize, starting_point, filtering_factor, \
+               noise_filename, nlp_solver_executable, qcqp_solver_executable,\
+                     print_iter_data, max_iter,\
+               result_filename_header):
+    problem_description = copy.deepcopy(default_HPC_2d_description)
+    problem_description.symbol_list['CV']=('obj',"feed_con1","feed_con2",\
+                                           "purity_con","drain_con")
+
+    rto_algorithm = DCCPWL_ModifierAdaptationTRPenalty()
+    options = {
+        "homotopy_simulation": True,
+        "homotopy_optimization": False,
+        "noise_adding_fashion": "added",
+        "eta1": global_parameter["eta1"],
+        "eta2": global_parameter["eta2"],
+        "gamma1": global_parameter["gamma1"],
+        "gamma2": global_parameter["gamma2"],
+        "gamma3": global_parameter["gamma3"],
+        "max_iter": max_iter,
+        "sigma": global_parameter["sigma"],
+        "max_trust_radius": global_parameter["max_trust_radius"],
+        "initial_trust_radius": global_parameter["initial_trust_radius"],
+    }
+    rto_algorithm.set_algorithm_option(options)
+
+    ffd_perturb = SimpleFiniteDiffPerturbation(perturbation_stepsize, problem_description)
+
+    noise_generator = NoiseGenerator()
+    noise_generator.load_noise(noise_filename)
+
+    rto_algorithm.set_problem(
+        problem_description=problem_description,
+        plant=RTO_Plant_HPC(),
+        model_dc_cpwl_functions={'obj':HPC3_3d_cost_QCPWL_subgrad(),
+                                "feed_con1":HPC3_3d_feed_con1_QCPWL_subgrad(),
+                                "feed_con2":HPC3_3d_feed_con2_QCPWL_subgrad(),
+                                "purity_con":HPC3_3d_purity_con_QCPWL_subgrad(),
+                                "drain_con":HPC3_3d_drain_con_QCPWL_subgrad(),
+                                 "validity_con":HPC3_3d_validity_CPWL_subgrad(),
+                                 },
+        perturbation_method=ffd_perturb,
+        noise_generator=noise_generator,
+        nlp_solver_executable=nlp_solver_executable,
+        qcqp_solver_executable=qcqp_solver_executable,
+        spec_function=None,
+        modifier_type=ModifierType.RTO,
+        parameter_set=[],
+        model_mvs=['TA_Flow', 'MA_Flow', 'GAN_Flow'],
+        )
+
+    homotopy_var=['TA_Flow', 'MA_Flow', 'GAN_Flow', 'LN_Flow']
+    rto_algorithm.plant_simulator.homotopy_var = homotopy_var
+
+    # set specification
+    def specification_func(iter):
+        ret = {}
+        if iter % 30 >= 20:
+            ret['GAN_Flow'] = 770
+            ret['LN_Flow'] = 100
+        elif iter % 30 >= 10:
+            ret['GAN_Flow'] = 800
+            ret['LN_Flow'] = 100
+        else:
+            ret['GAN_Flow'] = 750
+            ret['LN_Flow'] = 100
+        return ret
+    rto_algorithm.spec_function = specification_func
+
+    rto_algorithm.initialize_simulation(starting_point, initial_parameter_value={})
+
+    # draw 2d contour
+    num_point = 40
+    x_points = np.linspace(200, 400, num_point)
+    y_points = np.linspace(1600, 2000, num_point)
+    x_points, y_points = np.meshgrid(x_points, y_points)
+    z_points = np.zeros((num_point, num_point))
+    gan_flow = specification_func(0)['GAN_Flow']
+    for i in range(num_point):
+        for j in range(num_point):
+            output, _ = rto_algorithm.DC_CPWL_RTO_model.simulate(
+                {"TA_Flow": x_points[i, j], "MA_Flow": y_points[i, j],
+                 "GAN_Flow": gan_flow}, with_modifier=True)
+            if (output["feed_con1"] <= 0) and (output["feed_con2"] <= 0) and \
+                    (output["purity_con"] <= 0) and (output["drain_con"] <= 0):
+                z_points[i, j] = output["obj"]
+            else:
+                z_points[i, j] = 3500
+    plt.figure()
+    plt.contourf(x_points, y_points, z_points, 20)
+    plt.colorbar()
+    plt.scatter(rto_algorithm.input_history_data[0]['TA_Flow'], \
+                rto_algorithm.input_history_data[0]['MA_Flow'], s=10, c='black')
+    plt.savefig("pic/HPC3/HPC3_init.png")
+    plt.close()
+
+    for iter_no in range(max_iter):
+        rto_algorithm.one_step_simulation()
+
+        # draw 2d contour
+        num_point = 40
+        x_points = np.linspace(200, 400, num_point)
+        y_points = np.linspace(1600, 2000, num_point)
+        x_points, y_points = np.meshgrid(x_points, y_points)
+        z_points = np.zeros((num_point, num_point))
+        gan_flow = specification_func(iter_no)['GAN_Flow']
+        for i in range(num_point):
+            for j in range(num_point):
+                output, _ = rto_algorithm.DC_CPWL_RTO_model.simulate(
+                    {"TA_Flow": x_points[i, j], "MA_Flow": y_points[i, j],
+                     "GAN_Flow":gan_flow}, with_modifier=True)
+                if (output["feed_con1"] <= 0) and (output["feed_con2"] <= 0) and \
+                        (output["purity_con"] <= 0) and (output["drain_con"] <= 0):
+                    z_points[i, j] = output["obj"]
+                else:
+                    z_points[i, j] = 3500
+        plt.figure()
+        plt.contourf(x_points, y_points, z_points, 20)
+        plt.colorbar()
+        plt.scatter(rto_algorithm.input_history_data[iter_no+1]['TA_Flow'], \
+                    rto_algorithm.input_history_data[iter_no+1]['MA_Flow'], s=10, c='black')
+        plt.savefig("pic/HPC3/HPC3_iter" + str(iter_no) + ".png")
+        plt.close()
+
+        if print_iter_data:
+            print(rto_algorithm.model_history_data)
+            print(rto_algorithm.plant_history_data)
+            print(rto_algorithm.input_history_data)
+
+    # save data
+    save_iteration_data_in_dict(rto_algorithm.model_history_data, result_filename_header + "model_data.txt")
+    save_iteration_data_in_dict(rto_algorithm.plant_history_data, result_filename_header + "plant_data.txt")
+    save_iteration_data_in_dict(rto_algorithm.input_history_data, result_filename_header + "input_data.txt")
+
+
 def algo_test_main():
     # ------------------------------------
     noise_filename = "noise/hpc-noise0.txt"
@@ -462,12 +790,12 @@ def algo_test_main():
     max_iter = 30
 
     # ------------------------------------
-    print("\nTesting QCPWL-MA")
-    result_filename_header = result_filename_folder + "QCPWL_MA_"
-    do_test_QCPWL_MA(perturbation_stepsize, starting_point, filtering_factor, \
-                     noise_filename, nlp_solver_executable, qcqp_solver_executable, \
-                     print_iter_data, max_iter, \
-                     result_filename_header)
+    # print("\nTesting QCPWL-MA")
+    # result_filename_header = result_filename_folder + "QCPWL_MA_"
+    # do_test_QCPWL_MA(perturbation_stepsize, starting_point, filtering_factor, \
+    #                  noise_filename, nlp_solver_executable, qcqp_solver_executable, \
+    #                  print_iter_data, max_iter, \
+    #                  result_filename_header)
     # ------------------------------------
     # print("\nTesting MA")
     # result_filename_header = result_filename_folder + "MA_"
@@ -475,6 +803,20 @@ def algo_test_main():
     #                  noise_filename, nlp_solver_executable, \
     #                  print_iter_data, max_iter, \
     #                  result_filename_header)
+    # ------------------------------------
+    # print("\nTesting QCPWL-Subgrad")
+    # result_filename_header = result_filename_folder + "QCPWL_Subgrad_"
+    # do_test_QCPWL_Subgrad(perturbation_stepsize, starting_point, filtering_factor, \
+    #                                 noise_filename, nlp_solver_executable, qcqp_solver_executable, \
+    #                                 print_iter_data, max_iter, \
+    #                                 result_filename_header)
+    # ------------------------------------
+    print("\nTesting QCPWL-Subgrad-TR")
+    result_filename_header = result_filename_folder + "QCPWL_Subgrad_PenaltyTR_"
+    do_test_QCPWL_Subgrad_PenaltyTR(perturbation_stepsize, starting_point, filtering_factor, \
+                     noise_filename, nlp_solver_executable, qcqp_solver_executable, \
+                     print_iter_data, max_iter, \
+                     result_filename_header)
     # ------------------------------------
     
 
@@ -505,14 +847,16 @@ def compare_MA_and_QCPWL(pic_name):
     plt.rcParams['xtick.direction'] = 'in'
     plt.rcParams['ytick.direction'] = 'in'
 
-    algorighms = ['QCPWL_MA', 'MA']
+    algorighms = ['QCPWL_MA', 'MA','QCPWL_Subgrad']
     algo_name_dict = {
         'QCPWL_MA':'QCPWL-MA',
         'MA':"MA",
+        'QCPWL_Subgrad':'QCPWL_Subgrad',
     }
     algo_color = {
         'QCPWL_MA':'red',
         'MA':"blue",
+        'QCPWL_Subgrad':"black"
     }
     output_measurements = ['obj','Purity_GAN','Drain_Flow']
     inputs = ['TA_Flow', 'MA_Flow']

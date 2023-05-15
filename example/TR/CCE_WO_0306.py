@@ -398,7 +398,7 @@ def plot_profile_output_only():
              linestyle='--')
     plt.plot(range(1,max_iter+1), compo_step_plant_data.loc[1:max_iter, 'cost'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2,\
-             label="composite-step TR")
+             label="Composite-step TR")
     plt.plot(range(1, max_iter + 1), original_ma_plant_data.loc[1:max_iter, 'cost'], \
              marker='^', c='red', markersize=global_marker_size, linewidth=linewidth, \
              label="MA")
@@ -432,5 +432,5 @@ def plot_profile_output_only():
     plt.close()
 
 if __name__ == "__main__":
-    do_test()
+    # do_test()
     plot_profile_output_only()

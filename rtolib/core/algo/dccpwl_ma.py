@@ -8,7 +8,6 @@ from rtolib.core.solve import PyomoSimulator
 import copy
 from rtolib.core import ModifierType
 from pyomo.environ import SolverFactory
-from subgrad import DCCPWL_ModifierAdaptationTRPenalty
 
 
 class DCCPWL_ModifierAdaptation(ModifierAdaptation):
@@ -90,20 +89,19 @@ class DCCPWL_ModifierAdaptation(ModifierAdaptation):
 
         self.model_history_data[0] = {}
 
-        if isinstance(self, DCCPWL_ModifierAdaptationTRPenalty):
-            self.DC_CPWL_RTO_model.build(self.problem_description)
-        else:
-            self.DC_CPWL_RTO_model.build()
-        # solver2 = SolverFactory('cplex', executable=self.qcqp_solver_executable)
-        # solver2 = SolverFactory('gurobi')
-        solver2 = SolverFactory('ipopt', executable=self.nlp_solver_executable)
-        self.DC_CPWL_RTO_model.set_solver(solver2, tee=False, default_options=default_options)
+        self.DC_CPWL_RTO_model.build(self.problem_description)
+        solver2 = SolverFactory('cplex', executable=self.qcqp_solver_executable)
+        self.DC_CPWL_RTO_model.set_solver(solver2, tee=False,\
+                                          default_options={'logfile':"qcqp.log"})
+
+        # solver2 = SolverFactory('ipopt', executable=self.nlp_solver_executable)
+        # self.DC_CPWL_RTO_model.set_solver(solver2, tee=False, default_options=default_options)
 
 
-    def get_model_simulation_result(self, trial_points):
+    def get_model_simulation_result(self, trial_points, with_modifier=False):
         model_output_data = [{} for i in range(len(trial_points))]
         for i, p in enumerate(trial_points):
-            outputs, solve_status = self.DC_CPWL_RTO_model.simulate(p)
+            outputs, solve_status = self.DC_CPWL_RTO_model.simulate(p, with_modifier)
             # TODO:deal with solve status
             if i == 0:
                 for k, v in outputs.items():

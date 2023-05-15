@@ -2,135 +2,140 @@ Model unknown
 
   Variables:
     input : Size=1, Index=InputIndex
-        Key : Lower : Value              : Upper : Fixed : Stale : Domain
-         u1 :  None : -0.937504505642686 :  None : False : False :  Reals
-    slack : Size=2, Index=OutputIndex
+        Key : Lower : Value               : Upper : Fixed : Stale : Domain
+         u1 :  None : -0.9374322292799432 :  None : False : False :  Reals
+    infeasibility_sum : Size=1, Index=None
         Key  : Lower : Value                  : Upper : Fixed : Stale : Domain
-         con :     0 : -9.990909092696901e-09 :  None : False :  True : NonNegativeReals
-        cost :     0 :                   None :  None : False :  True : NonNegativeReals
+        None :     0 : 2.5156681855887503e-09 :  None : False : False : NonNegativeReals
+    tr_penalty_coeff : Size=1, Index=None
+        Key  : Lower : Value : Upper : Fixed : Stale : Domain
+        None :  None :    10 :  None :  True :  True :  Reals
+    con_vio_con : Size=1, Index=None
+        Key  : Lower : Value                  : Upper : Fixed : Stale : Domain
+        None :     0 : 2.5156681855887503e-09 :  None : False : False : NonNegativeReals
+    con_vio_validity_con : Size=1, Index=None
+        Key  : Lower : Value : Upper : Fixed : Stale : Domain
+        None :     0 :   0.0 :  None : False : False : NonNegativeReals
+    u1_tr_base : Size=1, Index=None
+        Key  : Lower : Value              : Upper : Fixed : Stale : Domain
+        None :  None : -0.874983280877816 :  None :  True :  True :  Reals
+    tr_radius : Size=1, Index=None
+        Key  : Lower : Value : Upper : Fixed : Stale : Domain
+        None :  None :     2 :  None :  True :  True :  Reals
 
   Objectives:
-    optimization_obj : Size=1, Index=None, Active=True
+    objective_function : Size=1, Index=None, Active=True
         Key  : Active : Value
-        None :   True : 0.0039056768119403126
+        None :   True : 0.003907021312819621
 
   Constraints:
-    optimization_constraint : Size=1
-        Key : Lower : Body                : Upper
-          1 :  None : -3.3075323284844034 :   0.0
+    violation_cons : Size=2
+        Key : Lower : Body               : Upper
+          1 :  None : -6.872659805561606 :   0.0
+          2 :  None :               -1.0 :   0.0
+    tr_infeasibility_sum : Size=1
+        Key  : Lower : Body : Upper
+        None :   0.0 :  0.0 :   0.0
+    trust_region_cons : Size=1
+        Key  : Lower : Body                : Upper
+        None :  None : -3.9961001288434685 :   0.0
 
   Blocks:
     Block output[con]
     
       Variables:
-        f : Size=1, Index=None
-            Key  : Lower : Value               : Upper : Fixed : Stale : Domain
-            None :  None : -3.3075323284844034 :  None : False : False :  Reals
         cpwl_pos : Size=1, Index=None
-            Key  : Lower : Value             : Upper : Fixed : Stale : Domain
-            None :  None : 7.140827930089582 :  None : False : False :  Reals
+            Key  : Lower : Value              : Upper : Fixed : Stale : Domain
+            None :  None : 3.5757745917194685 :  None : False : False :  Reals
         cpwl_neg : Size=1, Index=None
-            Key  : Lower : Value             : Upper : Fixed : Stale : Domain
-            None :  None : 0.468752252821343 :  None : False : False :  Reals
-        quadr_pos : Size=1, Index=None
-            Key  : Lower : Value             : Upper : Fixed : Stale : Domain
-            None :  None : -6.24607629061429 :  None : False : False :  Reals
+            Key  : Lower : Value              : Upper : Fixed : Stale : Domain
+            None :  None : 0.4687161146399716 :  None : False : False :  Reals
         quadr_neg : Size=1, Index=None
             Key  : Lower : Value : Upper : Fixed : Stale : Domain
             None :  None :   0.0 :  None : False : False :  Reals
         linear_correction : Size=1, Index=None
-            Key  : Lower : Value               : Upper : Fixed : Stale : Domain
-            None :  None : -3.7335317151383522 :  None : False : False :  Reals
-        active_vex_seg : Size=1, Index=output[con].active_vex_seg_index
-            Key : Lower : Value : Upper : Fixed : Stale : Domain
-              0 :     0 :   1.0 :     1 : False : False :  Reals
-        linear_correction_k : Size=1, Index=output[con].Dimension
-            Key : Lower : Value              : Upper : Fixed : Stale : Domain
-              0 :  None : 2.3489162338163343 :  None : False : False :  Reals
+            Key  : Lower : Value              : Upper : Fixed : Stale : Domain
+            None :  None : -3.733361923178085 :  None : False : False :  Reals
     
       Objectives:
         None
     
       Constraints:
-        f_con : Size=1
-            Key  : Lower : Body : Upper
-            None :   0.0 :  0.0 :   0.0
         cpwl_pos_calc : Size=2
-            Key : Lower : Body               : Upper
-              0 :  None : -5.203323424446896 :   0.0
-              1 :  None : -9.078332435732268 :   0.0
+            Key : Lower : Body                : Upper
+              0 :  None : -1.6383423624395252 :   0.0
+              1 :  None :  -5.513206820999412 :   0.0
         cpwl_neg_calc : Size=1
             Key  : Lower : Body : Upper
             None :   0.0 :  0.0 :   0.0
-        quadr_pos_calc : Size=1
-            Key  : Lower : Body                  : Upper
-            None :   0.0 : 8.881784197001252e-16 :   0.0
         quadr_neg_calc : Size=1
             Key  : Lower : Body : Upper
             None :   0.0 :  0.0 :   0.0
-        s_con : Size=1
-            Key  : Lower : Body : Upper
-            None :   1.0 :  1.0 :   1.0
-        subgradient_matching : Size=1
-            Key : Lower              : Body                : Upper
-              0 : -1.901091788703013 : -1.9010917887030132 : -1.901091788703013
         linear_correction_calc : Size=1
             Key  : Lower : Body : Upper
             None :   0.0 :  0.0 :   0.0
     Block output[cost]
     
       Variables:
-        f : Size=1, Index=None
-            Key  : Lower : Value                 : Upper : Fixed : Stale : Domain
-            None :  None : 0.0039056768119403126 :  None : False : False :  Reals
         cpwl_pos : Size=1, Index=None
             Key  : Lower : Value              : Upper : Fixed : Stale : Domain
-            None :  None : 0.9375044956517768 :  None : False : False :  Reals
+            None :  None : 0.9374322391631323 :  None : False : False :  Reals
         cpwl_neg : Size=1, Index=None
             Key  : Lower : Value : Upper : Fixed : Stale : Domain
             None :  None :   0.0 :  None : False : False :  Reals
-        quadr_pos : Size=1, Index=None
-            Key  : Lower : Value             : Upper : Fixed : Stale : Domain
-            None :  None : 0.878914698100337 :  None : False : False :  Reals
         quadr_neg : Size=1, Index=None
             Key  : Lower : Value : Upper : Fixed : Stale : Domain
             None :  None :   0.0 :  None : False : False :  Reals
         linear_correction : Size=1, Index=None
             Key  : Lower : Value               : Upper : Fixed : Stale : Domain
-            None :  None : -1.8125135169401736 :  None : False : False :  Reals
-        active_vex_seg : Size=1, Index=output[cost].active_vex_seg_index
-            Key : Lower : Value : Upper : Fixed : Stale : Domain
-              0 :     0 :   1.0 :     1 : False : False :  Reals
-        linear_correction_k : Size=1, Index=output[cost].Dimension
-            Key : Lower : Value             : Upper : Fixed : Stale : Domain
-              0 :  None : 2.875009011279241 :  None : False : False :  Reals
+            None :  None : -1.8123044274997584 :  None : False : False :  Reals
     
       Objectives:
         None
     
       Constraints:
-        f_con : Size=1
-            Key  : Lower : Body                  : Upper
-            None :   0.0 : 2.172741153660951e-16 :   0.0
         cpwl_pos_calc : Size=2
-            Key : Lower : Body                  : Upper
-              0 :  None : 9.990909100032752e-09 :   0.0
-              1 :  None :   -1.8750090012944627 :   0.0
+            Key : Lower : Body                   : Upper
+              0 :  None : -9.883189155956984e-09 :   0.0
+              1 :  None :    -1.8748644684430755 :   0.0
         cpwl_neg_calc : Size=1
-            Key  : Lower : Body : Upper
-            None :   0.0 :  0.0 :   0.0
-        quadr_pos_calc : Size=1
             Key  : Lower : Body : Upper
             None :   0.0 :  0.0 :   0.0
         quadr_neg_calc : Size=1
             Key  : Lower : Body : Upper
             None :   0.0 :  0.0 :   0.0
-        s_con : Size=1
-            Key  : Lower : Body : Upper
-            None :   1.0 :  1.0 :   1.0
-        subgradient_matching : Size=1
-            Key : Lower               : Body                : Upper
-              0 : 0.12500098875989352 : 0.12500098875989352 : 0.12500098875989352
         linear_correction_calc : Size=1
-            Key  : Lower : Body                   : Upper
-            None :   0.0 : -2.220446049250313e-16 :   0.0
+            Key  : Lower : Body : Upper
+            None :   0.0 :  0.0 :   0.0
+    Block output[validity_con]
+    
+      Variables:
+        cpwl_pos : Size=1, Index=None
+            Key  : Lower : Value : Upper : Fixed : Stale : Domain
+            None :  None :   0.0 :  None : False : False :  Reals
+        cpwl_neg : Size=1, Index=None
+            Key  : Lower : Value : Upper : Fixed : Stale : Domain
+            None :  None :   0.0 :  None : False : False :  Reals
+        quadr_neg : Size=1, Index=None
+            Key  : Lower : Value : Upper : Fixed : Stale : Domain
+            None :  None :   0.0 :  None : False : False :  Reals
+        linear_correction : Size=1, Index=None
+            Key  : Lower : Value : Upper : Fixed : Stale : Domain
+            None :  None :   0.0 :  None : False : False :  Reals
+    
+      Objectives:
+        None
+    
+      Constraints:
+        cpwl_pos_calc : Size=1
+            Key : Lower : Body : Upper
+              0 :   0.0 :  0.0 :  None
+        cpwl_neg_calc : Size=1
+            Key  : Lower : Body : Upper
+            None :   0.0 :  0.0 :   0.0
+        quadr_neg_calc : Size=1
+            Key  : Lower : Body : Upper
+            None :   0.0 :  0.0 :   0.0
+        linear_correction_calc : Size=1
+            Key  : Lower : Body : Upper
+            None :   0.0 :  0.0 :   0.0

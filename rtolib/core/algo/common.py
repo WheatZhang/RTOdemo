@@ -112,7 +112,8 @@ class Algorithm():
 
     def adapt_to_bound_mv(self, optimized_input, mv_bounds):
         bounded_input = {}
-        for k in self.problem_description.symbol_list['MV']:
+        # for k in self.problem_description.symbol_list['MV']:
+        for k in optimized_input.keys():
             bounded_input[k] = optimized_input[k]
             if mv_bounds[k][0] is not None and optimized_input[k] <= mv_bounds[k][0]:
                 print("MV %s reaches its lower bound." % k)
