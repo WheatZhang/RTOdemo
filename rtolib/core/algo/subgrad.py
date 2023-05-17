@@ -4,6 +4,7 @@ import numpy
 from rtolib.core.algo.dccpwl_ma import DCCPWL_ModifierAdaptation
 from rtolib.core.dc_cpwl_model import QuadraticBoostedDCCPWL_RTOObjectSubgrad,\
         QuadraticBoostedDCCPWL_PenaltyTR_Object
+from rtolib.core.cpwl_minlp import QCPWL_RTOObjectSubgradMINLP
 from rtolib.core.solve import PyomoSimulator
 import copy
 from rtolib.core import ModifierType
@@ -209,7 +210,7 @@ class DCCPWL_ModifierAdaptationTRPenalty(DCCPWL_ModifierAdaptationSubgrad):
         self.plant_history_data[self.iter_count]['base_merit'] = ret
 
         # get model simulation result with and without modifiers
-        model_output_data = self.get_model_simulation_result(trial_points)
+        model_output_data = self.get_model_simulation_result(trial_points, with_modifier=True)
         obj_var_name = self.problem_description.symbol_list['OBJ']
         ret = self.model_history_data[self.iter_count][obj_var_name] / \
               self.problem_description.scaling_factors[obj_var_name]
@@ -360,3 +361,69 @@ class DCCPWL_ModifierAdaptationTRPenalty(DCCPWL_ModifierAdaptationSubgrad):
                 self.trust_radius = self.options['max_trust_radius']
                 self.model_history_data[self.iter_count - 1]['event'] = "trust region too large"
             self.model_history_data[self.iter_count - 1]['tr_adjusted'] = self.trust_radius
+
+
+class QCPWL_Subgrad_MINLP(DCCPWL_ModifierAdaptationSubgrad):
+    def set_problem(self, problem_description,
+                    plant,
+                    model_dc_cpwl_functions,
+                    perturbation_method,
+                    noise_generator,
+                    nlp_solver_executable,
+                    minlp_solver_executable,
+                    spec_function,
+                    modifier_type,
+                    parameter_set,
+                    model_mvs=None,
+                    ):
+        self.problem_description = problem_description
+        self.plant_simulator = PyomoSimulator(plant)
+        if model_mvs is None:
+            mvs = self.problem_description.symbol_list['MV']
+        else:
+            mvs = model_mvs
+        if modifier_type == ModifierType.RTO:
+            cvs = [self.problem_description.symbol_list['OBJ']]
+            for cv in self.problem_description.symbol_list['CON']:
+                cvs.append(cv)
+            cvs.append("validity_con")
+        else:
+            raise ValueError("Not applicable")
+        self.DC_CPWL_RTO_model = QCPWL_RTOObjectSubgradMINLP(model_dc_cpwl_functions, mvs, cvs, [])
+        bounds = {}
+        for k, v in self.problem_description.bounds.items():
+            if k in mvs:
+                bounds[k] = v
+        self.DC_CPWL_RTO_model.set_input_bounds(bounds)
+        self.perturbation_method = perturbation_method
+        self.noise_generator = noise_generator
+        self.nlp_solver_executable = nlp_solver_executable
+        self.minlp_solver_executable = minlp_solver_executable
+        self.spec_function = spec_function
+        self.parameter_set = parameter_set
+
+    def initialize_simulation(self, starting_point, initial_parameter_value):
+        # build model
+        self.plant_simulator.build(self.problem_description)
+
+        default_options={'max_iter':500,
+                         "tol":1e-10}
+        solver1 = SolverFactory('ipopt', executable=self.nlp_solver_executable)
+        self.plant_simulator.set_solver(solver1, tee=False, default_options=default_options)
+
+        self.iter_count = 0
+        self.input_history_data[0] = {}
+        self.set_initial_model_parameters(initial_parameter_value)
+        self.set_current_point(starting_point)
+
+        self.iter_count = 1
+
+        self.model_history_data[0] = {}
+
+        self.DC_CPWL_RTO_model.build(self.problem_description)
+        solver2 = SolverFactory('scipampl', executable=self.minlp_solver_executable)
+        self.DC_CPWL_RTO_model.set_solver(solver2, tee=False,\
+                                          default_options={})
+        self.sigma = self.options['sigma']
+        self.DC_CPWL_RTO_model.sigma = self.options['sigma']
+        self.DC_CPWL_RTO_model.set_penalty_coeff(self.DC_CPWL_RTO_model.sigma)

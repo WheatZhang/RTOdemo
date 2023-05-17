@@ -415,41 +415,17 @@ class QuadraticBoostedDCCPWL_RTOObject(object):
         subproblem_model.input = Var(subproblem_model.InputIndex)
         subproblem_model.output = Block(subproblem_model.OutputIndex)
         subproblem_model.slack = Var(subproblem_model.OutputIndex, within=NonNegativeReals)
-        setattr(subproblem_model, "infeasibility_sum", Var(initialize=0, within=NonNegativeReals))
-        setattr(subproblem_model, "tr_penalty_coeff", Var(initialize=0))
-        getattr(subproblem_model, "tr_penalty_coeff").fixed = True
         for name, dc_cpwl in self.dc_cpwl_functions.items():
             dc_cpwl.build_optimizer_mainbody(subproblem_model.output[name], subproblem_model.input)
             dc_cpwl.build_optimizer_linear_correction(subproblem_model.output[name], subproblem_model.input)
 
-        # inequality violation measure
-        for con_var_name in self.cvs[1:]:
-            setattr(subproblem_model, "con_vio_" + con_var_name, Var(initialize=0, within=NonNegativeReals))
-
-        def _violation_cons(m):
-            for con_var_name in self.cvs[1:]:
-                yield (m.output[con_var_name].f /
-                       self.problem_description.scaling_factors[con_var_name] \
-                       - getattr(subproblem_model, "con_vio_" + con_var_name)) * constraint_scaling <= 0
-        subproblem_model.violation_cons = ConstraintList(rule=_violation_cons)
-
-        # merit function
-        def _tr_infeasibility_sum(m):
-            ret = 0
-            for con_var_name in self.cvs[1:]:
-                ret += getattr(m, "con_vio_" + con_var_name) / \
-                       self.problem_description.scaling_factors[con_var_name]
-            return ret - m.infeasibility_sum == 0
-        subproblem_model.tr_infeasibility_sum = Constraint(rule=_tr_infeasibility_sum)
-
-        def _tr_merit_function(m):
-            ret = m.output[self.cvs[0]].f
-            ret += m.infeasibility_sum * m.tr_penalty_coeff
-            return ret
-        subproblem_model.tr_merit_function = Expression(rule=_tr_merit_function)
+        def optimization_constraint(m):
+            for con_name in self.cvs[1:]:
+                yield m.output[con_name].f <= 0
+        subproblem_model.optimization_constraint = ConstraintList(rule=optimization_constraint)
 
         def optimization_obj(m):
-            return m.tr_merit_function
+            return m.output[self.cvs[0]].f
         subproblem_model.optimization_obj = Objective(rule=optimization_obj, sense=minimize)
 
         self.subproblem_model = subproblem_model
@@ -541,9 +517,208 @@ class QuadraticBoostedDCCPWL_RTOObject(object):
         for i,cv in enumerate(self.cvs):
             if i == 0:
                 continue
-            if y[cv] > 0:
-                infeasibility += y[cv]**2
+            if y[cv] > -1e-3:
+                infeasibility += (y[cv]+1e-3)**2
         return infeasibility
+
+    def optimize(self, spec_values, starting_point):
+        '''
+
+        :param spec_values: specification and parameters
+        :param starting_point: other inputs
+        :return:
+        '''
+        print(spec_values)
+        print(starting_point)
+        whole_input = {}
+        for k,v in spec_values.items():
+            if k not in self.inputs:
+                continue
+            if k not in self.parameters:
+                whole_input[k] = v
+                self.subproblem_model.input[k].fix(v)
+        for k,v in starting_point.items():
+            if k not in self.inputs:
+                continue
+            whole_input[k] = v
+            self.subproblem_model.input[k] = v
+
+            # -------------- find a feasible point ---------------------
+            variable_input_names = []
+            for k in starting_point.keys():
+                if k not in spec_values.keys():
+                    if k in self.inputs:
+                        variable_input_names.append(k)
+            variable_input_dimensionality = len(variable_input_names)
+            n_data = 100
+            lb = np.zeros((variable_input_dimensionality,))
+            ub = np.zeros((variable_input_dimensionality,))
+            current_point = np.zeros((variable_input_dimensionality,))
+            for i, mv in enumerate(variable_input_names):
+                lb[i] = self.input_bounds[mv][0]
+                ub[i] = self.input_bounds[mv][1]
+                current_point[i] = starting_point[mv]
+            candidate_input1 = get_hypercube_sampling(variable_input_dimensionality, n_data, lb, ub, seed=1)
+            full_input_dimensionality = len(self.inputs)
+            candidate_input = np.zeros((n_data, full_input_dimensionality))
+            for i in range(n_data):
+                for j, mv in enumerate(self.inputs):
+                    if mv not in variable_input_names:
+                        candidate_input[i, j] = spec_values[mv]
+                    else:
+                        candidate_input[i, j] = candidate_input1[i, variable_input_names.index(mv)]
+            infeasibility = np.zeros((n_data,))
+            for i in range(n_data):
+                candidate_input_dict = {}
+                for j, k in enumerate(self.inputs):
+                    candidate_input_dict[k] = candidate_input[i, j]
+                infeasibility[i] = self.calculate_infeasibility(candidate_input_dict)
+            nearest_dist = np.inf
+            nearest_point_no = None
+            for i in range(n_data):
+                if infeasibility[i] <= 1e-4:
+                    dist = np.linalg.norm(candidate_input1[i, :] - current_point)
+                    if dist < nearest_dist:
+                        nearest_dist = dist
+                        nearest_point_no = i
+            for i, k in enumerate(self.inputs):
+                whole_input[k] = candidate_input[nearest_point_no, i]
+                self.subproblem_model.input[k] = whole_input[k]
+            print("find a feasible point to start optimization")
+            print(whole_input)
+
+            # -------------- solve optimization problem ----------------
+            prev_u = self.get_input_vector()
+            # print(prev_u)
+            solve_status = False
+            for i in range(self.subproblem_max_iter):
+                for name, dc_cpwl in self.dc_cpwl_functions.items():
+                    dc_cpwl.set_optimizer_concave_majorization(self.subproblem_model.output[name], whole_input)
+                with open('before-optimize.txt', 'w') as model_file:
+                    self.subproblem_model.pprint(model_file)
+                results = self.solver.solve(self.subproblem_model, tee=self.tee)  # self.tee
+                if not ((results.solver.status == SolverStatus.ok) and (
+                        results.solver.termination_condition == TerminationCondition.optimal)):
+                    print(results.solver.termination_condition)
+                    raise Exception("QCQP solving fails.")
+                for mv in self.inputs:
+                    whole_input[mv] = value(self.subproblem_model.input[mv])
+                this_u = self.get_input_vector()
+                if np.linalg.norm(this_u - prev_u) < self.tol:
+                    solve_status = True
+                    break
+                prev_u = this_u
+            print("after optimization:")
+            print(whole_input)
+            return whole_input, solve_status
+
+    def simulate(self, point, with_modifier=False):
+        ret = {}
+        for cv in self.cvs:
+            ret[cv]=self.dc_cpwl_functions[cv].simulate(point, with_modifier, self.subproblem_model.output[cv])
+        solve_status = True
+        return ret, solve_status
+
+    def set_model_parameters(self, parameter_value):
+        '''
+
+        :param parameter_value: dict
+        :return:
+        '''
+        for para_name in self.parameters:
+            self.DC_CPWL_RTO_model.pe_model[para_name] = parameter_value[para_name]
+
+    def set_solver(self, solver, tee, default_options):
+        self.solver = solver
+        self.tee = tee
+        for k, v in default_options.items():
+            self.solver.options[k] = v
+
+class QuadraticBoostedDCCPWL_RTOObjectSubgrad(QuadraticBoostedDCCPWL_RTOObject):
+    def build(self, problem_description, constraint_scaling=1):
+        assert isinstance(problem_description, ProblemDescription)
+        self.problem_description = problem_description
+        self.problem_description.scaling_factors['validity_con'] = 1
+
+        subproblem_model = ConcreteModel()
+        subproblem_model.InputIndex = Set(initialize=self.inputs)
+        subproblem_model.OutputIndex = Set(initialize=self.cvs)
+        subproblem_model.input = Var(subproblem_model.InputIndex)
+        subproblem_model.output = Block(subproblem_model.OutputIndex)
+        subproblem_model.slack = Var(subproblem_model.OutputIndex, within=NonNegativeReals)
+        setattr(subproblem_model, "infeasibility_sum", Var(initialize=0, within=NonNegativeReals))
+        setattr(subproblem_model, "tr_penalty_coeff", Var(initialize=0))
+        getattr(subproblem_model, "tr_penalty_coeff").fixed = True
+        for name, dc_cpwl in self.dc_cpwl_functions.items():
+            dc_cpwl.build_optimizer_mainbody(subproblem_model.output[name], subproblem_model.input)
+            dc_cpwl.build_optimizer_linear_correction(subproblem_model.output[name], subproblem_model.input)
+
+        # inequality violation measure
+        for con_var_name in self.cvs[1:]:
+            setattr(subproblem_model, "con_vio_" + con_var_name, Var(initialize=0, within=NonNegativeReals))
+
+        def _violation_cons(m):
+            for con_var_name in self.cvs[1:]:
+                yield (m.output[con_var_name].f /
+                       self.problem_description.scaling_factors[con_var_name] \
+                       - getattr(subproblem_model, "con_vio_" + con_var_name)) * constraint_scaling <= 0
+        subproblem_model.violation_cons = ConstraintList(rule=_violation_cons)
+
+        # merit function
+        def _tr_infeasibility_sum(m):
+            ret = 0
+            for con_var_name in self.cvs[1:]:
+                ret += getattr(m, "con_vio_" + con_var_name) / \
+                       self.problem_description.scaling_factors[con_var_name]
+            return ret - m.infeasibility_sum == 0
+        subproblem_model.tr_infeasibility_sum = Constraint(rule=_tr_infeasibility_sum)
+
+        def _tr_merit_function(m):
+            ret = m.output[self.cvs[0]].f
+            ret += m.infeasibility_sum * m.tr_penalty_coeff
+            return ret
+        subproblem_model.tr_merit_function = Expression(rule=_tr_merit_function)
+
+        def optimization_obj(m):
+            return m.tr_merit_function
+        subproblem_model.optimization_obj = Objective(rule=optimization_obj, sense=minimize)
+
+        self.subproblem_model = subproblem_model
+
+    def set_penalty_coeff(self, sigma):
+        self.subproblem_model.tr_penalty_coeff.fix(sigma)
+
+    def update_modifiers(self, plant_y_and_k, base_point, sigma):
+        # plant_y_and_k and base_point may contain more input
+        # and output than the model has
+        merit_gd_direction = {}
+        for mv in self.inputs:
+            if (self.cvs[0], mv) in plant_y_and_k.keys():
+                merit_gd_direction[mv] = -plant_y_and_k[(self.cvs[0], mv)]\
+                                         /self.problem_description.scaling_factors[self.cvs[0]]
+            else:
+                merit_gd_direction[mv] = 0
+        for cv in self.cvs[1:]:
+            if cv == "validity_con":
+                continue
+            for mv in self.inputs:
+                if (cv, mv) in plant_y_and_k.keys():
+                    if plant_y_and_k[(cv, None)] >= 0:
+                        merit_gd_direction[mv] += -sigma*plant_y_and_k[(cv, mv)]\
+                                         /self.problem_description.scaling_factors[cv]
+
+        for cv in self.cvs:
+            if cv == "validity_con":
+                continue
+            plant_y = plant_y_and_k[(cv, None)]
+            plant_k = {}
+            for mv in self.inputs:
+                if (cv, mv) in plant_y_and_k.keys():
+                    plant_k[mv] = plant_y_and_k[(cv, mv)]
+                else:
+                    plant_k[mv] = 0
+            self.dc_cpwl_functions[cv].set_linear_correction_parameters(self.subproblem_model.output[cv],\
+                                plant_y, plant_k, base_point, merit_gd_direction)
 
     def optimize(self, spec_values, starting_point):
         '''
@@ -573,9 +748,9 @@ class QuadraticBoostedDCCPWL_RTOObject(object):
         for i in range(self.subproblem_max_iter):
             for name, dc_cpwl in self.dc_cpwl_functions.items():
                 dc_cpwl.set_optimizer_concave_majorization(self.subproblem_model.output[name], whole_input)
-            with open('before-optimize.txt', 'w') as model_file:
-                self.subproblem_model.pprint(model_file)
-            results = self.solver.solve(self.subproblem_model, tee=True) #self.tee
+            # with open('before-optimize.txt', 'w') as model_file:
+            #     self.subproblem_model.pprint(model_file)
+            results = self.solver.solve(self.subproblem_model, tee=self.tee) #self.tee
             if not ((results.solver.status == SolverStatus.ok) and (
                     results.solver.termination_condition == TerminationCondition.optimal)):
                 print(results.solver.termination_condition)
@@ -590,62 +765,6 @@ class QuadraticBoostedDCCPWL_RTOObject(object):
         print("after optimization:")
         print(whole_input)
         return whole_input, solve_status
-
-    def simulate(self, point, with_modifier=False):
-        ret = {}
-        for cv in self.cvs:
-            ret[cv]=self.dc_cpwl_functions[cv].simulate(point, with_modifier, self.subproblem_model.output[cv])
-        solve_status = True
-        return ret, solve_status
-
-    def set_model_parameters(self, parameter_value):
-        '''
-
-        :param parameter_value: dict
-        :return:
-        '''
-        for para_name in self.parameters:
-            self.DC_CPWL_RTO_model.pe_model[para_name] = parameter_value[para_name]
-
-    def set_solver(self, solver, tee, default_options):
-        self.solver = solver
-        self.tee = tee
-        for k, v in default_options.items():
-            self.solver.options[k] = v
-
-class QuadraticBoostedDCCPWL_RTOObjectSubgrad(QuadraticBoostedDCCPWL_RTOObject):
-    def set_penalty_coeff(self, sigma):
-        self.subproblem_model.tr_penalty_coeff.fix(sigma)
-
-    def update_modifiers(self, plant_y_and_k, base_point, sigma):
-        # plant_y_and_k and base_point may contain more input
-        # and output than the model has
-        merit_gd_direction = {}
-        for mv in self.inputs:
-            if (self.cvs[0], mv) in plant_y_and_k.keys():
-                merit_gd_direction[mv] = -plant_y_and_k[(self.cvs[0], mv)]
-            else:
-                merit_gd_direction[mv] = 0
-        for cv in self.cvs[1:]:
-            if cv == "validity_con":
-                continue
-            for mv in self.inputs:
-                if (cv, mv) in plant_y_and_k.keys():
-                    if plant_y_and_k[(cv, None)] >= 0:
-                        merit_gd_direction[mv] += -sigma*plant_y_and_k[(cv, mv)]
-
-        for cv in self.cvs:
-            if cv == "validity_con":
-                continue
-            plant_y = plant_y_and_k[(cv, None)]
-            plant_k = {}
-            for mv in self.inputs:
-                if (cv, mv) in plant_y_and_k.keys():
-                    plant_k[mv] = plant_y_and_k[(cv, mv)]
-                else:
-                    plant_k[mv] = 0
-            self.dc_cpwl_functions[cv].set_linear_correction_parameters(self.subproblem_model.output[cv],\
-                                plant_y, plant_k, base_point, merit_gd_direction)
 
 
 class QuadraticBoostedDCCPWL_PenaltyTR_Object(QuadraticBoostedDCCPWL_RTOObjectSubgrad):
@@ -750,10 +869,10 @@ class QuadraticBoostedDCCPWL_PenaltyTR_Object(QuadraticBoostedDCCPWL_RTOObjectSu
         for i in range(self.subproblem_max_iter):
             for name, dc_cpwl in self.dc_cpwl_functions.items():
                 dc_cpwl.set_optimizer_concave_majorization(self.subproblem_model.output[name], whole_input)
-            self.subproblem_model.display("temp.txt")
-            with open('before-optimize.txt', 'w') as model_file:
-                self.subproblem_model.pprint(model_file)
-            results = self.solver.solve(self.subproblem_model, tee=True)#self.tee
+            # self.subproblem_model.display("temp.txt")
+            # with open('before-optimize.txt', 'w') as model_file:
+            #     self.subproblem_model.pprint(model_file)
+            results = self.solver.solve(self.subproblem_model, tee=self.tee)#
             if not ((results.solver.status == SolverStatus.ok) and (
                     results.solver.termination_condition == TerminationCondition.optimal)):
                 print(results.solver.termination_condition)
