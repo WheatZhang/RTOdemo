@@ -145,8 +145,9 @@ class QCPWL_RTOObjectSubgradMINLP(QuadraticBoostedDCCPWL_RTOObjectSubgrad):
         :param starting_point: other inputs
         :return:
         '''
+        print("specification values:")
         print(spec_values)
-        print(starting_point)
+        # print(starting_point)
         whole_input = {}
         for k,v in spec_values.items():
             if k not in self.inputs:

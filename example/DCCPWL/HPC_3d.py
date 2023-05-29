@@ -10,7 +10,7 @@ from rtolib.core.algo.subgrad import DCCPWL_ModifierAdaptationSubgrad,\
 from rtolib.model.HPC import RTO_Plant_HPC, default_HPC_2d_description, RTO_Mismatched_HPC
 from rtolib.core import NoiseGenerator, ModifierType,\
                     SimpleFiniteDiffPerturbation
-from rtolib.core.solve import PyomoSimulator
+from rtolib.core.solve import PyomoSimulator, PyomoOptimizer
 from rtolib.core.dc_cpwl_model import QuadraticBoostedDCCPWL_RTOObject
 import os
 import copy
@@ -18,21 +18,23 @@ from rtolib.util.misc import save_iteration_data_in_dict
 from rtolib.core.pyomo_model import SolverFactory
 import matplotlib.pyplot as plt
 from rtolib.core.cpwl_minlp import QCPWLFunction_MINLP
+import sys
+import time
 
 # set specification
 def specification_func(iter):
     ret = {}
-    # if iter % 30 >= 20:
-    #     ret['GAN_Flow'] = 770
-    #     ret['LN_Flow'] = 100
-    # elif iter % 30 >= 10:
-    #     ret['GAN_Flow'] = 800
-    #     ret['LN_Flow'] = 100
-    # else:
-    #     ret['GAN_Flow'] = 750
-    #     ret['LN_Flow'] = 100
-    ret['GAN_Flow'] = 750
-    ret['LN_Flow'] = 100
+    if iter % 30 >= 20:
+        ret['GAN_Flow'] = 750
+        ret['LN_Flow'] = 100
+    elif iter % 30 >= 10:
+        ret['GAN_Flow'] = 800
+        ret['LN_Flow'] = 100
+    else:
+        ret['GAN_Flow'] = 780
+        ret['LN_Flow'] = 100
+    # ret['GAN_Flow'] = 750
+    # ret['LN_Flow'] = 100
     return ret
 
 global_parameter={
@@ -41,7 +43,7 @@ global_parameter={
         "gamma1": 0.5,
         "gamma2": 1,
         "gamma3": 2,
-        "sigma": 1000,
+        "sigma": 10,
         "max_trust_radius": 500,
         "initial_trust_radius": 10,
 }
@@ -66,103 +68,141 @@ def plant_simulator_test():
                                             use_homo=True)
     print(outputs)
 
+def get_plant_optimum():
+    plant_optimizer = PyomoOptimizer(RTO_Plant_HPC())
+    plant_simulator = PyomoSimulator(RTO_Plant_HPC())
+    problem_description = copy.deepcopy(default_HPC_2d_description)
+    problem_description.symbol_list['CV'] = ('obj', "feed_con1", "feed_con2", \
+                                             "purity_con", "drain_con")
+    plant_optimizer.build(problem_description)
+    plant_simulator.build(problem_description)
+    nlp_solver_executable = r"F:\Research\RTOdemo\external\bin\ipopt.exe"
+    solver = SolverFactory('ipopt', executable=nlp_solver_executable)
+    default_options = {'max_iter': 500,
+                       "tol": 1e-10}
+    plant_optimizer.set_solver(solver, tee=False, default_options=default_options)
+    plant_simulator.set_solver(solver, tee=False, default_options=default_options)
+    homotopy_var = ['TA_Flow', 'MA_Flow', 'GAN_Flow', 'LN_Flow']
+    plant_simulator.homotopy_var = homotopy_var
+    current_parameter_value=\
+    {'obj_eps': 0, 'TA_Flow_obj_lam': 0,
+        'MA_Flow_obj_lam': 0, 'feed_con1_eps': 0,
+        'TA_Flow_feed_con1_lam': 0, 'MA_Flow_feed_con1_lam': 0,
+        'feed_con2_eps': 0, 'TA_Flow_feed_con2_lam': 0,
+        'MA_Flow_feed_con2_lam': 0, 'purity_con_eps': 0,
+        'TA_Flow_purity_con_lam': 0, 'MA_Flow_purity_con_lam': 0,
+        'drain_con_eps': 0, 'TA_Flow_drain_con_lam': 0,
+        'MA_Flow_drain_con_lam': 0}
+
+    for iter in [5,15,25]:
+        print("iteration: ", iter)
+        input_values = specification_func(iter)
+        optimized_input, solve_status = plant_optimizer.optimize(input_values,
+                                                                      param_values=current_parameter_value,
+                                                                      use_homo=False)
+        outputs, solve_status = plant_simulator.simulate(optimized_input, param_values=None,
+                                                         use_homo=True)
+        print(optimized_input)
+        print(outputs)
+
+
 class HPC3_3d_validity_CPWL(QuadraticBoostedDCCPWLFunction):
     def __init__(self):
-        cpwl_file = "plant_data/HPC3_3d_validity.bin"
+        cpwl_file = "hpc_model/HPC3_3d_validity.bin"
         self.load_from_cpwl_model_file(cpwl_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
 
 class HPC3_3d_cost_QCPWL(QuadraticBoostedDCCPWLFunction):
     def __init__(self):
-        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_0.bin"
-        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_0.bin"
+        cpwl_file = "hpc_model/HPC3_3d_cpwl_processed_output_0.bin"
+        quadr_file = "hpc_model/HPC3_3d_quadr_processed_output_0.bin"
         self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
 
 class HPC3_3d_feed_con1_QCPWL(QuadraticBoostedDCCPWLFunction):
     def __init__(self):
-        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_1.bin"
-        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_1.bin"
+        cpwl_file = "hpc_model/HPC3_3d_cpwl_processed_output_1.bin"
+        quadr_file = "hpc_model/HPC3_3d_quadr_processed_output_1.bin"
         self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
 
 class HPC3_3d_feed_con2_QCPWL(QuadraticBoostedDCCPWLFunction):
     def __init__(self):
-        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_2.bin"
-        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_2.bin"
+        cpwl_file = "hpc_model/HPC3_3d_cpwl_processed_output_2.bin"
+        quadr_file = "hpc_model/HPC3_3d_quadr_processed_output_2.bin"
         self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
 
 class HPC3_3d_purity_con_QCPWL(QuadraticBoostedDCCPWLFunction):
     def __init__(self):
-        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_3.bin"
-        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_3.bin"
+        cpwl_file = "hpc_model/HPC3_3d_cpwl_processed_output_3.bin"
+        quadr_file = "hpc_model/HPC3_3d_quadr_processed_output_3.bin"
         self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
 
 class HPC3_3d_drain_con_QCPWL(QuadraticBoostedDCCPWLFunction):
     def __init__(self):
-        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_4.bin"
-        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_4.bin"
+        cpwl_file = "hpc_model/HPC3_3d_cpwl_processed_output_4.bin"
+        quadr_file = "hpc_model/HPC3_3d_quadr_processed_output_4.bin"
         self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
         
 class HPC3_3d_validity_CPWL_subgrad(QuadraticBoostedDCCPWLFunctionSubgrad):
     def __init__(self):
-        cpwl_file = "plant_data/HPC3_3d_validity.bin"
+        cpwl_file = "hpc_model/HPC3_3d_validity.bin"
         self.load_from_cpwl_model_file(cpwl_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
 
 class HPC3_3d_cost_QCPWL_subgrad(QuadraticBoostedDCCPWLFunctionSubgrad):
     def __init__(self):
-        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_0.bin"
-        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_0.bin"
+        cpwl_file = "hpc_model/HPC3_3d_cpwl_processed_output_0.bin"
+        quadr_file = "hpc_model/HPC3_3d_quadr_processed_output_0.bin"
         self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
 
 class HPC3_3d_feed_con1_QCPWL_subgrad(QuadraticBoostedDCCPWLFunctionSubgrad):
     def __init__(self):
-        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_1.bin"
-        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_1.bin"
+        cpwl_file = "hpc_model/HPC3_3d_cpwl_processed_output_1.bin"
+        quadr_file = "hpc_model/HPC3_3d_quadr_processed_output_1.bin"
         self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
 
 class HPC3_3d_feed_con2_QCPWL_subgrad(QuadraticBoostedDCCPWLFunctionSubgrad):
     def __init__(self):
-        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_2.bin"
-        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_2.bin"
+        cpwl_file = "hpc_model/HPC3_3d_cpwl_processed_output_2.bin"
+        quadr_file = "hpc_model/HPC3_3d_quadr_processed_output_2.bin"
         self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
 
 class HPC3_3d_purity_con_QCPWL_subgrad(QuadraticBoostedDCCPWLFunctionSubgrad):
     def __init__(self):
-        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_3.bin"
-        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_3.bin"
+        cpwl_file = "hpc_model/HPC3_3d_cpwl_processed_output_3.bin"
+        quadr_file = "hpc_model/HPC3_3d_quadr_processed_output_3.bin"
         self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
 
 class HPC3_3d_drain_con_QCPWL_subgrad(QuadraticBoostedDCCPWLFunctionSubgrad):
     def __init__(self):
-        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_4.bin"
-        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_4.bin"
+        cpwl_file = "hpc_model/HPC3_3d_cpwl_processed_output_4.bin"
+        quadr_file = "hpc_model/HPC3_3d_quadr_processed_output_4.bin"
         self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
 
 class HPC3_3d_validity_MINLP(QCPWLFunction_MINLP):
     def __init__(self):
-        cpwl_file = "plant_data/HPC3_3d_validity.bin"
+        cpwl_file = "hpc_model/HPC3_3d_validity.bin"
         self.load_from_cpwl_model_file(cpwl_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
@@ -170,8 +210,8 @@ class HPC3_3d_validity_MINLP(QCPWLFunction_MINLP):
 
 class HPC3_3d_cost_MINLP(QCPWLFunction_MINLP):
     def __init__(self):
-        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_0.bin"
-        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_0.bin"
+        cpwl_file = "hpc_model/HPC3_3d_cpwl_processed_output_0.bin"
+        quadr_file = "hpc_model/HPC3_3d_quadr_processed_output_0.bin"
         self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
@@ -179,8 +219,8 @@ class HPC3_3d_cost_MINLP(QCPWLFunction_MINLP):
 
 class HPC3_3d_feed_con1_MINLP(QCPWLFunction_MINLP):
     def __init__(self):
-        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_1.bin"
-        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_1.bin"
+        cpwl_file = "hpc_model/HPC3_3d_cpwl_processed_output_1.bin"
+        quadr_file = "hpc_model/HPC3_3d_quadr_processed_output_1.bin"
         self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
@@ -188,8 +228,8 @@ class HPC3_3d_feed_con1_MINLP(QCPWLFunction_MINLP):
 
 class HPC3_3d_feed_con2_MINLP(QCPWLFunction_MINLP):
     def __init__(self):
-        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_2.bin"
-        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_2.bin"
+        cpwl_file = "hpc_model/HPC3_3d_cpwl_processed_output_2.bin"
+        quadr_file = "hpc_model/HPC3_3d_quadr_processed_output_2.bin"
         self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
@@ -197,8 +237,8 @@ class HPC3_3d_feed_con2_MINLP(QCPWLFunction_MINLP):
 
 class HPC3_3d_purity_con_MINLP(QCPWLFunction_MINLP):
     def __init__(self):
-        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_3.bin"
-        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_3.bin"
+        cpwl_file = "hpc_model/HPC3_3d_cpwl_processed_output_3.bin"
+        quadr_file = "hpc_model/HPC3_3d_quadr_processed_output_3.bin"
         self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
@@ -206,8 +246,8 @@ class HPC3_3d_purity_con_MINLP(QCPWLFunction_MINLP):
 
 class HPC3_3d_drain_con_MINLP(QCPWLFunction_MINLP):
     def __init__(self):
-        cpwl_file = "qmodel/HPC3_3d_cpwl_processed_output_4.bin"
-        quadr_file = "qmodel/HPC3_3d_quadr_processed_output_4.bin"
+        cpwl_file = "hpc_model/HPC3_3d_cpwl_processed_output_4.bin"
+        quadr_file = "hpc_model/HPC3_3d_quadr_processed_output_4.bin"
         self.load_from_qcpwl_model_file(cpwl_file, quadr_file)
         self.input_variables = ['TA_Flow', 'MA_Flow', 'GAN_Flow']
         self.parameters = []
@@ -215,16 +255,17 @@ class HPC3_3d_drain_con_MINLP(QCPWLFunction_MINLP):
 
 def generate_noise_file():
     noise_level = {
-        "obj": HPC3_3d_cost_QCPWL(),
+        "obj": 2,
         "feed_con1": 0,
         "feed_con2": 0,
-        "purity_con": 0,
-        "drain_con": 0,
+        "purity_con": 2e-5,
+        "drain_con": 0.1,
+        "validity_con":0,
     }
     max_iter = 200
     noise_generator = NoiseGenerator(noise_level)
     noise_generator.generate_noise(max_iter, 6)
-    noise_generator.save_noise("noise/hpc-noise0.txt")
+    noise_generator.save_noise("noise/hpc-noise1.txt")
     
 def get_plant_contour_data():
     plant_simulator = PyomoSimulator(RTO_Plant_HPC())
@@ -284,9 +325,9 @@ def get_plant_contour_data():
                 pickle.dump(z_points[output_name], fp)
 
 def draw_plant_model_mismatch():
-    size = np.fromfile("plant_data/HPC3_processed_size_3d.dat", dtype=int)
-    X = np.fromfile("plant_data/HPC3_processed_X_3d.dat", dtype=float).reshape((size[0], size[1]))
-    Y = np.fromfile("plant_data/HPC3_processed_Y_3d.dat", dtype=float).reshape((size[2], size[3]))
+    size = np.fromfile("hpc_model/HPC3_processed_size_3d.dat", dtype=int)
+    X = np.fromfile("hpc_model/HPC3_processed_X_3d.dat", dtype=float).reshape((size[0], size[1]))
+    Y = np.fromfile("hpc_model/HPC3_processed_Y_3d.dat", dtype=float).reshape((size[2], size[3]))
     output_name_and_index = {
         "obj": 0,
         "feed_con1": 1,
@@ -339,7 +380,7 @@ def draw_plant_model_mismatch2():
         y_points = np.linspace(1600, 2000, num_point)
         x_points, y_points = np.meshgrid(x_points, y_points)
         for output_name in model_dc_cpwl_functions.keys():
-            data_file = "plant_data/" + output_name + "_%d" % num_point + \
+            data_file = "hpc_model/" + output_name + "_%d" % num_point + \
                 "_%d" % gan_flow + ".bin"
             with open(data_file, "rb") as fp:
                 plant_z = pickle.load(fp)
@@ -603,11 +644,13 @@ def do_test_QCPWL_Subgrad(perturbation_stepsize, starting_point, filtering_facto
             output, _ = rto_algorithm.DC_CPWL_RTO_model.simulate(
                 {"TA_Flow": x_points[i, j], "MA_Flow": y_points[i, j],
                  "GAN_Flow": gan_flow}, with_modifier=True)
-            if (output["feed_con1"] <= 0) and (output["feed_con2"] <= 0) and \
-                    (output["purity_con"] <= 0) and (output["drain_con"] <= 0):
-                z_points[i, j] = output["obj"]
-            else:
-                z_points[i, j] = 3500
+            z_points[i, j] = output["obj"] / problem_description.scaling_factors["obj"] + \
+                             global_parameter['sigma'] * ( \
+                                         max(output["feed_con1"],0) / problem_description.scaling_factors["feed_con1"] + \
+                                         max(output["feed_con2"],0) / problem_description.scaling_factors["feed_con2"] + \
+                                         max(output["purity_con"],0) / problem_description.scaling_factors["purity_con"] + \
+                                         max(output["drain_con"],0) / problem_description.scaling_factors["drain_con"]
+                                 )
     plt.figure()
     plt.contourf(x_points, y_points, z_points, 20)
     plt.colorbar()
@@ -631,11 +674,13 @@ def do_test_QCPWL_Subgrad(perturbation_stepsize, starting_point, filtering_facto
                 output, _ = rto_algorithm.DC_CPWL_RTO_model.simulate(
                     {"TA_Flow": x_points[i, j], "MA_Flow": y_points[i, j],
                      "GAN_Flow":gan_flow}, with_modifier=True)
-                if (output["feed_con1"] <= 0) and (output["feed_con2"] <= 0) and \
-                        (output["purity_con"] <= 0) and (output["drain_con"] <= 0):
-                    z_points[i, j] = output["obj"]
-                else:
-                    z_points[i, j] = 3500
+                z_points[i, j] = output["obj"] / problem_description.scaling_factors["obj"] + \
+                                 global_parameter['sigma'] * ( \
+                                             max(output["feed_con1"],0) / problem_description.scaling_factors["feed_con1"] + \
+                                             max(output["feed_con2"],0) / problem_description.scaling_factors["feed_con2"] + \
+                                             max(output["purity_con"],0) / problem_description.scaling_factors["purity_con"] + \
+                                             max(output["drain_con"],0) / problem_description.scaling_factors["drain_con"]
+                                     )
         plt.figure()
         plt.contourf(x_points, y_points, z_points, 20)
         plt.colorbar()
@@ -715,11 +760,13 @@ def do_test_QCPWL_Subgrad_MINLP(perturbation_stepsize, starting_point, filtering
             output, _ = rto_algorithm.DC_CPWL_RTO_model.simulate(
                 {"TA_Flow": x_points[i, j], "MA_Flow": y_points[i, j],
                  "GAN_Flow": gan_flow}, with_modifier=True)
-            if (output["feed_con1"] <= 0) and (output["feed_con2"] <= 0) and \
-                    (output["purity_con"] <= 0) and (output["drain_con"] <= 0):
-                z_points[i, j] = output["obj"]
-            else:
-                z_points[i, j] = 3500
+            z_points[i, j] = output["obj"] / problem_description.scaling_factors["obj"] + \
+                             global_parameter['sigma'] * ( \
+                                         max(output["feed_con1"],0) / problem_description.scaling_factors["feed_con1"] + \
+                                         max(output["feed_con2"],0) / problem_description.scaling_factors["feed_con2"] + \
+                                         max(output["purity_con"],0) / problem_description.scaling_factors["purity_con"] + \
+                                         max(output["drain_con"],0) / problem_description.scaling_factors["drain_con"]
+                                 )
     plt.figure()
     plt.contourf(x_points, y_points, z_points, 20)
     plt.colorbar()
@@ -743,11 +790,13 @@ def do_test_QCPWL_Subgrad_MINLP(perturbation_stepsize, starting_point, filtering
                 output, _ = rto_algorithm.DC_CPWL_RTO_model.simulate(
                     {"TA_Flow": x_points[i, j], "MA_Flow": y_points[i, j],
                      "GAN_Flow":gan_flow}, with_modifier=True)
-                if (output["feed_con1"] <= 0) and (output["feed_con2"] <= 0) and \
-                        (output["purity_con"] <= 0) and (output["drain_con"] <= 0):
-                    z_points[i, j] = output["obj"]
-                else:
-                    z_points[i, j] = 3500
+                z_points[i, j] = output["obj"] / problem_description.scaling_factors["obj"] + \
+                                 global_parameter['sigma'] * ( \
+                                             max(output["feed_con1"],0) / problem_description.scaling_factors["feed_con1"] + \
+                                             max(output["feed_con2"],0) / problem_description.scaling_factors["feed_con2"] + \
+                                             max(output["purity_con"],0) / problem_description.scaling_factors["purity_con"] + \
+                                             max(output["drain_con"],0) / problem_description.scaling_factors["drain_con"]
+                                     )
         plt.figure()
         plt.contourf(x_points, y_points, z_points, 20)
         plt.colorbar()
@@ -836,11 +885,13 @@ def do_test_QCPWL_Subgrad_PenaltyTR(perturbation_stepsize, starting_point, filte
             output, _ = rto_algorithm.DC_CPWL_RTO_model.simulate(
                 {"TA_Flow": x_points[i, j], "MA_Flow": y_points[i, j],
                  "GAN_Flow": gan_flow}, with_modifier=True)
-            if (output["feed_con1"] <= 0) and (output["feed_con2"] <= 0) and \
-                    (output["purity_con"] <= 0) and (output["drain_con"] <= 0):
-                z_points[i, j] = output["obj"]
-            else:
-                z_points[i, j] = 3500
+            z_points[i, j] = output["obj"] / problem_description.scaling_factors["obj"] + \
+                             global_parameter['sigma'] * ( \
+                                         max(output["feed_con1"],0) / problem_description.scaling_factors["feed_con1"] + \
+                                         max(output["feed_con2"],0) / problem_description.scaling_factors["feed_con2"] + \
+                                         max(output["purity_con"],0) / problem_description.scaling_factors["purity_con"] + \
+                                         max(output["drain_con"],0) / problem_description.scaling_factors["drain_con"]
+                                 )
     plt.figure()
     plt.contourf(x_points, y_points, z_points, 20)
     plt.colorbar()
@@ -864,11 +915,13 @@ def do_test_QCPWL_Subgrad_PenaltyTR(perturbation_stepsize, starting_point, filte
                 output, _ = rto_algorithm.DC_CPWL_RTO_model.simulate(
                     {"TA_Flow": x_points[i, j], "MA_Flow": y_points[i, j],
                      "GAN_Flow":gan_flow}, with_modifier=True)
-                if (output["feed_con1"] <= 0) and (output["feed_con2"] <= 0) and \
-                        (output["purity_con"] <= 0) and (output["drain_con"] <= 0):
-                    z_points[i, j] = output["obj"]
-                else:
-                    z_points[i, j] = 3500
+                z_points[i, j] = output["obj"]/problem_description.scaling_factors["obj"]+\
+                                 global_parameter['sigma']*(\
+                    max(output["feed_con1"],0) / problem_description.scaling_factors["feed_con1"]+\
+                    max(output["feed_con2"],0) / problem_description.scaling_factors["feed_con2"]+\
+                    max(output["purity_con"],0) / problem_description.scaling_factors["purity_con"]+\
+                    max(output["drain_con"],0) / problem_description.scaling_factors["drain_con"]
+                )
         plt.figure()
         plt.contourf(x_points, y_points, z_points, 20)
         plt.colorbar()
@@ -892,7 +945,7 @@ def algo_test_main():
     # ------------------------------------
     noise_filename = "noise/hpc-noise0.txt"
     nlp_solver_executable = r"F:\Research\RTOdemo\external\bin\ipopt.exe"
-    qcqp_solver_executable = None
+    qcqp_solver_executable = r"D:/Softwares/IBM/ILOG/CPLEX_Studio221/cplex/bin/x64_win64/cplex.exe"
     minlp_solver_executable = r"F:\Research\GasNetwork\kazda2020\build_model\scipampl.exe"
     result_filename_folder="data/hpc3d/"
     if not os.path.exists(result_filename_folder):
@@ -910,15 +963,17 @@ def algo_test_main():
                 }
     # ------------------------------------
     print_iter_data = False
-    max_iter = 10
+    max_iter = 30
 
+    timpstep = int(time.time())
+    sys.stdout = open("report/HPC3d_report_%d.txt"%timpstep, mode='w')
     # ------------------------------------
-    # print("\nTesting MA")
-    # result_filename_header = result_filename_folder + "MA_"
-    # do_test_MA(perturbation_stepsize, starting_point, filtering_factor, \
-    #                  noise_filename, nlp_solver_executable, \
-    #                  print_iter_data, max_iter, \
-    #                  result_filename_header)
+    print("\nTesting MA")
+    result_filename_header = result_filename_folder + "MA_"
+    do_test_MA(perturbation_stepsize, starting_point, filtering_factor, \
+                     noise_filename, nlp_solver_executable, \
+                     print_iter_data, max_iter, \
+                     result_filename_header)
     # ------------------------------------
     # print("\nTesting QCPWL-MA")
     # result_filename_header = result_filename_folder + "QCPWL_MA_"
@@ -927,12 +982,12 @@ def algo_test_main():
     #                  print_iter_data, max_iter, \
     #                  result_filename_header)
     # ------------------------------------
-    # print("\nTesting QCPWL-Subgrad")
-    # result_filename_header = result_filename_folder + "QCPWL_Subgrad_"
-    # do_test_QCPWL_Subgrad(perturbation_stepsize, starting_point, filtering_factor, \
-    #                                 noise_filename, nlp_solver_executable, qcqp_solver_executable, \
-    #                                 print_iter_data, max_iter, \
-    #                                 result_filename_header)
+    print("\nTesting QCPWL-Subgrad")
+    result_filename_header = result_filename_folder + "QCPWL_Subgrad_"
+    do_test_QCPWL_Subgrad(perturbation_stepsize, starting_point, filtering_factor, \
+                                    noise_filename, nlp_solver_executable, qcqp_solver_executable, \
+                                    print_iter_data, max_iter, \
+                                    result_filename_header)
     # ------------------------------------
     # print("\nTesting QCPWL-Subgrad-TR")
     # result_filename_header = result_filename_folder + "QCPWL_Subgrad_PenaltyTR_"
@@ -951,7 +1006,7 @@ def algo_test_main():
     
 
 def compare_MA_and_QCPWL(pic_name):
-    max_iter_no=10
+    max_iter_no=30
     pic_constant = 0.39370
     global_font_size = 15
     global_tick_size = 15
@@ -978,15 +1033,16 @@ def compare_MA_and_QCPWL(pic_name):
     plt.rcParams['xtick.direction'] = 'in'
     plt.rcParams['ytick.direction'] = 'in'
 
-    algorighms = ['QCPWL_MA', 'MA','QCPWL_Subgrad','QCPWL_Subgrad_MINLP']
+    # algorighms = ['QCPWL_MA', 'MA','QCPWL_Subgrad','QCPWL_Subgrad_MINLP']
+    algorighms = ['MA','QCPWL_Subgrad','QCPWL_Subgrad_MINLP']
     algo_name_dict = {
-        'QCPWL_MA':'QCPWL-MA',
+        # 'QCPWL_MA':'QCPWL-MA',
         'MA':"MA",
         'QCPWL_Subgrad':'QCPWL_Subgrad',
         'QCPWL_Subgrad_MINLP':'QCPWL_Subgrad_MINLP',
     }
     algo_color = {
-        'QCPWL_MA':'red',
+        # 'QCPWL_MA':'red',
         'MA':"blue",
         'QCPWL_Subgrad':"black",
         'QCPWL_Subgrad_MINLP':"magenta"
@@ -1002,13 +1058,14 @@ def compare_MA_and_QCPWL(pic_name):
         'Purity_GAN':'Purity of GAN',
         'Drain_Flow':'Drain flowrate (kmol/h)',
     }
+
     for op_index, op in enumerate(output_measurements):
         plt.subplot(5, 1, op_index + 1)
         for algo_index, algo in enumerate(algorighms):
             model_data = pandas.read_csv("data/hpc3d/" + algo + '_model_data' + ".txt", sep='\t', index_col=0, header=0)
             plant_data = pandas.read_csv("data/hpc3d/" + algo + '_plant_data' + ".txt", sep='\t', index_col=0, header=0)
             time = model_data.index
-            plt.plot(time[:max_iter_no], plant_data.loc[:max_iter_no, op], linewidth=global_linewidth, label=algo,
+            plt.plot(time[0:max_iter_no], plant_data.iloc[0:(max_iter_no),:].loc[:,op], linewidth=global_linewidth, label=algo,
                                        color=algo_color[algo],
                                        linestyle='-')
         plt.legend(prop=font_legend)
@@ -1033,9 +1090,11 @@ def compare_MA_and_QCPWL(pic_name):
             plt.plot(time[0:max_iter_no], input_data.iloc[1:(max_iter_no+1),:].loc[:,op], linewidth=global_linewidth, label=algo,
                                        color=algo_color[algo],
                                        linestyle='-')
-        plt.legend(prop=font_legend)
+        if op_index == 0:
+            plt.legend(prop=font_legend)
         plt.ylabel(mv_label_dict[op], font2)
-        plt.xlabel("RTO iteration", font2)
+        if op_index == 4:
+            plt.xlabel("RTO iteration", font2)
         plt.xticks([0,10,20,30])
         plt.rcParams['xtick.direction'] = 'in'
         plt.rcParams['ytick.direction'] = 'in'
@@ -1051,10 +1110,11 @@ def compare_MA_and_QCPWL(pic_name):
     plt.close()
 
 if __name__ == "__main__":
+    # get_plant_optimum()
     # plant_simulator_test()
     # generate_noise_file()
     # draw_plant_model_mismatch()
-    algo_test_main()
+    # algo_test_main()
     # get_plant_contour_data()
     # draw_plant_model_mismatch2()
     compare_MA_and_QCPWL("pic/HPC3/compare_MA_and_QCPWL.png")

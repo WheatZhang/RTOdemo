@@ -88,6 +88,8 @@ class PyomoOptimizer(Optimizer):
         model = self.pyomo_model.parameters
         # Fix inputs and parameters
         if use_homo:
+            init_value.load_init_from_template(self.model, self.pyomo_model.initial_value_file, \
+                                               ignore_init_mismatch=True)
             for var_name in self.pyomo_model.input_variables.keys():
                 if var_name in input_values.keys():
                     if var_name in self.homotopy_var:

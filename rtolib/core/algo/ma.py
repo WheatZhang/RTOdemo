@@ -67,9 +67,9 @@ class ModifierAdaptation(MA_type_Algorithm):
         solver1 = SolverFactory('ipopt', executable=self.solver_executable)
         self.plant_simulator.set_solver(solver1, tee=False, default_options=default_options)
         solver2 = SolverFactory('ipopt', executable=self.solver_executable)
-        self.model_simulator.set_solver(solver2, tee=False, default_options=default_options)
+        self.model_simulator.set_solver(solver2, tee=True, default_options=default_options)
         solver3 = SolverFactory('ipopt', executable=self.solver_executable)
-        self.model_optimizer.set_solver(solver3, tee=False, default_options=default_options)
+        self.model_optimizer.set_solver(solver3, tee=True, default_options=default_options)
 
         self.iter_count = 0
         self.input_history_data[0] = {}

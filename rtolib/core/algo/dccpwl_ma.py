@@ -91,7 +91,7 @@ class DCCPWL_ModifierAdaptation(ModifierAdaptation):
 
         self.DC_CPWL_RTO_model.build(self.problem_description)
         solver2 = SolverFactory('cplex', executable=self.qcqp_solver_executable)
-        self.DC_CPWL_RTO_model.set_solver(solver2, tee=False,\
+        self.DC_CPWL_RTO_model.set_solver(solver2, tee=True,\
                                           default_options={'logfile':"qcqp.log"})
 
         # solver2 = SolverFactory('ipopt', executable=self.nlp_solver_executable)

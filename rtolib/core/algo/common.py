@@ -124,6 +124,7 @@ class Algorithm():
         return bounded_input
 
     def optimize_for_u(self):
+        # print(self.current_parameter_value)
         input_values = {}
         if self.spec_function is not None:
             for k, v in self.current_spec.items():

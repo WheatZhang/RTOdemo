@@ -422,7 +422,7 @@ class QCPWL_Subgrad_MINLP(DCCPWL_ModifierAdaptationSubgrad):
 
         self.DC_CPWL_RTO_model.build(self.problem_description)
         solver2 = SolverFactory('scipampl', executable=self.minlp_solver_executable)
-        self.DC_CPWL_RTO_model.set_solver(solver2, tee=False,\
+        self.DC_CPWL_RTO_model.set_solver(solver2, tee=True,\
                                           default_options={})
         self.sigma = self.options['sigma']
         self.DC_CPWL_RTO_model.sigma = self.options['sigma']
