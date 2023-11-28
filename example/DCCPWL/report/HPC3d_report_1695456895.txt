@@ -1,0 +1,2197 @@
+
+Testing QCPWL-Subgrad
+Iteration 1
+{'GAN_Flow': 780, 'LN_Flow': 100}
+{'TA_Flow': 300, 'MA_Flow': 1750, 'GAN_Flow': 780, 'LN_Flow': 100}
+
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp6oix1scc.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp6oix1scc.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmp7yl9ao7b.pyomo.lp' read.
+Read time = 0.02 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmp7yl9ao7b.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.470811e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.02 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   6.9512121e+02  -3.2790722e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   3.2081369e+03   2.1931784e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   2.3947793e+03   1.4742095e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   2.5391702e+03   1.8282637e+03  3.29e+05  0.00e+00  1.00e+03  1.12e-02
+   4   2.8414947e+03   2.4793043e+03  2.68e+05  0.00e+00  8.16e+02  8.20e-03
+   5   1.8215087e+03   1.6890835e+03  1.62e+05  0.00e+00  4.94e+02  4.55e-03
+   6   2.8152125e+03   2.7294356e+03  1.18e+05  0.00e+00  3.59e+02  3.57e-03
+   7   2.5610724e+03   2.4353361e+03  1.22e+05  0.00e+00  3.73e+02  1.00e-02
+   8   3.4347045e+03   3.3848071e+03  7.54e+04  0.00e+00  2.30e+02  2.39e-02
+   9   4.0014426e+03   3.9959454e+03  3.07e+04  0.00e+00  9.35e+01  1.20e-01
+  10   4.0397634e+03   4.0384571e+03  4.63e+03  0.00e+00  1.41e+01  2.83e-01
+  11   4.1056268e+03   4.1065961e+03  1.62e+03  0.00e+00  4.93e+00  1.44e-01
+  12   4.1422662e+03   4.1430638e+03  1.99e+03  0.00e+00  6.08e+00  4.93e-01
+  13   4.1218804e+03   4.1228580e+03  4.11e+02  0.00e+00  1.25e+00  5.51e-01
+  14   4.1111939e+03   4.1113415e+03  2.80e+02  0.00e+00  8.54e-01  4.10e+00
+  15   4.1104890e+03   4.1104910e+03  3.22e+01  0.00e+00  9.81e-02  2.31e+02
+  16   4.1104958e+03   4.1104962e+03  7.78e-01  0.00e+00  2.37e-03  1.04e+03
+  17   4.1104983e+03   4.1104984e+03  1.62e-01  0.00e+00  4.95e-04  6.81e+03
+
+Barrier - Optimal:  Objective =  4.1104981924e+03
+Solution time =    0.03 sec.  Iterations = 17
+Deterministic time = 0.50 ticks  (15.67 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmpfqx_cmux.cplex.sol'.
+CPLEX> 
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpmfbgcrn9.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpmfbgcrn9.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmpyradqk3v.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmpyradqk3v.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.470811e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   6.9512121e+02  -3.2790722e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   3.2080610e+03   2.1931020e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   2.3947998e+03   1.4742258e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   2.5392918e+03   1.8283699e+03  3.29e+05  0.00e+00  1.00e+03  1.12e-02
+   4   2.8418820e+03   2.4797799e+03  2.68e+05  0.00e+00  8.16e+02  8.20e-03
+   5   1.8229902e+03   1.6905528e+03  1.62e+05  0.00e+00  4.94e+02  4.55e-03
+   6   2.8172847e+03   2.7313451e+03  1.18e+05  0.00e+00  3.59e+02  3.57e-03
+   7   2.5733830e+03   2.4477617e+03  1.22e+05  0.00e+00  3.73e+02  1.01e-02
+   8   3.4519977e+03   3.4032575e+03  7.50e+04  0.00e+00  2.29e+02  2.47e-02
+   9   4.0074129e+03   4.0023587e+03  2.98e+04  0.00e+00  9.09e+01  1.41e-01
+  10   4.0403758e+03   4.0390532e+03  4.06e+03  0.00e+00  1.24e+01  2.87e-01
+  11   4.1134001e+03   4.1145949e+03  1.61e+03  0.00e+00  4.90e+00  1.52e-01
+  12   4.1415365e+03   4.1424954e+03  1.80e+03  0.00e+00  5.48e+00  4.66e-01
+  13   4.1109710e+03   4.1114523e+03  3.97e+02  0.00e+00  1.21e+00  1.09e+00
+  14   4.1102697e+03   4.1102750e+03  1.46e+02  0.00e+00  4.44e-01  6.52e+01
+  15   4.1103409e+03   4.1103415e+03  3.36e+00  0.00e+00  1.02e-02  6.02e+02
+  16   4.1103516e+03   4.1103519e+03  3.62e-01  0.00e+00  1.10e-03  1.87e+03
+
+Barrier - Optimal:  Objective =  4.1103507866e+03
+Solution time =    0.00 sec.  Iterations = 16
+Deterministic time = 0.48 ticks  (482.31 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmp1wz3tye2.cplex.sol'.
+CPLEX> 
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpmg2u4c4v.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpmg2u4c4v.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmpc727jzbj.pyomo.lp' read.
+Read time = 0.02 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmpc727jzbj.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.470811e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   6.9512121e+02  -3.2790722e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   3.2080610e+03   2.1931020e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   2.3947998e+03   1.4742258e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   2.5392918e+03   1.8283699e+03  3.29e+05  0.00e+00  1.00e+03  1.12e-02
+   4   2.8418820e+03   2.4797799e+03  2.68e+05  0.00e+00  8.16e+02  8.20e-03
+   5   1.8229902e+03   1.6905528e+03  1.62e+05  0.00e+00  4.94e+02  4.55e-03
+   6   2.8172847e+03   2.7313451e+03  1.18e+05  0.00e+00  3.59e+02  3.57e-03
+   7   2.5733830e+03   2.4477617e+03  1.22e+05  0.00e+00  3.73e+02  1.01e-02
+   8   3.4519977e+03   3.4032575e+03  7.50e+04  0.00e+00  2.29e+02  2.47e-02
+   9   4.0074129e+03   4.0023587e+03  2.98e+04  0.00e+00  9.09e+01  1.41e-01
+  10   4.0403758e+03   4.0390532e+03  4.06e+03  0.00e+00  1.24e+01  2.87e-01
+  11   4.1134001e+03   4.1145949e+03  1.61e+03  0.00e+00  4.90e+00  1.52e-01
+  12   4.1415365e+03   4.1424954e+03  1.80e+03  0.00e+00  5.48e+00  4.66e-01
+  13   4.1109710e+03   4.1114523e+03  3.97e+02  0.00e+00  1.21e+00  1.09e+00
+  14   4.1102697e+03   4.1102750e+03  1.46e+02  0.00e+00  4.44e-01  6.52e+01
+  15   4.1103409e+03   4.1103415e+03  3.36e+00  0.00e+00  1.02e-02  6.02e+02
+  16   4.1103516e+03   4.1103519e+03  3.62e-01  0.00e+00  1.10e-03  1.87e+03
+
+Barrier - Optimal:  Objective =  4.1103507866e+03
+Solution time =    0.00 sec.  Iterations = 16
+Deterministic time = 0.48 ticks  (482.31 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmpg13l7fyt.cplex.sol'.
+CPLEX> after optimization:
+{'GAN_Flow': 780, 'TA_Flow': 274.7484530893856, 'MA_Flow': 1750.9339970228696}
+Iteration 2
+{'GAN_Flow': 780, 'LN_Flow': 100}
+{'TA_Flow': 274.7484530893856, 'MA_Flow': 1750.9339970228696, 'GAN_Flow': 780, 'LN_Flow': 100}
+
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpuwijafqo.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpuwijafqo.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmpjlhadjau.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmpjlhadjau.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.749773e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   1.3304868e+03   3.0745840e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   3.8411775e+03   2.8262018e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   3.0068370e+03   2.0859248e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   3.0491871e+03   2.3364892e+03  3.29e+05  0.00e+00  1.00e+03  1.13e-02
+   4   3.2016725e+03   2.7995687e+03  2.68e+05  0.00e+00  8.17e+02  8.70e-03
+   5   3.0314036e+03   2.6852152e+03  1.73e+05  0.00e+00  5.27e+02  7.85e-03
+   6   2.9122698e+03   2.7017376e+03  1.58e+05  0.00e+00  4.83e+02  7.57e-03
+   7   3.4467654e+03   3.3633663e+03  1.15e+05  0.00e+00  3.49e+02  8.35e-03
+   8   3.5902107e+03   3.5135031e+03  6.79e+04  0.00e+00  2.07e+02  7.62e-03
+   9   3.9394673e+03   3.9186330e+03  6.96e+04  0.00e+00  2.12e+02  6.18e-02
+  10   4.0464679e+03   4.0438267e+03  1.24e+04  0.00e+00  3.77e+01  3.36e-01
+  11   4.0571869e+03   4.0564666e+03  1.88e+03  0.00e+00  5.73e+00  7.07e-01
+  12   4.0902425e+03   4.0909552e+03  7.14e+02  0.00e+00  2.18e+00  2.19e-01
+  13   4.1376355e+03   4.1395388e+03  1.29e+03  0.00e+00  3.93e+00  2.88e-01
+  14   4.1281766e+03   4.1306838e+03  5.25e+02  0.00e+00  1.60e+00  2.54e-01
+  15   4.1108714e+03   4.1119183e+03  4.80e+02  0.00e+00  1.46e+00  6.30e-01
+  16   4.1112717e+03   4.1113625e+03  1.80e+02  0.00e+00  5.50e-01  7.59e+00
+  17   4.1118672e+03   4.1118692e+03  1.37e+01  0.00e+00  4.16e-02  3.01e+02
+  18   4.1118990e+03   4.1118993e+03  4.46e-01  0.00e+00  1.36e-03  2.05e+03
+
+Barrier - Optimal:  Objective =  4.1118989324e+03
+Solution time =    0.00 sec.  Iterations = 18
+Deterministic time = 0.52 ticks  (520.27 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmpxub2pva9.cplex.sol'.
+CPLEX> 
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpjedrzykw.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpjedrzykw.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmpy9jsfl_7.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmpy9jsfl_7.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.749773e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   1.3304868e+03   3.0745840e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   3.8411775e+03   2.8262018e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   3.0068370e+03   2.0859248e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   3.0491871e+03   2.3364892e+03  3.29e+05  0.00e+00  1.00e+03  1.13e-02
+   4   3.2016725e+03   2.7995687e+03  2.68e+05  0.00e+00  8.17e+02  8.70e-03
+   5   3.0314036e+03   2.6852152e+03  1.73e+05  0.00e+00  5.27e+02  7.85e-03
+   6   2.9122698e+03   2.7017376e+03  1.58e+05  0.00e+00  4.83e+02  7.57e-03
+   7   3.4467654e+03   3.3633663e+03  1.15e+05  0.00e+00  3.49e+02  8.35e-03
+   8   3.5902107e+03   3.5135031e+03  6.79e+04  0.00e+00  2.07e+02  7.62e-03
+   9   3.9394673e+03   3.9186330e+03  6.96e+04  0.00e+00  2.12e+02  6.18e-02
+  10   4.0464679e+03   4.0438267e+03  1.24e+04  0.00e+00  3.77e+01  3.36e-01
+  11   4.0571869e+03   4.0564666e+03  1.88e+03  0.00e+00  5.73e+00  7.07e-01
+  12   4.0902425e+03   4.0909552e+03  7.14e+02  0.00e+00  2.18e+00  2.19e-01
+  13   4.1376355e+03   4.1395388e+03  1.29e+03  0.00e+00  3.93e+00  2.88e-01
+  14   4.1281766e+03   4.1306838e+03  5.25e+02  0.00e+00  1.60e+00  2.54e-01
+  15   4.1108714e+03   4.1119183e+03  4.80e+02  0.00e+00  1.46e+00  6.30e-01
+  16   4.1112717e+03   4.1113625e+03  1.80e+02  0.00e+00  5.50e-01  7.59e+00
+  17   4.1118672e+03   4.1118692e+03  1.37e+01  0.00e+00  4.16e-02  3.01e+02
+  18   4.1118990e+03   4.1118993e+03  4.46e-01  0.00e+00  1.36e-03  2.05e+03
+
+Barrier - Optimal:  Objective =  4.1118989324e+03
+Solution time =    0.02 sec.  Iterations = 18
+Deterministic time = 0.52 ticks  (32.52 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmph2hz1uko.cplex.sol'.
+CPLEX> after optimization:
+{'GAN_Flow': 780, 'TA_Flow': 275.37588080501683, 'MA_Flow': 1750.3915730586307}
+Iteration 3
+{'GAN_Flow': 780, 'LN_Flow': 100}
+{'TA_Flow': 275.37588080501683, 'MA_Flow': 1750.3915730586307, 'GAN_Flow': 780, 'LN_Flow': 100}
+
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp1vpeswc8.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp1vpeswc8.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmp987z3e83.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmp987z3e83.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.640883e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   6.9953516e+02  -3.2349327e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   3.2116011e+03   2.1966198e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   2.4002016e+03   1.4791603e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   2.5542186e+03   1.8427312e+03  3.29e+05  0.00e+00  1.00e+03  1.12e-02
+   4   2.7788583e+03   2.3317096e+03  2.68e+05  0.00e+00  8.17e+02  8.79e-03
+   5   2.6284022e+03   2.2462738e+03  1.88e+05  0.00e+00  5.72e+02  7.86e-03
+   6   2.5140846e+03   2.2598151e+03  1.70e+05  0.00e+00  5.20e+02  7.41e-03
+   7   3.1910588e+03   3.1699745e+03  1.30e+05  0.00e+00  3.97e+02  6.63e-03
+   8   3.5442994e+03   3.5247674e+03  5.75e+04  0.00e+00  1.75e+02  9.23e-03
+   9   3.9402320e+03   3.9311382e+03  4.28e+04  0.00e+00  1.30e+02  9.74e-02
+  10   4.0328812e+03   4.0322811e+03  6.48e+03  0.00e+00  1.97e+01  6.89e-01
+  11   4.0394321e+03   4.0393733e+03  6.86e+02  0.00e+00  2.09e+00  3.49e-01
+  12   4.1020437e+03   4.1061981e+03  9.77e+02  0.00e+00  2.98e+00  1.58e-01
+  13   4.0965463e+03   4.0976835e+03  7.34e+02  0.00e+00  2.24e+00  5.25e-01
+  14   4.1075405e+03   4.1082249e+03  2.57e+02  0.00e+00  7.84e-01  1.04e+00
+  15   4.1092947e+03   4.1093036e+03  9.28e+01  0.00e+00  2.83e-01  5.90e+01
+  16   4.1094483e+03   4.1094491e+03  2.70e+00  0.00e+00  8.23e-03  5.94e+02
+  17   4.1094649e+03   4.1094653e+03  2.67e-01  0.00e+00  8.14e-04  1.66e+03
+  18   4.1094675e+03   4.1094675e+03  5.23e-02  0.00e+00  1.59e-04  1.22e+04
+
+Barrier - Optimal:  Objective =  4.1094673846e+03
+Solution time =    0.00 sec.  Iterations = 18
+Deterministic time = 0.54 ticks  (544.77 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmpuqopv2o9.cplex.sol'.
+CPLEX> 
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpgio3vgio.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpgio3vgio.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmp57c7ik4w.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmp57c7ik4w.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.640883e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   6.9953516e+02  -3.2349327e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   3.2116011e+03   2.1966198e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   2.4002016e+03   1.4791603e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   2.5542186e+03   1.8427312e+03  3.29e+05  0.00e+00  1.00e+03  1.12e-02
+   4   2.7788583e+03   2.3317096e+03  2.68e+05  0.00e+00  8.17e+02  8.79e-03
+   5   2.6284022e+03   2.2462738e+03  1.88e+05  0.00e+00  5.72e+02  7.86e-03
+   6   2.5140846e+03   2.2598151e+03  1.70e+05  0.00e+00  5.20e+02  7.41e-03
+   7   3.1910588e+03   3.1699745e+03  1.30e+05  0.00e+00  3.97e+02  6.63e-03
+   8   3.5442994e+03   3.5247674e+03  5.75e+04  0.00e+00  1.75e+02  9.23e-03
+   9   3.9402320e+03   3.9311382e+03  4.28e+04  0.00e+00  1.30e+02  9.74e-02
+  10   4.0328812e+03   4.0322811e+03  6.48e+03  0.00e+00  1.97e+01  6.89e-01
+  11   4.0394321e+03   4.0393733e+03  6.86e+02  0.00e+00  2.09e+00  3.49e-01
+  12   4.1020437e+03   4.1061981e+03  9.77e+02  0.00e+00  2.98e+00  1.58e-01
+  13   4.0965463e+03   4.0976835e+03  7.34e+02  0.00e+00  2.24e+00  5.25e-01
+  14   4.1075405e+03   4.1082249e+03  2.57e+02  0.00e+00  7.84e-01  1.04e+00
+  15   4.1092947e+03   4.1093036e+03  9.28e+01  0.00e+00  2.83e-01  5.90e+01
+  16   4.1094483e+03   4.1094491e+03  2.70e+00  0.00e+00  8.23e-03  5.94e+02
+  17   4.1094649e+03   4.1094653e+03  2.67e-01  0.00e+00  8.14e-04  1.66e+03
+  18   4.1094675e+03   4.1094675e+03  5.23e-02  0.00e+00  1.59e-04  1.22e+04
+
+Barrier - Optimal:  Objective =  4.1094673846e+03
+Solution time =    0.02 sec.  Iterations = 18
+Deterministic time = 0.54 ticks  (34.05 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmp73hqvwih.cplex.sol'.
+CPLEX> after optimization:
+{'GAN_Flow': 780, 'TA_Flow': 275.5014454007304, 'MA_Flow': 1749.55717022077}
+Iteration 4
+{'GAN_Flow': 780, 'LN_Flow': 100}
+{'TA_Flow': 275.5014454007304, 'MA_Flow': 1749.55717022077, 'GAN_Flow': 780, 'LN_Flow': 100}
+
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpoun989dq.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpoun989dq.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmpyaqq8qkg.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmpyaqq8qkg.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.520519e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   9.3502975e+02  -8.7998680e+01  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   3.4466632e+03   2.4316938e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   2.6264288e+03   1.7056662e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   2.7342796e+03   2.0227079e+03  3.29e+05  0.00e+00  1.00e+03  1.12e-02
+   4   2.9692468e+03   2.5968984e+03  2.68e+05  0.00e+00  8.16e+02  8.34e-03
+   5   2.5329093e+03   2.2270739e+03  1.65e+05  0.00e+00  5.02e+02  6.44e-03
+   6   2.5998623e+03   2.5606452e+03  1.54e+05  0.00e+00  4.70e+02  5.27e-03
+   7   3.4915070e+03   3.4768475e+03  7.66e+04  0.00e+00  2.33e+02  1.21e-02
+   8   3.7273564e+03   3.7146349e+03  3.26e+04  0.00e+00  9.93e+01  1.98e-02
+   9   3.9522501e+03   3.9476564e+03  2.11e+04  0.00e+00  6.43e+01  9.53e-02
+  10   4.0276456e+03   4.0271595e+03  5.05e+03  0.00e+00  1.54e+01  5.71e-01
+  11   4.0363400e+03   4.0366576e+03  7.49e+02  0.00e+00  2.28e+00  2.78e-01
+  12   4.1042477e+03   4.1089594e+03  1.10e+03  0.00e+00  3.35e+00  1.42e-01
+  13   4.1020963e+03   4.1050401e+03  7.74e+02  0.00e+00  2.36e+00  2.36e-01
+  14   4.1075096e+03   4.1084611e+03  4.30e+02  0.00e+00  1.31e+00  7.17e-01
+  15   4.1126008e+03   4.1126193e+03  1.48e+02  0.00e+00  4.51e-01  3.14e+01
+  16   4.1129189e+03   4.1129200e+03  4.46e+00  0.00e+00  1.36e-02  5.23e+02
+  17   4.1129401e+03   4.1129406e+03  2.79e-01  0.00e+00  8.51e-04  1.44e+03
+  18   4.1129443e+03   4.1129444e+03  6.85e-02  0.00e+00  2.09e-04  1.00e+04
+
+Barrier - Optimal:  Objective =  4.1129442209e+03
+Solution time =    0.02 sec.  Iterations = 18
+Deterministic time = 0.54 ticks  (33.67 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmpw_qgghkp.cplex.sol'.
+CPLEX> 
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp8q7yazjj.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp8q7yazjj.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmpnxki1hre.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmpnxki1hre.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.520519e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   9.3502975e+02  -8.7998680e+01  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   3.4466632e+03   2.4316938e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   2.6264288e+03   1.7056662e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   2.7342796e+03   2.0227079e+03  3.29e+05  0.00e+00  1.00e+03  1.12e-02
+   4   2.9692468e+03   2.5968984e+03  2.68e+05  0.00e+00  8.16e+02  8.34e-03
+   5   2.5329093e+03   2.2270739e+03  1.65e+05  0.00e+00  5.02e+02  6.44e-03
+   6   2.5998623e+03   2.5606452e+03  1.54e+05  0.00e+00  4.70e+02  5.27e-03
+   7   3.4915070e+03   3.4768475e+03  7.66e+04  0.00e+00  2.33e+02  1.21e-02
+   8   3.7273564e+03   3.7146349e+03  3.26e+04  0.00e+00  9.93e+01  1.98e-02
+   9   3.9522501e+03   3.9476564e+03  2.11e+04  0.00e+00  6.43e+01  9.53e-02
+  10   4.0276456e+03   4.0271595e+03  5.05e+03  0.00e+00  1.54e+01  5.71e-01
+  11   4.0363400e+03   4.0366576e+03  7.49e+02  0.00e+00  2.28e+00  2.78e-01
+  12   4.1042477e+03   4.1089594e+03  1.10e+03  0.00e+00  3.35e+00  1.42e-01
+  13   4.1020963e+03   4.1050401e+03  7.74e+02  0.00e+00  2.36e+00  2.36e-01
+  14   4.1075096e+03   4.1084611e+03  4.30e+02  0.00e+00  1.31e+00  7.17e-01
+  15   4.1126008e+03   4.1126193e+03  1.48e+02  0.00e+00  4.51e-01  3.14e+01
+  16   4.1129189e+03   4.1129200e+03  4.46e+00  0.00e+00  1.36e-02  5.23e+02
+  17   4.1129401e+03   4.1129406e+03  2.79e-01  0.00e+00  8.51e-04  1.44e+03
+  18   4.1129443e+03   4.1129444e+03  6.85e-02  0.00e+00  2.09e-04  1.00e+04
+
+Barrier - Optimal:  Objective =  4.1129442209e+03
+Solution time =    0.00 sec.  Iterations = 18
+Deterministic time = 0.54 ticks  (538.71 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmp8hs5lf1b.cplex.sol'.
+CPLEX> after optimization:
+{'GAN_Flow': 780, 'TA_Flow': 275.04670529615555, 'MA_Flow': 1750.6269902537185}
+Iteration 5
+{'GAN_Flow': 780, 'LN_Flow': 100}
+{'TA_Flow': 275.04670529615555, 'MA_Flow': 1750.6269902537185, 'GAN_Flow': 780, 'LN_Flow': 100}
+
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp7b9ewc9k.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp7b9ewc9k.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmpj5888002.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmpj5888002.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.606203e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   1.2990673e+03   2.7603890e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   3.8098349e+03   2.7948621e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   2.9765540e+03   2.0557147e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   3.0231354e+03   2.3105326e+03  3.29e+05  0.00e+00  1.00e+03  1.13e-02
+   4   3.1905147e+03   2.8052336e+03  2.68e+05  0.00e+00  8.17e+02  8.58e-03
+   5   2.9528242e+03   2.6224178e+03  1.68e+05  0.00e+00  5.11e+02  7.42e-03
+   6   2.8234177e+03   2.6559636e+03  1.56e+05  0.00e+00  4.74e+02  7.00e-03
+   7   3.3418844e+03   3.2501577e+03  1.04e+05  0.00e+00  3.16e+02  8.34e-03
+   8   3.4869282e+03   3.4016868e+03  7.08e+04  0.00e+00  2.16e+02  7.72e-03
+   9   3.8938083e+03   3.8694503e+03  7.18e+04  0.00e+00  2.19e+02  3.91e-02
+  10   4.0406067e+03   4.0365030e+03  1.67e+04  0.00e+00  5.09e+01  3.63e-01
+  11   4.0522670e+03   4.0512098e+03  2.29e+03  0.00e+00  6.99e+00  9.53e-01
+  12   4.0776087e+03   4.0770261e+03  7.05e+02  0.00e+00  2.15e+00  3.12e-01
+  13   4.1348704e+03   4.1363764e+03  1.27e+03  0.00e+00  3.86e+00  3.14e-01
+  14   4.1292122e+03   4.1313163e+03  5.61e+02  0.00e+00  1.71e+00  2.82e-01
+  15   4.1143207e+03   4.1148343e+03  4.81e+02  0.00e+00  1.47e+00  8.73e-01
+  16   4.1145037e+03   4.1147998e+03  2.11e+02  0.00e+00  6.44e-01  2.33e+00
+  17   4.1163370e+03   4.1163710e+03  4.44e+01  0.00e+00  1.35e-01  2.16e+01
+  18   4.1165222e+03   4.1165237e+03  4.15e+00  0.00e+00  1.26e-02  4.70e+02
+  19   4.1165332e+03   4.1165336e+03  1.99e-01  0.00e+00  6.08e-04  1.73e+03
+  20   4.1165352e+03   4.1165353e+03  4.94e-02  0.00e+00  1.50e-04  1.41e+04
+
+Barrier - Optimal:  Objective =  4.1165351474e+03
+Solution time =    0.00 sec.  Iterations = 20
+Deterministic time = 0.58 ticks  (582.36 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmpo_71jqmk.cplex.sol'.
+CPLEX> 
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpjnhegdq5.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpjnhegdq5.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmpquo7mrz9.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmpquo7mrz9.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.606203e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   1.2990673e+03   2.7603890e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   3.8098349e+03   2.7948621e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   2.9765540e+03   2.0557147e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   3.0231354e+03   2.3105326e+03  3.29e+05  0.00e+00  1.00e+03  1.13e-02
+   4   3.1905147e+03   2.8052336e+03  2.68e+05  0.00e+00  8.17e+02  8.58e-03
+   5   2.9528242e+03   2.6224178e+03  1.68e+05  0.00e+00  5.11e+02  7.42e-03
+   6   2.8234177e+03   2.6559636e+03  1.56e+05  0.00e+00  4.74e+02  7.00e-03
+   7   3.3418844e+03   3.2501577e+03  1.04e+05  0.00e+00  3.16e+02  8.34e-03
+   8   3.4869282e+03   3.4016868e+03  7.08e+04  0.00e+00  2.16e+02  7.72e-03
+   9   3.8938083e+03   3.8694503e+03  7.18e+04  0.00e+00  2.19e+02  3.91e-02
+  10   4.0406067e+03   4.0365030e+03  1.67e+04  0.00e+00  5.09e+01  3.63e-01
+  11   4.0522670e+03   4.0512098e+03  2.29e+03  0.00e+00  6.99e+00  9.53e-01
+  12   4.0776087e+03   4.0770261e+03  7.05e+02  0.00e+00  2.15e+00  3.12e-01
+  13   4.1348704e+03   4.1363764e+03  1.27e+03  0.00e+00  3.86e+00  3.14e-01
+  14   4.1292122e+03   4.1313163e+03  5.61e+02  0.00e+00  1.71e+00  2.82e-01
+  15   4.1143207e+03   4.1148343e+03  4.81e+02  0.00e+00  1.47e+00  8.73e-01
+  16   4.1145037e+03   4.1147998e+03  2.11e+02  0.00e+00  6.44e-01  2.33e+00
+  17   4.1163370e+03   4.1163710e+03  4.44e+01  0.00e+00  1.35e-01  2.16e+01
+  18   4.1165222e+03   4.1165237e+03  4.15e+00  0.00e+00  1.26e-02  4.70e+02
+  19   4.1165332e+03   4.1165336e+03  1.99e-01  0.00e+00  6.08e-04  1.73e+03
+  20   4.1165352e+03   4.1165353e+03  4.94e-02  0.00e+00  1.50e-04  1.41e+04
+
+Barrier - Optimal:  Objective =  4.1165351474e+03
+Solution time =    0.02 sec.  Iterations = 20
+Deterministic time = 0.58 ticks  (36.40 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmpand0a3ut.cplex.sol'.
+CPLEX> after optimization:
+{'GAN_Flow': 780, 'TA_Flow': 275.26085267825334, 'MA_Flow': 1750.623227772408}
+Iteration 6
+{'GAN_Flow': 780, 'LN_Flow': 100}
+{'TA_Flow': 275.26085267825334, 'MA_Flow': 1750.623227772408, 'GAN_Flow': 780, 'LN_Flow': 100}
+
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp8p7ye_vu.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp8p7ye_vu.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmpsvv5f3tq.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmpsvv5f3tq.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.755294e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   1.3750449e+03   3.5201649e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   3.8862827e+03   2.8713161e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   3.0494174e+03   2.1286567e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   3.0810530e+03   2.3685278e+03  3.29e+05  0.00e+00  1.00e+03  1.13e-02
+   4   3.2439975e+03   2.8916319e+03  2.68e+05  0.00e+00  8.17e+02  8.39e-03
+   5   2.8681807e+03   2.5756241e+03  1.58e+05  0.00e+00  4.81e+02  6.61e-03
+   6   2.9083677e+03   2.8648393e+03  1.48e+05  0.00e+00  4.52e+02  5.88e-03
+   7   3.5738927e+03   3.5508676e+03  7.15e+04  0.00e+00  2.18e+02  1.55e-02
+   8   4.0015947e+03   3.9948455e+03  2.93e+04  0.00e+00  8.93e+01  1.43e-01
+   9   4.0490564e+03   4.0481945e+03  4.60e+03  0.00e+00  1.40e+01  7.31e-01
+  10   4.0623877e+03   4.0621090e+03  7.46e+02  0.00e+00  2.27e+00  3.11e-01
+  11   4.1269142e+03   4.1302755e+03  1.17e+03  0.00e+00  3.56e+00  1.80e-01
+  12   4.1211949e+03   4.1247448e+03  7.36e+02  0.00e+00  2.24e+00  1.85e-01
+  13   4.1072649e+03   4.1080086e+03  6.19e+02  0.00e+00  1.88e+00  7.20e-01
+  14   4.1141501e+03   4.1143136e+03  2.16e+02  0.00e+00  6.57e-01  4.45e+00
+  15   4.1155349e+03   4.1155403e+03  2.05e+01  0.00e+00  6.25e-02  1.19e+02
+  16   4.1156170e+03   4.1156179e+03  9.81e-01  0.00e+00  2.99e-03  7.27e+02
+  17   4.1156336e+03   4.1156337e+03  1.58e-01  0.00e+00  4.82e-04  4.26e+03
+
+Barrier - Optimal:  Objective =  4.1156332748e+03
+Solution time =    0.02 sec.  Iterations = 17
+Deterministic time = 0.51 ticks  (31.72 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmphhpf95tg.cplex.sol'.
+CPLEX> 
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpqfh8qxek.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpqfh8qxek.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmpthea_dvl.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmpthea_dvl.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.755294e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   1.3750449e+03   3.5201649e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   3.8862827e+03   2.8713161e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   3.0494174e+03   2.1286567e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   3.0810530e+03   2.3685278e+03  3.29e+05  0.00e+00  1.00e+03  1.13e-02
+   4   3.2439975e+03   2.8916319e+03  2.68e+05  0.00e+00  8.17e+02  8.39e-03
+   5   2.8681807e+03   2.5756241e+03  1.58e+05  0.00e+00  4.81e+02  6.61e-03
+   6   2.9083677e+03   2.8648393e+03  1.48e+05  0.00e+00  4.52e+02  5.88e-03
+   7   3.5738927e+03   3.5508676e+03  7.15e+04  0.00e+00  2.18e+02  1.55e-02
+   8   4.0015947e+03   3.9948455e+03  2.93e+04  0.00e+00  8.93e+01  1.43e-01
+   9   4.0490564e+03   4.0481945e+03  4.60e+03  0.00e+00  1.40e+01  7.31e-01
+  10   4.0623877e+03   4.0621090e+03  7.46e+02  0.00e+00  2.27e+00  3.11e-01
+  11   4.1269142e+03   4.1302755e+03  1.17e+03  0.00e+00  3.56e+00  1.80e-01
+  12   4.1211949e+03   4.1247448e+03  7.36e+02  0.00e+00  2.24e+00  1.85e-01
+  13   4.1072649e+03   4.1080086e+03  6.19e+02  0.00e+00  1.88e+00  7.20e-01
+  14   4.1141501e+03   4.1143136e+03  2.16e+02  0.00e+00  6.57e-01  4.45e+00
+  15   4.1155349e+03   4.1155403e+03  2.05e+01  0.00e+00  6.25e-02  1.19e+02
+  16   4.1156170e+03   4.1156179e+03  9.81e-01  0.00e+00  2.99e-03  7.27e+02
+  17   4.1156336e+03   4.1156337e+03  1.58e-01  0.00e+00  4.82e-04  4.26e+03
+
+Barrier - Optimal:  Objective =  4.1156332748e+03
+Solution time =    0.00 sec.  Iterations = 17
+Deterministic time = 0.51 ticks  (507.51 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmp_o74yguk.cplex.sol'.
+CPLEX> after optimization:
+{'GAN_Flow': 780, 'TA_Flow': 275.37190592652837, 'MA_Flow': 1750.8504625058633}
+Iteration 7
+{'GAN_Flow': 780, 'LN_Flow': 100}
+{'TA_Flow': 275.37190592652837, 'MA_Flow': 1750.8504625058633, 'GAN_Flow': 780, 'LN_Flow': 100}
+
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmps1dpp_it.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmps1dpp_it.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmpk4vifcwz.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmpk4vifcwz.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.380858e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   1.1398627e+03   1.1683427e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   3.6515438e+03   2.6365819e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   2.8230482e+03   1.9024151e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   2.8923882e+03   2.1805091e+03  3.29e+05  0.00e+00  1.00e+03  1.12e-02
+   4   3.0948273e+03   2.7370946e+03  2.68e+05  0.00e+00  8.16e+02  8.32e-03
+   5   2.2089226e+03   1.9733009e+03  1.60e+05  0.00e+00  4.87e+02  5.18e-03
+   6   3.0538490e+03   2.9535976e+03  1.43e+05  0.00e+00  4.37e+02  3.92e-03
+   7   2.7119131e+03   2.5827669e+03  1.19e+05  0.00e+00  3.62e+02  1.08e-02
+   8   3.6080070e+03   3.5766047e+03  7.42e+04  0.00e+00  2.26e+02  2.86e-02
+   9   3.9936515e+03   3.9886025e+03  2.22e+04  0.00e+00  6.76e+01  1.93e-01
+  10   4.0297053e+03   4.0290286e+03  3.43e+03  0.00e+00  1.04e+01  8.40e-01
+  11   4.0477769e+03   4.0479181e+03  6.25e+02  0.00e+00  1.90e+00  3.04e-01
+  12   4.1168714e+03   4.1209535e+03  1.05e+03  0.00e+00  3.21e+00  1.68e-01
+  13   4.0915233e+03   4.0916447e+03  6.25e+02  0.00e+00  1.90e+00  1.10e+00
+  14   4.1138993e+03   4.1140270e+03  2.64e+02  0.00e+00  8.04e-01  2.35e+00
+  15   4.1119681e+03   4.1120263e+03  9.97e+01  0.00e+00  3.04e-01  1.23e+01
+  16   4.1126037e+03   4.1126055e+03  7.69e+00  0.00e+00  2.34e-02  3.89e+02
+  17   4.1126342e+03   4.1126346e+03  2.75e-01  0.00e+00  8.37e-04  2.03e+03
+
+Barrier - Optimal:  Objective =  4.1126335013e+03
+Solution time =    0.00 sec.  Iterations = 17
+Deterministic time = 0.50 ticks  (504.36 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmp_hr9dvym.cplex.sol'.
+CPLEX> 
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmphpfa_odj.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmphpfa_odj.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmpfe7e3gkb.pyomo.lp' read.
+Read time = 0.02 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmpfe7e3gkb.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.380858e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   1.1398627e+03   1.1683427e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   3.6515438e+03   2.6365819e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   2.8230482e+03   1.9024151e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   2.8923882e+03   2.1805091e+03  3.29e+05  0.00e+00  1.00e+03  1.12e-02
+   4   3.0948273e+03   2.7370946e+03  2.68e+05  0.00e+00  8.16e+02  8.32e-03
+   5   2.2089226e+03   1.9733009e+03  1.60e+05  0.00e+00  4.87e+02  5.18e-03
+   6   3.0538490e+03   2.9535976e+03  1.43e+05  0.00e+00  4.37e+02  3.92e-03
+   7   2.7119131e+03   2.5827669e+03  1.19e+05  0.00e+00  3.62e+02  1.08e-02
+   8   3.6080070e+03   3.5766047e+03  7.42e+04  0.00e+00  2.26e+02  2.86e-02
+   9   3.9936515e+03   3.9886025e+03  2.22e+04  0.00e+00  6.76e+01  1.93e-01
+  10   4.0297053e+03   4.0290286e+03  3.43e+03  0.00e+00  1.04e+01  8.40e-01
+  11   4.0477769e+03   4.0479181e+03  6.25e+02  0.00e+00  1.90e+00  3.04e-01
+  12   4.1168714e+03   4.1209535e+03  1.05e+03  0.00e+00  3.21e+00  1.68e-01
+  13   4.0915233e+03   4.0916447e+03  6.25e+02  0.00e+00  1.90e+00  1.10e+00
+  14   4.1138993e+03   4.1140270e+03  2.64e+02  0.00e+00  8.04e-01  2.35e+00
+  15   4.1119681e+03   4.1120263e+03  9.97e+01  0.00e+00  3.04e-01  1.23e+01
+  16   4.1126037e+03   4.1126055e+03  7.69e+00  0.00e+00  2.34e-02  3.89e+02
+  17   4.1126342e+03   4.1126346e+03  2.75e-01  0.00e+00  8.37e-04  2.03e+03
+
+Barrier - Optimal:  Objective =  4.1126335013e+03
+Solution time =    0.00 sec.  Iterations = 17
+Deterministic time = 0.50 ticks  (504.36 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmpkh382ous.cplex.sol'.
+CPLEX> after optimization:
+{'GAN_Flow': 780, 'TA_Flow': 275.0372711375552, 'MA_Flow': 1749.6133935565817}
+Iteration 8
+{'GAN_Flow': 780, 'LN_Flow': 100}
+{'TA_Flow': 275.0372711375552, 'MA_Flow': 1749.6133935565817, 'GAN_Flow': 780, 'LN_Flow': 100}
+
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp4cfly3r1.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp4cfly3r1.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmp95lq87ag.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmp95lq87ag.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.501439e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   2.1472874e+03   1.1242590e+03  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   4.6558375e+03   3.6408592e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   3.7926318e+03   2.8716986e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   3.6955527e+03   2.9811165e+03  3.29e+05  0.00e+00  1.00e+03  1.14e-02
+   4   3.6814374e+03   3.2873732e+03  2.68e+05  0.00e+00  8.17e+02  8.90e-03
+   5   3.6203896e+03   3.2819304e+03  1.69e+05  0.00e+00  5.16e+02  8.97e-03
+   6   3.5550432e+03   3.3269852e+03  1.50e+05  0.00e+00  4.58e+02  9.61e-03
+   7   3.7520547e+03   3.7076079e+03  1.11e+05  0.00e+00  3.38e+02  1.25e-02
+   8   3.9600570e+03   3.9359098e+03  4.17e+04  0.00e+00  1.27e+02  2.97e-02
+   9   4.0737331e+03   4.0691128e+03  1.93e+04  0.00e+00  5.89e+01  2.90e-01
+  10   4.0902359e+03   4.0892049e+03  2.70e+03  0.00e+00  8.22e+00  8.06e-01
+  11   4.1013350e+03   4.1007425e+03  7.60e+02  0.00e+00  2.31e+00  3.50e-01
+  12   4.1359608e+03   4.1377919e+03  1.15e+03  0.00e+00  3.51e+00  2.30e-01
+  13   4.1271768e+03   4.1295110e+03  8.40e+02  0.00e+00  2.56e+00  2.50e-01
+  14   4.1190895e+03   4.1193733e+03  5.58e+02  0.00e+00  1.70e+00  1.06e+00
+  15   4.1143396e+03   4.1144731e+03  2.19e+02  0.00e+00  6.68e-01  4.80e+00
+  16   4.1152147e+03   4.1152171e+03  2.50e+01  0.00e+00  7.62e-02  2.03e+02
+  17   4.1152552e+03   4.1152557e+03  8.27e-01  0.00e+00  2.52e-03  9.64e+02
+  18   4.1152649e+03   4.1152650e+03  1.62e-01  0.00e+00  4.93e-04  5.80e+03
+
+Barrier - Optimal:  Objective =  4.1152647537e+03
+Solution time =    0.00 sec.  Iterations = 18
+Deterministic time = 0.53 ticks  (532.69 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmpvvkh77vw.cplex.sol'.
+CPLEX> 
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpb5vwb9z2.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpb5vwb9z2.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmpkrjkrn9k.pyomo.lp' read.
+Read time = 0.02 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmpkrjkrn9k.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.501439e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   2.1472874e+03   1.1242590e+03  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   4.6558375e+03   3.6408592e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   3.7926318e+03   2.8716986e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   3.6955527e+03   2.9811165e+03  3.29e+05  0.00e+00  1.00e+03  1.14e-02
+   4   3.6814374e+03   3.2873732e+03  2.68e+05  0.00e+00  8.17e+02  8.90e-03
+   5   3.6203896e+03   3.2819304e+03  1.69e+05  0.00e+00  5.16e+02  8.97e-03
+   6   3.5550432e+03   3.3269852e+03  1.50e+05  0.00e+00  4.58e+02  9.61e-03
+   7   3.7520547e+03   3.7076079e+03  1.11e+05  0.00e+00  3.38e+02  1.25e-02
+   8   3.9600570e+03   3.9359098e+03  4.17e+04  0.00e+00  1.27e+02  2.97e-02
+   9   4.0737331e+03   4.0691128e+03  1.93e+04  0.00e+00  5.89e+01  2.90e-01
+  10   4.0902359e+03   4.0892049e+03  2.70e+03  0.00e+00  8.22e+00  8.06e-01
+  11   4.1013350e+03   4.1007425e+03  7.60e+02  0.00e+00  2.31e+00  3.50e-01
+  12   4.1359608e+03   4.1377919e+03  1.15e+03  0.00e+00  3.51e+00  2.30e-01
+  13   4.1271768e+03   4.1295110e+03  8.40e+02  0.00e+00  2.56e+00  2.50e-01
+  14   4.1190895e+03   4.1193733e+03  5.58e+02  0.00e+00  1.70e+00  1.06e+00
+  15   4.1143396e+03   4.1144731e+03  2.19e+02  0.00e+00  6.68e-01  4.80e+00
+  16   4.1152147e+03   4.1152171e+03  2.50e+01  0.00e+00  7.62e-02  2.03e+02
+  17   4.1152552e+03   4.1152557e+03  8.27e-01  0.00e+00  2.52e-03  9.64e+02
+  18   4.1152649e+03   4.1152650e+03  1.62e-01  0.00e+00  4.93e-04  5.80e+03
+
+Barrier - Optimal:  Objective =  4.1152647537e+03
+Solution time =    0.00 sec.  Iterations = 18
+Deterministic time = 0.53 ticks  (532.69 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmpspj91ytn.cplex.sol'.
+CPLEX> after optimization:
+{'GAN_Flow': 780, 'TA_Flow': 275.3946012926353, 'MA_Flow': 1750.515143815973}
+Iteration 9
+{'GAN_Flow': 780, 'LN_Flow': 100}
+{'TA_Flow': 275.3946012926353, 'MA_Flow': 1750.515143815973, 'GAN_Flow': 780, 'LN_Flow': 100}
+
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpzumiaq_d.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpzumiaq_d.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmpk8vva7b8.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmpk8vva7b8.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.612779e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   1.2219550e+03   1.9892660e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   3.7331595e+03   2.7181840e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   2.9023586e+03   1.9814183e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   2.9637106e+03   2.2512139e+03  3.29e+05  0.00e+00  1.00e+03  1.13e-02
+   4   3.1351635e+03   2.7285336e+03  2.68e+05  0.00e+00  8.17e+02  8.70e-03
+   5   2.9568510e+03   2.6072630e+03  1.74e+05  0.00e+00  5.32e+02  7.79e-03
+   6   2.8361340e+03   2.6209212e+03  1.60e+05  0.00e+00  4.87e+02  7.47e-03
+   7   3.4291033e+03   3.3565112e+03  1.17e+05  0.00e+00  3.56e+02  8.02e-03
+   8   3.5801286e+03   3.5147446e+03  6.60e+04  0.00e+00  2.01e+02  7.29e-03
+   9   3.9385603e+03   3.9193470e+03  6.77e+04  0.00e+00  2.06e+02  6.72e-02
+  10   4.0422525e+03   4.0399973e+03  1.14e+04  0.00e+00  3.47e+01  3.51e-01
+  11   4.0526431e+03   4.0520639e+03  1.71e+03  0.00e+00  5.21e+00  7.23e-01
+  12   4.0841850e+03   4.0851236e+03  6.57e+02  0.00e+00  2.00e+00  2.23e-01
+  13   4.1332314e+03   4.1354388e+03  1.19e+03  0.00e+00  3.62e+00  2.66e-01
+  14   4.1252696e+03   4.1278779e+03  5.19e+02  0.00e+00  1.58e+00  2.54e-01
+  15   4.1098067e+03   4.1108999e+03  4.45e+02  0.00e+00  1.36e+00  6.30e-01
+  16   4.1114308e+03   4.1115088e+03  1.66e+02  0.00e+00  5.05e-01  8.94e+00
+  17   4.1120129e+03   4.1120147e+03  1.13e+01  0.00e+00  3.45e-02  3.47e+02
+  18   4.1120422e+03   4.1120426e+03  3.66e-01  0.00e+00  1.12e-03  2.08e+03
+
+Barrier - Optimal:  Objective =  4.1120417863e+03
+Solution time =    0.00 sec.  Iterations = 18
+Deterministic time = 0.52 ticks  (520.28 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmppnqtjo92.cplex.sol'.
+CPLEX> 
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp_upz2uqm.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp_upz2uqm.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmp3a4mtukg.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmp3a4mtukg.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003377262      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.612779e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 244376.0       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.324183e-11     Max   : 112.5273       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   1.2219550e+03   1.9892660e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   3.7331595e+03   2.7181840e+03  3.42e+05  0.00e+00  1.04e+03  1.53e-01
+   2   2.9023586e+03   1.9814183e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-02
+   3   2.9637106e+03   2.2512139e+03  3.29e+05  0.00e+00  1.00e+03  1.13e-02
+   4   3.1351635e+03   2.7285336e+03  2.68e+05  0.00e+00  8.17e+02  8.70e-03
+   5   2.9568510e+03   2.6072630e+03  1.74e+05  0.00e+00  5.32e+02  7.79e-03
+   6   2.8361340e+03   2.6209212e+03  1.60e+05  0.00e+00  4.87e+02  7.47e-03
+   7   3.4291033e+03   3.3565112e+03  1.17e+05  0.00e+00  3.56e+02  8.02e-03
+   8   3.5801286e+03   3.5147446e+03  6.60e+04  0.00e+00  2.01e+02  7.29e-03
+   9   3.9385603e+03   3.9193470e+03  6.77e+04  0.00e+00  2.06e+02  6.72e-02
+  10   4.0422525e+03   4.0399973e+03  1.14e+04  0.00e+00  3.47e+01  3.51e-01
+  11   4.0526431e+03   4.0520639e+03  1.71e+03  0.00e+00  5.21e+00  7.23e-01
+  12   4.0841850e+03   4.0851236e+03  6.57e+02  0.00e+00  2.00e+00  2.23e-01
+  13   4.1332314e+03   4.1354388e+03  1.19e+03  0.00e+00  3.62e+00  2.66e-01
+  14   4.1252696e+03   4.1278779e+03  5.19e+02  0.00e+00  1.58e+00  2.54e-01
+  15   4.1098067e+03   4.1108999e+03  4.45e+02  0.00e+00  1.36e+00  6.30e-01
+  16   4.1114308e+03   4.1115088e+03  1.66e+02  0.00e+00  5.05e-01  8.94e+00
+  17   4.1120129e+03   4.1120147e+03  1.13e+01  0.00e+00  3.45e-02  3.47e+02
+  18   4.1120422e+03   4.1120426e+03  3.66e-01  0.00e+00  1.12e-03  2.08e+03
+
+Barrier - Optimal:  Objective =  4.1120417863e+03
+Solution time =    0.02 sec.  Iterations = 18
+Deterministic time = 0.52 ticks  (34.69 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmp1h_gylqc.cplex.sol'.
+CPLEX> after optimization:
+{'GAN_Flow': 780, 'TA_Flow': 275.5491272374711, 'MA_Flow': 1750.1248019558354}
+Iteration 10
+{'GAN_Flow': 800, 'LN_Flow': 100}
+{'TA_Flow': 275.5491272374711, 'MA_Flow': 1750.1248019558354, 'GAN_Flow': 800, 'LN_Flow': 100}
+
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmplycqc055.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmplycqc055.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmpyze27_d1.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmpyze27_d1.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003134489      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 3.082737e-13     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 245168.2       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.886819e-11     Max   : 112.1091       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   1.5390998e+03   5.1607140e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   4.1476442e+03   3.1324037e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-01
+   2   3.2891653e+03   2.3652744e+03  3.41e+05  0.00e+00  1.04e+03  1.59e-02
+   3   3.4274570e+03   2.7484570e+03  3.30e+05  0.00e+00  1.01e+03  1.02e-02
+   4   3.4744075e+03   3.0180981e+03  2.60e+05  0.00e+00  7.92e+02  8.84e-03
+   5   3.3736355e+03   3.0289011e+03  1.90e+05  0.00e+00  5.80e+02  8.48e-03
+   6   3.2286504e+03   3.0432473e+03  1.55e+05  0.00e+00  4.72e+02  8.21e-03
+   7   3.5279466e+03   3.3973648e+03  1.03e+05  0.00e+00  3.13e+02  9.86e-03
+   8   3.6272504e+03   3.5009951e+03  7.75e+04  0.00e+00  2.36e+02  9.16e-03
+   9   4.0121391e+03   3.9848521e+03  7.87e+04  0.00e+00  2.40e+02  4.38e-02
+  10   4.1126060e+03   4.1063687e+03  1.68e+04  0.00e+00  5.11e+01  2.32e-01
+  11   4.1272614e+03   4.1254365e+03  3.53e+03  0.00e+00  1.08e+01  5.40e-01
+  12   4.1640878e+03   4.1630040e+03  1.23e+03  0.00e+00  3.75e+00  2.39e-01
+  13   4.1989930e+03   4.1990974e+03  1.76e+03  0.00e+00  5.37e+00  8.90e-01
+  14   4.1867727e+03   4.1878426e+03  3.41e+02  0.00e+00  1.04e+00  3.93e-01
+  15   4.1750931e+03   4.1749941e+03  4.92e+02  0.00e+00  1.50e+00  1.63e+00
+  16   4.1683151e+03   4.1684404e+03  2.38e+02  0.00e+00  7.27e-01  4.24e+00
+  17   4.1687249e+03   4.1687307e+03  3.68e+01  0.00e+00  1.12e-01  8.99e+01
+  18   4.1687481e+03   4.1687489e+03  1.80e+00  0.00e+00  5.48e-03  6.41e+02
+  19   4.1687542e+03   4.1687544e+03  2.50e-01  0.00e+00  7.64e-04  3.25e+03
+
+Barrier - Optimal:  Objective =  4.1687537902e+03
+Solution time =    0.00 sec.  Iterations = 19
+Deterministic time = 0.53 ticks  (533.06 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmpp5iglc9h.cplex.sol'.
+CPLEX> 
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpynwz_pfj.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpynwz_pfj.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmppemq07ry.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmppemq07ry.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003134489      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 3.082737e-13     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 245168.2       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.886819e-11     Max   : 112.1091       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   1.5390998e+03   5.1607140e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   4.1476442e+03   3.1324037e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-01
+   2   3.2891653e+03   2.3652744e+03  3.41e+05  0.00e+00  1.04e+03  1.59e-02
+   3   3.4274570e+03   2.7484570e+03  3.30e+05  0.00e+00  1.01e+03  1.02e-02
+   4   3.4744075e+03   3.0180981e+03  2.60e+05  0.00e+00  7.92e+02  8.84e-03
+   5   3.3736355e+03   3.0289011e+03  1.90e+05  0.00e+00  5.80e+02  8.48e-03
+   6   3.2286504e+03   3.0432473e+03  1.55e+05  0.00e+00  4.72e+02  8.21e-03
+   7   3.5279466e+03   3.3973648e+03  1.03e+05  0.00e+00  3.13e+02  9.86e-03
+   8   3.6272504e+03   3.5009951e+03  7.75e+04  0.00e+00  2.36e+02  9.16e-03
+   9   4.0121391e+03   3.9848521e+03  7.87e+04  0.00e+00  2.40e+02  4.38e-02
+  10   4.1126060e+03   4.1063687e+03  1.68e+04  0.00e+00  5.11e+01  2.32e-01
+  11   4.1272614e+03   4.1254365e+03  3.53e+03  0.00e+00  1.08e+01  5.40e-01
+  12   4.1640878e+03   4.1630040e+03  1.23e+03  0.00e+00  3.75e+00  2.39e-01
+  13   4.1989930e+03   4.1990974e+03  1.76e+03  0.00e+00  5.37e+00  8.90e-01
+  14   4.1867727e+03   4.1878426e+03  3.41e+02  0.00e+00  1.04e+00  3.93e-01
+  15   4.1750931e+03   4.1749941e+03  4.92e+02  0.00e+00  1.50e+00  1.63e+00
+  16   4.1683151e+03   4.1684404e+03  2.38e+02  0.00e+00  7.27e-01  4.24e+00
+  17   4.1687249e+03   4.1687307e+03  3.68e+01  0.00e+00  1.12e-01  8.99e+01
+  18   4.1687481e+03   4.1687489e+03  1.80e+00  0.00e+00  5.48e-03  6.41e+02
+  19   4.1687542e+03   4.1687544e+03  2.50e-01  0.00e+00  7.64e-04  3.25e+03
+
+Barrier - Optimal:  Objective =  4.1687537902e+03
+Solution time =    0.02 sec.  Iterations = 19
+Deterministic time = 0.53 ticks  (33.32 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmpzunolhe7.cplex.sol'.
+CPLEX> after optimization:
+{'GAN_Flow': 800, 'TA_Flow': 277.4282668802614, 'MA_Flow': 1784.5692088505893}
+Iteration 11
+{'GAN_Flow': 800, 'LN_Flow': 100}
+{'TA_Flow': 277.4282668802614, 'MA_Flow': 1784.5692088505893, 'GAN_Flow': 800, 'LN_Flow': 100}
+
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp8d976e8p.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp8d976e8p.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmpbkni9tj4.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmpbkni9tj4.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003134489      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 5.013341e-13     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 245168.2       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.886819e-11     Max   : 112.1091       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   2.2572229e+03   1.2341945e+03  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   4.8635174e+03   3.8482750e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-01
+   2   3.9821331e+03   3.0582862e+03  3.41e+05  0.00e+00  1.04e+03  1.59e-02
+   3   3.9806517e+03   3.3000258e+03  3.30e+05  0.00e+00  1.00e+03  1.02e-02
+   4   3.9133552e+03   3.4614002e+03  2.60e+05  0.00e+00  7.93e+02  8.99e-03
+   5   3.8401593e+03   3.4811518e+03  1.88e+05  0.00e+00  5.73e+02  9.29e-03
+   6   3.6775325e+03   3.4375528e+03  1.56e+05  0.00e+00  4.75e+02  9.64e-03
+   7   3.7759341e+03   3.7043101e+03  1.15e+05  0.00e+00  3.50e+02  1.17e-02
+   8   3.8596918e+03   3.7907980e+03  5.25e+04  0.00e+00  1.60e+02  1.05e-02
+   9   4.0618794e+03   4.0406120e+03  5.49e+04  0.00e+00  1.67e+02  8.04e-02
+  10   4.1552159e+03   4.1532650e+03  1.13e+04  0.00e+00  3.43e+01  6.18e-01
+  11   4.1731621e+03   4.1734309e+03  1.19e+03  0.00e+00  3.63e+00  4.10e-01
+  12   4.2078823e+03   4.2102340e+03  7.25e+02  0.00e+00  2.21e+00  2.82e-01
+  13   4.1945864e+03   4.1966611e+03  3.98e+02  0.00e+00  1.21e+00  3.42e-01
+  14   4.1925686e+03   4.1926660e+03  2.83e+02  0.00e+00  8.62e-01  5.34e+00
+  15   4.1932224e+03   4.1932238e+03  3.00e+01  0.00e+00  9.15e-02  2.33e+02
+  16   4.1932591e+03   4.1932594e+03  9.82e-01  0.00e+00  2.99e-03  1.15e+03
+  17   4.1932657e+03   4.1932658e+03  1.63e-01  0.00e+00  4.96e-04  6.16e+03
+
+Barrier - Optimal:  Objective =  4.1932656303e+03
+Solution time =    0.00 sec.  Iterations = 17
+Deterministic time = 0.51 ticks  (507.52 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmpynym_1pw.cplex.sol'.
+CPLEX> 
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpivcvaki8.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpivcvaki8.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmp5ktl6ga3.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmp5ktl6ga3.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003134489      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 5.013341e-13     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 245168.2       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.886819e-11     Max   : 112.1091       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   2.2572229e+03   1.2341945e+03  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   4.8633874e+03   3.8481442e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-01
+   2   3.9821374e+03   3.0582875e+03  3.41e+05  0.00e+00  1.04e+03  1.59e-02
+   3   3.9807269e+03   3.3000478e+03  3.30e+05  0.00e+00  1.00e+03  1.02e-02
+   4   3.9144896e+03   3.4595332e+03  2.60e+05  0.00e+00  7.93e+02  9.01e-03
+   5   3.8535744e+03   3.4819626e+03  1.89e+05  0.00e+00  5.76e+02  9.28e-03
+   6   3.6907693e+03   3.4500118e+03  1.60e+05  0.00e+00  4.88e+02  9.77e-03
+   7   3.7739940e+03   3.7180861e+03  1.15e+05  0.00e+00  3.49e+02  1.20e-02
+   8   3.8882391e+03   3.8385229e+03  4.65e+04  0.00e+00  1.42e+02  1.25e-02
+   9   4.0783409e+03   4.0637476e+03  4.34e+04  0.00e+00  1.32e+02  1.02e-01
+  10   4.1549600e+03   4.1535024e+03  8.16e+03  0.00e+00  2.49e+01  7.88e-01
+  11   4.1602759e+03   4.1588831e+03  9.11e+02  0.00e+00  2.78e+00  4.31e-01
+  12   4.2003534e+03   4.2015669e+03  1.24e+03  0.00e+00  3.78e+00  2.29e-01
+  13   4.2036656e+03   4.2039267e+03  1.05e+03  0.00e+00  3.21e+00  7.06e-01
+  14   4.1907619e+03   4.1915250e+03  3.86e+02  0.00e+00  1.18e+00  5.76e-01
+  15   4.1952171e+03   4.1956006e+03  3.25e+02  0.00e+00  9.90e-01  1.62e+00
+  16   4.1932155e+03   4.1932215e+03  7.85e+01  0.00e+00  2.39e-01  6.84e+01
+  17   4.1932139e+03   4.1932146e+03  2.86e+00  0.00e+00  8.70e-03  6.01e+02
+  18   4.1932165e+03   4.1932168e+03  3.24e-01  0.00e+00  9.87e-04  2.06e+03
+  19   4.1932165e+03   4.1932165e+03  5.50e-02  0.00e+00  1.68e-04  1.61e+04
+
+Barrier - Optimal:  Objective =  4.1932164039e+03
+Solution time =    0.02 sec.  Iterations = 19
+Deterministic time = 0.54 ticks  (35.95 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmpaeyxtrkn.cplex.sol'.
+CPLEX> 
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp2vbw0dk_.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmp2vbw0dk_.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmp3zy0t1l7.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmp3zy0t1l7.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003134489      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 5.013341e-13     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 245168.2       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.886819e-11     Max   : 112.1091       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   2.2572229e+03   1.2341945e+03  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   4.8633874e+03   3.8481442e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-01
+   2   3.9821374e+03   3.0582875e+03  3.41e+05  0.00e+00  1.04e+03  1.59e-02
+   3   3.9807269e+03   3.3000478e+03  3.30e+05  0.00e+00  1.00e+03  1.02e-02
+   4   3.9144896e+03   3.4595332e+03  2.60e+05  0.00e+00  7.93e+02  9.01e-03
+   5   3.8535744e+03   3.4819626e+03  1.89e+05  0.00e+00  5.76e+02  9.28e-03
+   6   3.6907693e+03   3.4500118e+03  1.60e+05  0.00e+00  4.88e+02  9.77e-03
+   7   3.7739940e+03   3.7180861e+03  1.15e+05  0.00e+00  3.49e+02  1.20e-02
+   8   3.8882391e+03   3.8385229e+03  4.65e+04  0.00e+00  1.42e+02  1.25e-02
+   9   4.0783409e+03   4.0637476e+03  4.34e+04  0.00e+00  1.32e+02  1.02e-01
+  10   4.1549600e+03   4.1535024e+03  8.16e+03  0.00e+00  2.49e+01  7.88e-01
+  11   4.1602759e+03   4.1588831e+03  9.11e+02  0.00e+00  2.78e+00  4.31e-01
+  12   4.2003534e+03   4.2015669e+03  1.24e+03  0.00e+00  3.78e+00  2.29e-01
+  13   4.2036656e+03   4.2039267e+03  1.05e+03  0.00e+00  3.21e+00  7.06e-01
+  14   4.1907619e+03   4.1915250e+03  3.86e+02  0.00e+00  1.18e+00  5.76e-01
+  15   4.1952171e+03   4.1956006e+03  3.25e+02  0.00e+00  9.90e-01  1.62e+00
+  16   4.1932155e+03   4.1932215e+03  7.85e+01  0.00e+00  2.39e-01  6.84e+01
+  17   4.1932139e+03   4.1932146e+03  2.86e+00  0.00e+00  8.70e-03  6.01e+02
+  18   4.1932165e+03   4.1932168e+03  3.24e-01  0.00e+00  9.87e-04  2.06e+03
+  19   4.1932165e+03   4.1932165e+03  5.50e-02  0.00e+00  1.68e-04  1.61e+04
+
+Barrier - Optimal:  Objective =  4.1932164039e+03
+Solution time =    0.00 sec.  Iterations = 19
+Deterministic time = 0.54 ticks  (539.20 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmp6absywpv.cplex.sol'.
+CPLEX> after optimization:
+{'GAN_Flow': 800, 'TA_Flow': 277.52260585591927, 'MA_Flow': 1792.5021781094963}
+Iteration 12
+{'GAN_Flow': 800, 'LN_Flow': 100}
+{'TA_Flow': 277.52260585591927, 'MA_Flow': 1792.5021781094963, 'GAN_Flow': 800, 'LN_Flow': 100}
+
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmppzfiz4_g.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmppzfiz4_g.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmpenr29dyo.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmpenr29dyo.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003134489      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.442014e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 245168.2       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.886819e-11     Max   : 112.1091       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   1.4936880e+03   4.7065961e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   4.1026388e+03   3.0874004e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-01
+   2   3.2469107e+03   2.3230316e+03  3.41e+05  0.00e+00  1.04e+03  1.59e-02
+   3   3.3989122e+03   2.7207823e+03  3.30e+05  0.00e+00  1.01e+03  1.01e-02
+   4   3.4424072e+03   2.9899434e+03  2.60e+05  0.00e+00  7.92e+02  8.75e-03
+   5   3.2327264e+03   2.9044168e+03  1.89e+05  0.00e+00  5.78e+02  7.87e-03
+   6   3.0206093e+03   2.8519203e+03  1.52e+05  0.00e+00  4.64e+02  7.44e-03
+   7   3.4337279e+03   3.3250686e+03  1.01e+05  0.00e+00  3.09e+02  8.75e-03
+   8   3.5742283e+03   3.4709083e+03  7.45e+04  0.00e+00  2.27e+02  7.97e-03
+   9   3.9799611e+03   3.9549264e+03  7.64e+04  0.00e+00  2.33e+02  3.99e-02
+  10   4.1171875e+03   4.1126875e+03  1.67e+04  0.00e+00  5.10e+01  3.07e-01
+  11   4.1300770e+03   4.1290505e+03  2.59e+03  0.00e+00  7.91e+00  8.87e-01
+  12   4.1472526e+03   4.1465839e+03  7.20e+02  0.00e+00  2.19e+00  3.46e-01
+  13   4.2111063e+03   4.2130694e+03  1.19e+03  0.00e+00  3.62e+00  2.71e-01
+  14   4.2061876e+03   4.2087116e+03  5.79e+02  0.00e+00  1.77e+00  2.59e-01
+  15   4.1949560e+03   4.1954939e+03  4.48e+02  0.00e+00  1.37e+00  9.04e-01
+  16   4.1936947e+03   4.1939669e+03  1.90e+02  0.00e+00  5.80e-01  2.40e+00
+  17   4.1956157e+03   4.1956486e+03  4.81e+01  0.00e+00  1.47e-01  2.03e+01
+  18   4.1958886e+03   4.1958901e+03  5.44e+00  0.00e+00  1.66e-02  4.52e+02
+  19   4.1959014e+03   4.1959018e+03  2.35e-01  0.00e+00  7.17e-04  1.66e+03
+  20   4.1959036e+03   4.1959037e+03  5.49e-02  0.00e+00  1.68e-04  1.29e+04
+
+Barrier - Optimal:  Objective =  4.1959035371e+03
+Solution time =    0.00 sec.  Iterations = 20
+Deterministic time = 0.58 ticks  (582.58 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmpnqt_un0n.cplex.sol'.
+CPLEX> 
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 22.1.0.0
+  with Simplex, Mixed Integer & Barrier Optimizers
+5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
+Copyright IBM Corp. 1988, 2022.  All Rights Reserved.
+
+Type 'help' for a list of available commands.
+Type 'help' followed by a command name for more
+information on commands.
+
+CPLEX> Logfile 'cplex.log' closed.
+Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpp57h4_ah.cplex.log' open.
+CPLEX> Logfile 'C:\Users\lenovo\AppData\Local\Temp\tmpp57h4_ah.cplex.log' closed.
+Logfile 'qcqp.log' open.
+CPLEX> Problem 'C:\Users\lenovo\AppData\Local\Temp\tmp_5ah5q2h.pyomo.lp' read.
+Read time = 0.00 sec. (0.00 ticks)
+CPLEX> Problem name         : C:\Users\lenovo\AppData\Local\Temp\tmp_5ah5q2h.pyomo.lp
+Objective sense      : Minimize
+Variables            :      33  [Nneg: 7,  Free: 26,  Qobj: 2]
+Objective nonzeros   :       8
+Objective Q nonzeros :       4
+Linear constraints   :      35  [Less: 11,  Greater: 4,  Equal: 20]
+  Nonzeros           :      78
+  RHS nonzeros       :      22
+Quadratic constraints:       4  [Less: 4]
+  Linear terms       :      28
+  Quadratic terms    :      12
+  RHS nonzeros       :       4
+
+Variables            : Min LB: 0.000000         Max UB: all infinite   
+Objective nonzeros   : Min   : 0.003134489      Max   : 10.00000       
+Objective Q nonzeros : Min   : 7.541633e-10     Max   : 3.611065e-08   
+Linear constraints   :
+  Nonzeros           : Min   : 1.442014e-12     Max   : 1295.670       
+  RHS nonzeros       : Min   : 0.0009499622     Max   : 245168.2       
+Quadratic constraints:
+  Linear terms       : Min   : 9.999999e-07     Max   : 100.0000       
+  Quadratic terms    : Min   : 1.801463e-18     Max   : 2.831225e-05   
+  RHS nonzeros       : Min   : 6.886819e-11     Max   : 112.1091       
+CPLEX> Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+Tried aggregator 1 time.
+QCP Presolve eliminated 18 rows and 17 columns.
+Aggregator did 10 substitutions.
+Reduced QCP has 22 rows, 21 columns, and 64 nonzeros.
+Reduced QCP has 5 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 168
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 22
+  Integer space required    = 24
+  Total non-zeros in factor = 217
+  Total FP ops to factor    = 2895
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   1.4936880e+03   4.7065961e+02  3.42e+05  0.00e+00  1.04e+03  1.00e+00
+   1   4.1026388e+03   3.0874004e+03  3.42e+05  0.00e+00  1.04e+03  1.56e-01
+   2   3.2469107e+03   2.3230316e+03  3.41e+05  0.00e+00  1.04e+03  1.59e-02
+   3   3.3989122e+03   2.7207823e+03  3.30e+05  0.00e+00  1.01e+03  1.01e-02
+   4   3.4424072e+03   2.9899434e+03  2.60e+05  0.00e+00  7.92e+02  8.75e-03
+   5   3.2327264e+03   2.9044168e+03  1.89e+05  0.00e+00  5.78e+02  7.87e-03
+   6   3.0206093e+03   2.8519203e+03  1.52e+05  0.00e+00  4.64e+02  7.44e-03
+   7   3.4337279e+03   3.3250686e+03  1.01e+05  0.00e+00  3.09e+02  8.75e-03
+   8   3.5742283e+03   3.4709083e+03  7.45e+04  0.00e+00  2.27e+02  7.97e-03
+   9   3.9799611e+03   3.9549264e+03  7.64e+04  0.00e+00  2.33e+02  3.99e-02
+  10   4.1171875e+03   4.1126875e+03  1.67e+04  0.00e+00  5.10e+01  3.07e-01
+  11   4.1300770e+03   4.1290505e+03  2.59e+03  0.00e+00  7.91e+00  8.87e-01
+  12   4.1472526e+03   4.1465839e+03  7.20e+02  0.00e+00  2.19e+00  3.46e-01
+  13   4.2111063e+03   4.2130694e+03  1.19e+03  0.00e+00  3.62e+00  2.71e-01
+  14   4.2061876e+03   4.2087116e+03  5.79e+02  0.00e+00  1.77e+00  2.59e-01
+  15   4.1949560e+03   4.1954939e+03  4.48e+02  0.00e+00  1.37e+00  9.04e-01
+  16   4.1936947e+03   4.1939669e+03  1.90e+02  0.00e+00  5.80e-01  2.40e+00
+  17   4.1956157e+03   4.1956486e+03  4.81e+01  0.00e+00  1.47e-01  2.03e+01
+  18   4.1958886e+03   4.1958901e+03  5.44e+00  0.00e+00  1.66e-02  4.52e+02
+  19   4.1959014e+03   4.1959018e+03  2.35e-01  0.00e+00  7.17e-04  1.66e+03
+  20   4.1959036e+03   4.1959037e+03  5.49e-02  0.00e+00  1.68e-04  1.29e+04
+
+Barrier - Optimal:  Objective =  4.1959035371e+03
+Solution time =    0.00 sec.  Iterations = 20
+Deterministic time = 0.58 ticks  (582.58 ticks/sec)
+
+CPLEX> Solution written to file 'C:\Users\lenovo\AppData\Local\Temp\tmpyfyiegpz.cplex.sol'.
+CPLEX> after optimization:
+{'GAN_Flow': 800, 'TA_Flow': 277.7958801737426, 'MA_Flow': 1791.9349572534384}
+Iteration 13

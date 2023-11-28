@@ -258,14 +258,23 @@ def generate_noise_file():
         "obj": 2,
         "feed_con1": 0,
         "feed_con2": 0,
-        "purity_con": 2e-5,
+        "purity_con": 1e-5,
         "drain_con": 0.1,
         "validity_con":0,
     }
+    # OK
+    # noise_level = {
+    #     "obj": 2,
+    #     "feed_con1": 0,
+    #     "feed_con2": 0,
+    #     "purity_con": 1e-5,
+    #     "drain_con": 0.1,
+    #     "validity_con": 0,
+    # }
     max_iter = 200
     noise_generator = NoiseGenerator(noise_level)
     noise_generator.generate_noise(max_iter, 6)
-    noise_generator.save_noise("noise/hpc-noise1.txt")
+    noise_generator.save_noise("noise/hpc-noise-for-paper.txt")
     
 def get_plant_contour_data():
     plant_simulator = PyomoSimulator(RTO_Plant_HPC())
@@ -428,7 +437,7 @@ def do_test_MA(perturbation_stepsize, starting_point, filtering_factor, \
     rto_algorithm = ModifierAdaptation()
     options = {
         "homotopy_simulation": True,
-        "homotopy_optimization": True,
+        "homotopy_optimization": False,
         "filtering_factor": filtering_factor,
         "noise_adding_fashion": "added",
     }
@@ -943,7 +952,8 @@ def do_test_QCPWL_Subgrad_PenaltyTR(perturbation_stepsize, starting_point, filte
 
 def algo_test_main():
     # ------------------------------------
-    noise_filename = "noise/hpc-noise0.txt"
+    # noise_filename = "noise/hpc-noise0.txt"
+    noise_filename = "noise/hpc-noise-for-paper.txt"
     nlp_solver_executable = r"F:\Research\RTOdemo\external\bin\ipopt.exe"
     qcqp_solver_executable = r"D:/Softwares/IBM/ILOG/CPLEX_Studio221/cplex/bin/x64_win64/cplex.exe"
     minlp_solver_executable = r"F:\Research\GasNetwork\kazda2020\build_model\scipampl.exe"
@@ -952,14 +962,14 @@ def algo_test_main():
         os.makedirs(result_filename_folder)
 
     # ------------------------------------
-    filtering_factor = 1
+    filtering_factor = 0.8
     starting_point = {'TA_Flow': 300,
                       'MA_Flow': 1750,
                       }
 
     # ------------------------------------
-    perturbation_stepsize = {'TA_Flow': 2,
-                'MA_Flow': 2,
+    perturbation_stepsize = {'TA_Flow': 10,
+                'MA_Flow': 10,
                 }
     # ------------------------------------
     print_iter_data = False
@@ -968,12 +978,12 @@ def algo_test_main():
     timpstep = int(time.time())
     sys.stdout = open("report/HPC3d_report_%d.txt"%timpstep, mode='w')
     # ------------------------------------
-    print("\nTesting MA")
-    result_filename_header = result_filename_folder + "MA_"
-    do_test_MA(perturbation_stepsize, starting_point, filtering_factor, \
-                     noise_filename, nlp_solver_executable, \
-                     print_iter_data, max_iter, \
-                     result_filename_header)
+    # print("\nTesting MA")
+    # result_filename_header = result_filename_folder + "MA_"
+    # do_test_MA(perturbation_stepsize, starting_point, filtering_factor, \
+    #                  noise_filename, nlp_solver_executable, \
+    #                  print_iter_data, max_iter, \
+    #                  result_filename_header)
     # ------------------------------------
     # print("\nTesting QCPWL-MA")
     # result_filename_header = result_filename_folder + "QCPWL_MA_"
@@ -982,12 +992,12 @@ def algo_test_main():
     #                  print_iter_data, max_iter, \
     #                  result_filename_header)
     # ------------------------------------
-    print("\nTesting QCPWL-Subgrad")
-    result_filename_header = result_filename_folder + "QCPWL_Subgrad_"
-    do_test_QCPWL_Subgrad(perturbation_stepsize, starting_point, filtering_factor, \
-                                    noise_filename, nlp_solver_executable, qcqp_solver_executable, \
-                                    print_iter_data, max_iter, \
-                                    result_filename_header)
+    # print("\nTesting QCPWL-Subgrad")
+    # result_filename_header = result_filename_folder + "QCPWL_Subgrad_"
+    # do_test_QCPWL_Subgrad(perturbation_stepsize, starting_point, filtering_factor, \
+    #                                 noise_filename, nlp_solver_executable, qcqp_solver_executable, \
+    #                                 print_iter_data, max_iter, \
+    #                                 result_filename_header)
     # ------------------------------------
     # print("\nTesting QCPWL-Subgrad-TR")
     # result_filename_header = result_filename_folder + "QCPWL_Subgrad_PenaltyTR_"
@@ -1114,7 +1124,7 @@ if __name__ == "__main__":
     # plant_simulator_test()
     # generate_noise_file()
     # draw_plant_model_mismatch()
-    # algo_test_main()
+    algo_test_main()
     # get_plant_contour_data()
     # draw_plant_model_mismatch2()
-    compare_MA_and_QCPWL("pic/HPC3/compare_MA_and_QCPWL.png")
+    compare_MA_and_QCPWL("pic/HPC3/compare_MA_and_QCPWL_noised.png")

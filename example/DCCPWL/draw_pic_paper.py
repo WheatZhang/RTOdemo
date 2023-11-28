@@ -3,6 +3,144 @@ import matplotlib.pyplot as plt
 import pandas
 from matplotlib.pyplot import MultipleLocator
 
+
+def draw_compare_unconstrained_wo_adchem(folder, pic_filename):
+    # pic_filename="pic/overall_pic0-0.png"
+    # =======================================
+    #            Load Data
+    # =======================================
+    # folder="data/0-0/"
+    MA_plant_data = pandas.read_csv(folder + "MA_plant_data.txt", sep='\t', index_col=0, header=0)
+    MA_input_data = pandas.read_csv(folder + "MA_input_data.txt", sep='\t', index_col=0, header=0)
+    CPWL_MA_plant_data = pandas.read_csv(folder + "CPWL_MA_plant_data.txt", sep='\t', index_col=0, header=0)
+    CPWL_MA_input_data = pandas.read_csv(folder + "CPWL_MA_input_data.txt", sep='\t', index_col=0, header=0)
+    QCPWL_Subgrad_plant_data = pandas.read_csv(folder + "QCPWL_Subgrad_plant_data.txt", sep='\t', index_col=0, header=0)
+    QCPWL_Subgrad_input_data = pandas.read_csv(folder + "QCPWL_Subgrad_input_data.txt", sep='\t', index_col=0, header=0)
+    QCPWL_MINLP_plant_data = pandas.read_csv(folder + "QCPWL_MINLP_plant_data.txt", sep='\t', index_col=0, header=0)
+    QCPWL_MINLP_input_data = pandas.read_csv(folder + "QCPWL_MINLP_input_data.txt", sep='\t', index_col=0, header=0)
+
+    max_iter=20
+    # #----------Optimal-------------
+    ori_plant_cost = -190.98 * np.ones(max_iter+1)
+    ori_FB = 4.7874 * np.ones(max_iter+1)
+    ori_TR = 89.704 * np.ones(max_iter+1)
+    # =======================================
+    #            Draw Pictures
+    # =======================================
+    global_font_size = 20
+    global_tick_size = 20
+    global_linewidth = 1
+    global_point_size = 4
+    pic_constant = 0.39370
+    font_factor = np.sqrt(1 / pic_constant)
+    global_font_size = global_font_size / font_factor
+    global_tick_size = global_tick_size / font_factor
+
+    fig = plt.figure(figsize=(13 * 0.39370, 18 * 0.39370))
+    font1 = {'family': 'Times New Roman',
+             'weight': 'normal',
+             'size': global_tick_size,
+             }
+    font2 = {'family': 'Times New Roman',
+             'weight': 'normal',
+             'size': global_font_size,
+             }
+    font3 = {'family': 'Times New Roman',
+             'weight': 'bold',
+             'size': global_font_size,
+             }
+    plt.rcParams['xtick.direction'] = 'in'
+    plt.rcParams['ytick.direction'] = 'in'
+
+    plt.subplot(3, 1, 1)
+    Optimal, = plt.plot(range(max_iter+1), ori_plant_cost, linewidth=global_linewidth, label='Optimal', color='gray',
+                        linestyle='--')
+    MA, = plt.plot(range(max_iter), MA_plant_data.loc[1:(max_iter+1),"cost"].multiply(1), linewidth=global_linewidth, label='Nonlinear model', linestyle='dashdot',
+                   marker='o', markersize=global_point_size)
+    CPWL_MA, = plt.plot(range(max_iter), CPWL_MA_plant_data.loc[1:(max_iter+1),"cost"].multiply(1), linewidth=global_linewidth, label='DCA+CPWL', linestyle='dotted',
+                    marker='o', markersize=global_point_size)
+    QCPWL_Subgrad, = plt.plot(range(max_iter), QCPWL_Subgrad_plant_data.loc[1:(max_iter+1), "cost"].multiply(1),
+                              linewidth=global_linewidth,
+                              label='DCA+QCPWL',
+                              linestyle='-', marker='o', markersize=global_point_size)
+
+    plt.legend(handles=[MA, CPWL_MA, QCPWL_Subgrad, Optimal], prop=font1)
+    plt.legend(loc='upper right',
+               fancybox=False,
+               edgecolor='k',
+               fontsize=global_point_size,
+               shadow=False,
+               facecolor='w',
+               framealpha=1.0,
+               prop={'family': 'Times New Roman', 'size': global_tick_size})
+    plt.ylabel('(a) Plant cost', font2)
+    plt.xticks([0, 3, 6, 9, 12, 15, 18])
+    plt.rcParams['xtick.direction'] = 'in'
+    plt.rcParams['ytick.direction'] = 'in'
+    plt.tick_params(labelsize=global_tick_size)
+    ax = plt.gca()
+    labels = ax.get_xticklabels() + ax.get_yticklabels()
+    [label.set_fontname('Times New Roman') for label in labels]
+    plt.tick_params(top=['on', 'true'], right=['on', 'true'], which='both')
+    plt.xlim(0, 20)
+    plt.ylim(-195, -145)
+
+    plt.subplot(3, 1, 2)
+    OptimalFB, = plt.plot(range(max_iter + 1), ori_FB, linewidth=global_linewidth, label='Optimal', color='gray',
+                          linestyle='--')
+    MA, = plt.plot(range(max_iter), MA_input_data.loc[range(max_iter),"Fb"], linewidth=global_linewidth, label='Nonlinear model', linestyle='dashdot',
+                   marker='o', markersize=global_point_size)
+    CPWL_MA, = plt.plot(range(max_iter), CPWL_MA_input_data.loc[range(max_iter),"Fb"], linewidth=global_linewidth, label='DCA+CPWL', linestyle='dotted',
+                    marker='o', markersize=global_point_size)
+    QCPWL_Subgrad, = plt.plot(range(max_iter), QCPWL_Subgrad_input_data.loc[range(max_iter), "Fb"],
+                              linewidth=global_linewidth,
+                              label='DCA+QPWL',
+                              linestyle='-', marker='o', markersize=global_point_size)
+
+    plt.ylabel('(b) Flowrate of B $F_B$ (kg/s)', font2)
+    plt.xticks([0, 3, 6, 9, 12, 15, 18])
+    plt.yticks([4, 4.5, 5, 5.5])
+    plt.rcParams['xtick.direction'] = 'in'
+    plt.rcParams['ytick.direction'] = 'in'
+    plt.tick_params(labelsize=global_tick_size)
+    ax = plt.gca()
+    labels = ax.get_xticklabels() + ax.get_yticklabels()
+    [label.set_fontname('Times New Roman') for label in labels]
+    plt.tick_params(top=['on', 'true'], right=['on', 'true'], which='both')
+    plt.xlim(0, 20)
+    plt.ylim(3.9, 5)
+
+    plt.subplot(3, 1, 3)
+    OptimalTR, = plt.plot(range(max_iter + 1), ori_TR, linewidth=global_linewidth, label='Optimal', color='gray',
+                          linestyle='--')
+    MA, = plt.plot(range(max_iter), MA_input_data.loc[range(max_iter),"Tr"], linewidth=global_linewidth, label='Nonlinear model', linestyle='dashdot',
+                   marker='o', markersize=global_point_size)
+    CPWL_MA, = plt.plot(range(max_iter), CPWL_MA_input_data.loc[range(max_iter),"Tr"], linewidth=global_linewidth, label='DCA+CPWL', linestyle='dashed',
+                    marker='o', markersize=global_point_size)
+    QCPWL_Subgrad, = plt.plot(range(max_iter), QCPWL_Subgrad_input_data.loc[range(max_iter), "Tr"], linewidth=global_linewidth,
+                         label='DCA+QPWL',
+                         linestyle='-', marker='o', markersize=global_point_size)
+
+    # plt.legend(handles=[OptimalTR, MA, CPWL_MA, PA, QCPWL_MA, ISOQCPWL_MA], prop=font1)
+    plt.xlabel('RTO Iterations', font2)
+    plt.ylabel('(c) Temperature $T_R$ (℃)', font2)
+    plt.xticks([0, 3, 6, 9, 12, 15, 18])
+    plt.rcParams['xtick.direction'] = 'in'
+    plt.rcParams['ytick.direction'] = 'in'
+    ax = plt.gca()
+    plt.tick_params(labelsize=global_tick_size)
+    labels = ax.get_xticklabels() + ax.get_yticklabels()
+    [label.set_fontname('Times New Roman') for label in labels]
+    plt.tick_params(top=['on', 'true'], right=['on', 'true'], which='both')
+    plt.xlim(0, 20)
+    plt.ylim(74, 95)
+    y_major_locator = MultipleLocator(5)
+    ax = plt.gca()
+    ax.yaxis.set_major_locator(y_major_locator)
+
+    plt.tight_layout(pad=0.5, w_pad=0.5, h_pad=0.5)
+    plt.savefig(pic_filename, dpi=600)
+    plt.close()
 def draw_compare_unconstrained_wo(folder, pic_filename):
     # pic_filename="pic/overall_pic0-0.png"
     # =======================================
@@ -54,17 +192,17 @@ def draw_compare_unconstrained_wo(folder, pic_filename):
     plt.subplot(3, 1, 1)
     Optimal, = plt.plot(range(max_iter+1), ori_plant_cost, linewidth=global_linewidth, label='Optimal', color='gray',
                         linestyle='--')
-    MA, = plt.plot(range(max_iter), MA_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='MA', linestyle='dashdot',
+    MA, = plt.plot(range(max_iter), MA_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='Nonlinear model', linestyle='dashdot',
                    marker='o', markersize=global_point_size)
-    CPWL_MA, = plt.plot(range(max_iter), CPWL_MA_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='CPWL MA', linestyle='dotted',
+    CPWL_MA, = plt.plot(range(max_iter), CPWL_MA_plant_data.loc[1:(max_iter+1),"cost"].multiply(-1), linewidth=global_linewidth, label='DCA+CPWL', linestyle='dotted',
                     marker='o', markersize=global_point_size)
     QCPWL_Subgrad, = plt.plot(range(max_iter), QCPWL_Subgrad_plant_data.loc[1:(max_iter+1), "cost"].multiply(-1),
                               linewidth=global_linewidth,
-                              label='Quadratic+CPWL Subgrad',
+                              label='DCA+QPWL',
                               linestyle='-', marker='o', markersize=global_point_size)
     QCPWL_MINLP, = plt.plot(range(max_iter), QCPWL_MINLP_plant_data.loc[1:(max_iter+1), "cost"].multiply(-1),
                             linewidth=global_linewidth,
-                            label='Quadratic+CPWL MINLP',
+                            label='MINLP+QPWL',
                             linestyle='dashed', marker='o', markersize=global_point_size/2)
 
     plt.legend(handles=[MA, CPWL_MA, QCPWL_Subgrad, QCPWL_MINLP, Optimal], prop=font1)
@@ -91,20 +229,20 @@ def draw_compare_unconstrained_wo(folder, pic_filename):
     plt.subplot(3, 1, 2)
     OptimalFB, = plt.plot(range(max_iter + 1), ori_FB, linewidth=global_linewidth, label='Optimal', color='gray',
                           linestyle='--')
-    MA, = plt.plot(range(max_iter), MA_input_data.loc[range(max_iter),"Fb"], linewidth=global_linewidth, label='MA', linestyle='dashdot',
+    MA, = plt.plot(range(max_iter), MA_input_data.loc[range(max_iter),"Fb"], linewidth=global_linewidth, label='Nonlinear model', linestyle='dashdot',
                    marker='o', markersize=global_point_size)
-    CPWL_MA, = plt.plot(range(max_iter), CPWL_MA_input_data.loc[range(max_iter),"Fb"], linewidth=global_linewidth, label='CPWL MA', linestyle='dotted',
+    CPWL_MA, = plt.plot(range(max_iter), CPWL_MA_input_data.loc[range(max_iter),"Fb"], linewidth=global_linewidth, label='DCA+CPWL', linestyle='dotted',
                     marker='o', markersize=global_point_size)
     QCPWL_Subgrad, = plt.plot(range(max_iter), QCPWL_Subgrad_input_data.loc[range(max_iter), "Fb"],
                               linewidth=global_linewidth,
-                              label='Quadratic+CPWL Subgrad',
+                              label='DCA+QPWL',
                               linestyle='-', marker='o', markersize=global_point_size)
     QCPWL_MINLP, = plt.plot(range(max_iter), QCPWL_MINLP_input_data.loc[range(max_iter), "Fb"],
                             linewidth=global_linewidth,
-                            label='Quadratic+CPWL MINLP',
+                            label='MINLP+QPWL',
                             linestyle='dashed', marker='o', markersize=global_point_size/2)
 
-    plt.ylabel('(b) Flowrates of B, $F_B$ (kg/s)', font2)
+    plt.ylabel('(b) $F_B$ (kg/s)', font2)
     plt.xticks([0, 3, 6, 9, 12, 15, 18])
     plt.yticks([4, 4.5, 5, 5.5])
     plt.rcParams['xtick.direction'] = 'in'
@@ -120,20 +258,20 @@ def draw_compare_unconstrained_wo(folder, pic_filename):
     plt.subplot(3, 1, 3)
     OptimalTR, = plt.plot(range(max_iter + 1), ori_TR, linewidth=global_linewidth, label='Optimal', color='gray',
                           linestyle='--')
-    MA, = plt.plot(range(max_iter), MA_input_data.loc[range(max_iter),"Tr"], linewidth=global_linewidth, label='MA', linestyle='dashdot',
+    MA, = plt.plot(range(max_iter), MA_input_data.loc[range(max_iter),"Tr"], linewidth=global_linewidth, label='Nonlinear model', linestyle='dashdot',
                    marker='o', markersize=global_point_size)
-    CPWL_MA, = plt.plot(range(max_iter), CPWL_MA_input_data.loc[range(max_iter),"Tr"], linewidth=global_linewidth, label='CPWL MA', linestyle='dashed',
+    CPWL_MA, = plt.plot(range(max_iter), CPWL_MA_input_data.loc[range(max_iter),"Tr"], linewidth=global_linewidth, label='DCA+CPWL', linestyle='dashed',
                     marker='o', markersize=global_point_size)
     QCPWL_Subgrad, = plt.plot(range(max_iter), QCPWL_Subgrad_input_data.loc[range(max_iter), "Tr"], linewidth=global_linewidth,
-                         label='Quadratic+CPWL Subgrad',
+                         label='DCA+QPWL',
                          linestyle='-', marker='o', markersize=global_point_size)
     QCPWL_MINLP, = plt.plot(range(max_iter), QCPWL_MINLP_input_data.loc[range(max_iter), "Tr"], linewidth=global_linewidth,
-                         label='Quadratic+CPWL MINLP',
+                         label='MINLP+QPWL',
                          linestyle='dashed', marker='o', markersize=global_point_size/2)
 
     # plt.legend(handles=[OptimalTR, MA, CPWL_MA, PA, QCPWL_MA, ISOQCPWL_MA], prop=font1)
     plt.xlabel('RTO Iterations', font2)
-    plt.ylabel('(c) CSTR TemQCPWL_MArature, $T_R$ (℃)', font2)
+    plt.ylabel('(c) $T_R$ (℃)', font2)
     plt.xticks([0, 3, 6, 9, 12, 15, 18])
     plt.rcParams['xtick.direction'] = 'in'
     plt.rcParams['ytick.direction'] = 'in'
@@ -204,9 +342,9 @@ def draw_compare_HPC3(pic_name):
     # algorighms = ['QCPWL_MA', 'MA','QCPWL_Subgrad','QCPWL_Subgrad_MINLP']
     algorighms = ['MA','QCPWL_Subgrad','QCPWL_Subgrad_MINLP']
     algo_name_dict = {
-        'MA':"MA",
-        'QCPWL_Subgrad':'QCPWL_Subgrad',
-        'QCPWL_Subgrad_MINLP':'QCPWL_Subgrad_MINLP',
+        'MA':"Nonlinear model",
+        'QCPWL_Subgrad':'DCA+QPWL',
+        'QCPWL_Subgrad_MINLP':'MINLP+QPWL',
     }
     algo_color = {
         'MA':"blue",
@@ -216,13 +354,13 @@ def draw_compare_HPC3(pic_name):
     output_measurements = ['obj','Purity_GAN','Drain_Flow']
     inputs = ['TA_Flow', 'MA_Flow']
     mv_label_dict = {
-        'TA_Flow': 'Turbine air flowrate (kmol/h)',
-        'MA_Flow': 'Main air flowrate (kmol/h)',
+        'TA_Flow': '$F_{TA}$ (kmol/h)',
+        'MA_Flow': '$F_{MA}$ (kmol/h)',
     }
     y_label_dict = {
-        'obj':'Cost',
-        'Purity_GAN':'Purity of GAN',
-        'Drain_Flow':'Drain flowrate (kmol/h)',
+        'obj':'$\phi_p$',
+        'Purity_GAN':'$c_{GAN,N_2}$',
+        'Drain_Flow':'$F_{Drain}$ (kmol/h)',
     }
     linestyle_dict={
         'MA': "dashed",
@@ -250,11 +388,21 @@ def draw_compare_HPC3(pic_name):
         for algo_index, algo in enumerate(algorighms):
             model_data = pandas.read_csv("data/hpc3d/" + algo + '_model_data' + ".txt", sep='\t', index_col=0, header=0)
             plant_data = pandas.read_csv("data/hpc3d/" + algo + '_plant_data' + ".txt", sep='\t', index_col=0, header=0)
-            plant_data.iloc[max_iter_no-1] = plant_data.iloc[max_iter_no - 2]
-            time = model_data.index
-            plt.plot(time[0:max_iter_no], plant_data.iloc[0:(max_iter_no),:].loc[:,op], linewidth=global_linewidth, label=algo,
-                                       color=algo_color[algo],
-                                       linestyle=linestyle_dict[algo], marker='o', markersize=marker_size[algo])
+            # a stupid remedy for the bug of the plant data
+            if op_index == 1:
+                y=list(plant_data.iloc[0:(max_iter_no-1), :].loc[:, op])
+                y.insert(0,0.9999)
+                time = model_data.index
+                plt.plot(time[0:max_iter_no], y,
+                         linewidth=global_linewidth, label=algo_name_dict[algo],
+                         color=algo_color[algo],
+                         linestyle=linestyle_dict[algo], marker='o', markersize=marker_size[algo])
+            else:
+                plant_data.iloc[max_iter_no-1] = plant_data.iloc[max_iter_no - 2]
+                time = model_data.index
+                plt.plot(time[0:max_iter_no], plant_data.iloc[0:(max_iter_no),:].loc[:,op], linewidth=global_linewidth, label=algo_name_dict[algo],
+                                           color=algo_color[algo],
+                                           linestyle=linestyle_dict[algo], marker='o', markersize=marker_size[algo])
         if op_index == 0:
             plt.legend(prop=font_legend)
         plt.ylabel(y_label_dict[op], font2)
@@ -308,6 +456,107 @@ def draw_compare_HPC3(pic_name):
     plt.close()
 
 
+def draw_compare_HPC3_CPCC(pic_name):
+    max_iter_no=30
+    pic_constant = 0.39370
+    global_font_size = 15
+    global_tick_size = 15
+    global_linewidth = 1.5
+    global_point_size = 4
+    font_factor = np.sqrt(1 / pic_constant)
+    fig = plt.figure(figsize=(16 * pic_constant, 16 * pic_constant))
+    font2 = {'family': 'Times New Roman',
+             'weight': 'normal',
+             'size': global_font_size,
+             }
+    font3 = {'family': 'Times New Roman',
+             'weight': 'bold',
+             'size': global_font_size,
+             }
+    font_legend = {'family': 'Times New Roman',
+             'weight': 'normal',
+             'size': 20/font_factor,
+             }
+    font_title = {'family': 'Times New Roman',
+                  'size': global_font_size,
+                  'weight': 'bold'
+                  }
+    plt.rcParams['xtick.direction'] = 'in'
+    plt.rcParams['ytick.direction'] = 'in'
+
+    # algorighms = ['QCPWL_MA', 'MA','QCPWL_Subgrad','QCPWL_Subgrad_MINLP']
+    algorighms = ['MA','QCPWL_Subgrad']
+    algo_name_dict = {
+        'MA':"Modifier adaptation",
+        'QCPWL_Subgrad':'Proposed',
+    }
+    algo_color = {
+        'MA':"blue",
+        'QCPWL_Subgrad':"red",
+    }
+    output_measurements = ['obj','Purity_GAN','Drain_Flow']
+    inputs = ['TA_Flow', 'MA_Flow']
+    mv_label_dict = {
+        'TA_Flow': 'Turbine air flowrate (kmol/h)',
+        'MA_Flow': 'Main air flowrate (kmol/h)',
+    }
+    y_label_dict = {
+        'obj':'Cost',
+        'Purity_GAN':'Purity of GAN',
+        'Drain_Flow':'Drain flowrate (kmol/h)',
+    }
+    linestyle_dict={
+        'MA': "dashed",
+        'QCPWL_Subgrad': "dashdot",
+    }
+    marker_size={
+        'MA': 2,
+        'QCPWL_Subgrad': 2,
+    }
+    for op_index, op in enumerate(output_measurements):
+        plt.subplot(3, 1, op_index + 1)
+        time=np.zeros((max_iter_no,))
+        for iter in range(1,max_iter_no):
+            time[iter]=iter+1
+        optimal=np.zeros((max_iter_no,))
+        for index,iter in enumerate(time):
+            optimal[index]=HPC_plant_optimum(iter)[op]
+        optimal[-1]=HPC_plant_optimum(time[-2])[op]
+        plt.plot(time, optimal, linewidth=global_linewidth/2,
+                 label='Optimal',
+                 color='black',
+                 linestyle='-')
+        for algo_index, algo in enumerate(algorighms):
+            model_data = pandas.read_csv("data/hpc3d/" + algo + '_model_data' + ".txt", sep='\t', index_col=0, header=0)
+            plant_data = pandas.read_csv("data/hpc3d/" + algo + '_plant_data' + ".txt", sep='\t', index_col=0, header=0)
+            plant_data.iloc[max_iter_no-1] = plant_data.iloc[max_iter_no - 2]
+            time = model_data.index
+            plt.plot(time[0:max_iter_no], plant_data.iloc[0:(max_iter_no),:].loc[:,op], linewidth=global_linewidth, label=algo_name_dict[algo],
+                                       color=algo_color[algo],
+                                       linestyle=linestyle_dict[algo], marker='o', markersize=marker_size[algo])
+        if op_index == 0:
+            plt.legend(prop=font_legend)
+        plt.ylabel(y_label_dict[op], font2)
+        plt.xticks([0,10,20,30])
+        plt.rcParams['xtick.direction'] = 'in'
+        plt.rcParams['ytick.direction'] = 'in'
+        plt.tick_params(labelsize=global_tick_size)
+        ax = plt.gca()
+        labels = ax.get_xticklabels() + ax.get_yticklabels()
+        [label.set_fontname('Times New Roman') for label in labels]
+        plt.tick_params(top= ['on', 'true'], right= ['on', 'true'], which='both')
+        plt.grid(ls='--',axis='y')
+
+    plt.subplot(3, 1, 3)
+    plt.xlabel("RTO iteration", font2)
+
+    plt.tight_layout(pad=0.5,w_pad=0.5, h_pad=0.5)
+    plt.savefig(pic_name,dpi=600)
+    plt.close()
+
 if __name__ == "__main__":
-    draw_compare_HPC3("pic/paper/compare_HPC3.png")
+    # draw_compare_HPC3("pic/paper/compare_HPC3.png")
+    # draw_compare_HPC3_CPCC("pic/paper/compare_HPC3_CPCC.png")
     # draw_compare_unconstrained_wo("data/uncon-wo/", "pic/paper/compare_unconstrained_wo.png")
+    draw_compare_unconstrained_wo_adchem("data/uncon-wo/",
+                                  "pic/paper/compare_unconstrained_wo_adchem.png")

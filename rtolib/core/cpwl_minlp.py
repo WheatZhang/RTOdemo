@@ -122,19 +122,28 @@ class QCPWL_RTOObjectSubgradMINLP(QuadraticBoostedDCCPWL_RTOObjectSubgrad):
             return ret - m.infeasibility_sum == 0
         subproblem_model.tr_infeasibility_sum = Constraint(rule=_tr_infeasibility_sum)
 
-        def _tr_merit_function(m):
-            ret = m.output[self.cvs[0]].f
-            ret += m.infeasibility_sum * m.tr_penalty_coeff
-            return ret
-        subproblem_model.tr_merit_function = Expression(rule=_tr_merit_function)
+        # def _tr_merit_function(m):
+        #     ret = m.output[self.cvs[0]].f
+        #     ret += m.infeasibility_sum * m.tr_penalty_coeff
+        #     return ret
+        # subproblem_model.tr_merit_function = Expression(rule=_tr_merit_function)
+
+        def _ineq_con(m):
+            return m.infeasibility_sum == 0
+        subproblem_model.ineq_con = Constraint(rule=_ineq_con)
 
         def _validity_con(m):
-            return m.output["validity_con"].f <= 0
+            return m.output["validity_con"].f <= 1
         subproblem_model.validity_con = Constraint(rule=_validity_con)
 
+        # def optimization_obj(m):
+        #     return m.tr_merit_function
+        # subproblem_model.optimization_obj = Objective(rule=optimization_obj, sense=minimize)
+
         def optimization_obj(m):
-            return m.tr_merit_function
+            return m.output[self.cvs[0]].f
         subproblem_model.optimization_obj = Objective(rule=optimization_obj, sense=minimize)
+
 
         self.subproblem_model = subproblem_model
 

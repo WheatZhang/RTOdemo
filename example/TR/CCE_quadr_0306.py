@@ -622,11 +622,11 @@ def draw_profile_global_convergence():
                  marker='^', c='red', markersize=global_marker_size, linewidth=linewidth / 3, label="Modifier adaptation")
         if no == 0:
             plt.ylabel("cost", font_label)
-            plt.title(r"Model (85) - Correct curvatures", fontdict=font_title)
+            plt.title(r"Model (64) - Correct curvatures", fontdict=font_title)
         elif no == 1:
-            plt.title(r"Model (86) - Wrong objective curvature", fontdict=font_title)
+            plt.title(r"Model (65) - Wrong objective curvature", fontdict=font_title)
         elif no == 2:
-            plt.title(r"Model (87) - Wrong constraint curvature", fontdict=font_title)
+            plt.title(r"Model (66) - Wrong constraint curvature", fontdict=font_title)
             plt.legend(loc='upper right', prop=font_legend)
         plt.xticks([0, 5, 10, 15, 20])
         plt.yticks([-1, 1, 3, 5])
@@ -893,9 +893,9 @@ def generate_all_data():
 
 def draw_all_pic():
     draw_profile_global_convergence()
-    draw_profile_sigma()
-    draw_profile_trust_radius()
-    draw_contour_xi()
+    # draw_profile_sigma()
+    # draw_profile_trust_radius()
+    # draw_contour_xi()
 
 if __name__ == "__main__":
     # generate_all_data()
