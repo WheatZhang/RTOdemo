@@ -67,9 +67,9 @@ class ModifierAdaptation(MA_type_Algorithm):
         solver1 = SolverFactory('ipopt', executable=self.solver_executable)
         self.plant_simulator.set_solver(solver1, tee=False, default_options=default_options)
         solver2 = SolverFactory('ipopt', executable=self.solver_executable)
-        self.model_simulator.set_solver(solver2, tee=True, default_options=default_options)
+        self.model_simulator.set_solver(solver2, tee=False, default_options=default_options)
         solver3 = SolverFactory('ipopt', executable=self.solver_executable)
-        self.model_optimizer.set_solver(solver3, tee=True, default_options=default_options)
+        self.model_optimizer.set_solver(solver3, tee=False, default_options=default_options)
 
         self.iter_count = 0
         self.input_history_data[0] = {}
@@ -897,4 +897,507 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
                 self.trust_radius = self.options['max_trust_radius']
                 self.model_history_data[self.iter_count - 1]['event'] = "trust region too large"
             self.model_history_data[self.iter_count-1]['tr_adjusted'] = self.trust_radius
+
+
+class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
+    def set_problem(self, problem_description,
+                    plant,
+                    model,
+                    backup_model,
+                    perturbation_method,
+                    noise_generator,
+                    solver_executable,
+                    spec_function,
+                    modifier_type,
+                    skipped_modifiers=[]):
+        self.problem_description = problem_description
+        self.plant_simulator = PyomoSimulator(plant)
+        mvs = self.problem_description.symbol_list['MV']
+        if modifier_type == ModifierType.RTO:
+            cvs = [self.problem_description.symbol_list['OBJ']]
+            for cv in self.problem_description.symbol_list['CON']:
+                cvs.append(cv)
+        elif modifier_type == ModifierType.OUTPUT:
+            cvs = self.problem_description.symbol_list['CV']
+        else:
+            raise ValueError("Not applicable")
+        # TODO: FOR MODELS OTHER THAN PYOMO TYPE
+        self.model_simulator = PyomoSimulator(PyomoModelWithModifiers(model, modifier_type, mvs, cvs))
+        self.model_optimizer = CompoStepTrustRegionOptimizer(PyomoModelWithModifiers(model, modifier_type, mvs, cvs))
+        self.backup_model_simulator = PyomoSimulator(PyomoModelWithModifiers(backup_model, modifier_type, mvs, cvs))
+        self.backup_model_optimizer = CompoStepTrustRegionOptimizer(PyomoModelWithModifiers(backup_model, modifier_type, mvs, cvs))
+        self.perturbation_method = perturbation_method
+        self.noise_generator = noise_generator
+        self.solver_executable = solver_executable
+        self.spec_function = spec_function
+        self.skipped_modifiers = skipped_modifiers
+
+    def initialize_simulation(self, starting_point, initial_parameter_value):
+        ModifierAdaptationCompoStepTR.initialize_simulation(self, starting_point, initial_parameter_value)
+        # build model
+        self.backup_model_simulator.build(self.problem_description)
+        self.backup_model_optimizer.build(self.problem_description)
+
+        # set solver
+        # TODO: solver parameter tuning
+        # TODO: each solver should be seperate
+        default_options={'max_iter':500,
+                         "tol":1e-10}
+        solver4 = SolverFactory('ipopt', executable=self.solver_executable)
+        self.backup_model_simulator.set_solver(solver4, tee=False, default_options=default_options)
+        solver5 = SolverFactory('ipopt', executable=self.solver_executable)
+        self.backup_model_optimizer.set_solver(solver5, tee=False, default_options=default_options)
+
+        self.set_initial_backup_model_parameters(initial_parameter_value)
+
+        # set basepoint
+        self.backup_model_simulator.set_base_point(self.current_point)
+        self.backup_model_optimizer.set_base_point(self.current_point)
+    def register_option(self):
+        super().register_option()
+        self.available_options["kappa_r"] = ("[0,1]", 0.5)
+
+    def optimize_for_u(self, tr_radius, tr_base):
+        return super().optimize_for_u(tr_radius, tr_base)
+
+    def optimize_for_u_backup_model(self, tr_radius, tr_base):
+        '''
+        used in self.one_step_simulation
+        :return:
+        '''
+        input_values = {}
+        if self.spec_function is not None:
+            for k, v in self.current_spec.items():
+                input_values[k] = v
+        optimized_input, input_after_normal_step, solve_status = self.backup_model_optimizer.optimize(input_values, tr_radius,
+                                                                                               tr_base,
+                                                                                               self.options['xi_N'],
+                                                                                               param_values=self.current_backup_parameter_value,
+                                                                                               use_homo=self.options[
+                                                                                                   "homotopy_optimization"])
+        return optimized_input, input_after_normal_step, solve_status
+    def one_step_simulation(self):
+        print("Iteration %d" % self.iter_count)
+
+        # initialize storage
+        self.model_history_data[self.iter_count] = {}
+        self.plant_history_data[self.iter_count] = {}
+        self.input_history_data[self.iter_count] = {}
+        if self.iter_count == 1:
+            # If we want to add some print information, do it here.
+            self.model_history_data[1]['rho'] = ""
+            self.model_history_data[1]['tr'] = ""
+            self.model_history_data[1]['tr_adjusted'] = ""
+            self.model_history_data[1]['event'] = ""
+            obj_var_name = self.problem_description.symbol_list['OBJ']
+            self.model_history_data[1]['base_'+obj_var_name] = ""
+            for con_var_name in self.problem_description.symbol_list['CON']:
+                self.model_history_data[1]['base_'+con_var_name] = ""
+
+            self.model_history_data[1]['m_sigma'] = ""
+            self.model_history_data[1]['m_merit'] = ""
+            self.model_history_data[1]['m_infeasibility'] = ""
+            self.model_history_data[1]['m_obj_for_merit'] = ""
+            self.model_history_data[1]['m_base_merit'] = ""
+            self.model_history_data[1]['m_base_infeasibility'] = ""
+            self.model_history_data[1]['m_base_obj_for_merit'] = ""
+
+            self.model_history_data[1]['b_sigma'] = ""
+            self.model_history_data[1]['b_merit'] = ""
+            self.model_history_data[1]['b_infeasibility'] = ""
+            self.model_history_data[1]['b_obj_for_merit'] = ""
+            self.model_history_data[1]['b_base_merit'] = ""
+            self.model_history_data[1]['b_base_infeasibility'] = ""
+            self.model_history_data[1]['b_base_obj_for_merit'] = ""
+
+            self.model_history_data[1]['selected_model']=0
+            self.model_history_data[1]['merit'] = ""
+            self.model_history_data[1]['base_merit'] = ""
+
+            self.plant_history_data[1]['merit'] = ""
+            self.plant_history_data[1]['infeasibility'] = ""
+            self.plant_history_data[1]['obj_for_merit'] = ""
+            self.plant_history_data[1]['base_merit'] = ""
+            self.plant_history_data[1]['base_infeasibility'] = ""
+            self.plant_history_data[1]['base_obj_for_merit'] = ""
+
+        # get trial point
+        trial_points = self.get_trial_point()
+        base_iteration = self.iter_count
+        base_input = copy.deepcopy(trial_points[0])
+
+        # get plant simulation result
+        plant_output_data = self.get_plant_simulation_result(trial_points)
+        obj_var_name = self.problem_description.symbol_list['OBJ']
+        obj = self.plant_history_data[self.iter_count][obj_var_name] / \
+              self.problem_description.scaling_factors[obj_var_name]
+        self.plant_history_data[self.iter_count]['obj_for_merit'] = obj
+        self.plant_history_data[base_iteration]['base_obj_for_merit'] = obj
+        infeasibility_sq = 0
+        for con_var_name in self.problem_description.symbol_list['CON']:
+            infeasibility_sq += max(self.plant_history_data[self.iter_count][con_var_name], 0) ** 2 / \
+                                self.problem_description.scaling_factors[con_var_name] ** 2
+        infeasibility = numpy.sqrt(infeasibility_sq)
+        self.plant_history_data[self.iter_count]['infeasibility'] = infeasibility
+        self.plant_history_data[base_iteration]['base_infeasibility'] = infeasibility
+        merit = obj + infeasibility * self.sigma
+        self.plant_history_data[self.iter_count]['merit'] = merit
+        self.plant_history_data[base_iteration]['base_merit'] = merit
+
+        # get model simulation result with and without modifiers
+        model_output_data = self.get_model_simulation_result(trial_points)
+        obj_var_name = self.problem_description.symbol_list['OBJ']
+        obj = self.model_history_data[self.iter_count][obj_var_name] / \
+              self.problem_description.scaling_factors[obj_var_name]
+        self.model_history_data[self.iter_count]['m_obj_for_merit'] = obj
+        infeasibility_sq = 0
+        for con_var_name in self.problem_description.symbol_list['CON']:
+            infeasibility_sq += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
+                                self.problem_description.scaling_factors[con_var_name] ** 2
+        infeasibility = numpy.sqrt(infeasibility_sq)
+        self.model_history_data[self.iter_count]['m_infeasibility'] = infeasibility
+        merit = obj + infeasibility * self.sigma
+        self.model_history_data[self.iter_count]['m_merit'] = merit
+
+        # update modifiers
+        self.update_modifiers(plant_output_data, model_output_data)
+
+        # get backup model simulation result with and without modifiers
+        model_output_data = self.get_backup_model_simulation_result(trial_points)
+        obj_var_name = self.problem_description.symbol_list['OBJ']
+        obj = self.model_history_data[self.iter_count]['b_'+obj_var_name] / \
+              self.problem_description.scaling_factors[obj_var_name]
+        self.model_history_data[self.iter_count]['b_obj_for_merit'] = obj
+        infeasibility_sq = 0
+        for con_var_name in self.problem_description.symbol_list['CON']:
+            infeasibility_sq += max(self.model_history_data[self.iter_count]['b_'+con_var_name], 0) ** 2 / \
+                                self.problem_description.scaling_factors[con_var_name] ** 2
+        infeasibility = numpy.sqrt(infeasibility_sq)
+        self.model_history_data[self.iter_count]['b_infeasibility'] = infeasibility
+        merit = obj + infeasibility * self.sigma
+        self.model_history_data[self.iter_count]['b_merit'] = merit
+
+        # update modifiers for the backup model
+        self.update_modifiers_backup_model(plant_output_data, model_output_data)
+
+        # set basepoint
+        self.model_simulator.set_base_point(self.current_point)
+        self.model_optimizer.set_base_point(self.current_point)
+        self.backup_model_simulator.set_base_point(self.current_point)
+        self.backup_model_optimizer.set_base_point(self.current_point)
+
+        self.store_model_adaptation_data()
+        self.store_backup_model_adaptation_data()
+
+        # culculate_base_merit
+        base_model_output, solve_status = self.model_simulator.simulate(base_input,
+                                                                        param_values=self.current_parameter_value,
+                                                                        use_homo=self.options["homotopy_simulation"])
+        obj_var_name = self.problem_description.symbol_list['OBJ']
+        base_obj = base_model_output[obj_var_name] / \
+                   self.problem_description.scaling_factors[obj_var_name]
+        infeasibility_sq = 0
+        for con_var_name in self.problem_description.symbol_list['CON']:
+            infeasibility_sq += max(base_model_output[con_var_name], 0) ** 2 / \
+                                self.problem_description.scaling_factors[con_var_name] ** 2
+        base_infeasibility = numpy.sqrt(infeasibility_sq)
+
+        self.model_history_data[base_iteration]['m_base_' + obj_var_name] = base_model_output[obj_var_name]
+        self.model_history_data[base_iteration]['m_base_obj_for_merit'] = base_obj
+        for con_var_name in self.problem_description.symbol_list['CON']:
+            self.model_history_data[base_iteration]['m_base_' + con_var_name] = base_model_output[con_var_name]
+        self.model_history_data[base_iteration]['m_base_infeasibility'] = base_infeasibility
+        merit = base_obj + base_infeasibility * self.sigma
+        self.model_history_data[base_iteration]['m_base_merit'] = merit
+
+        # culculate_base_merit for the backup model
+        base_model_output, solve_status = self.backup_model_simulator.simulate(base_input,
+                                                                        param_values=self.current_backup_parameter_value,
+                                                                        use_homo=self.options["homotopy_simulation"])
+        obj_var_name = self.problem_description.symbol_list['OBJ']
+        base_obj = base_model_output[obj_var_name] / \
+                   self.problem_description.scaling_factors[obj_var_name]
+        infeasibility_sq = 0
+        for con_var_name in self.problem_description.symbol_list['CON']:
+            infeasibility_sq += max(base_model_output[con_var_name], 0) ** 2 / \
+                                self.problem_description.scaling_factors[con_var_name] ** 2
+        base_infeasibility = numpy.sqrt(infeasibility_sq)
+
+        self.model_history_data[base_iteration]['b_base_' + obj_var_name] = base_model_output[obj_var_name]
+        self.model_history_data[base_iteration]['b_base_obj_for_merit'] = base_obj
+        for con_var_name in self.problem_description.symbol_list['CON']:
+            self.model_history_data[base_iteration]['b_base_' + con_var_name] = base_model_output[con_var_name]
+        self.model_history_data[base_iteration]['b_base_infeasibility'] = base_infeasibility
+        merit = base_obj + base_infeasibility * self.sigma
+        self.model_history_data[base_iteration]['b_base_merit'] = merit
+
+        iter_successful_flag = False
+        rho = 100
+        tr_base = {}
+        for k, v in trial_points[0].items():
+            if k in self.problem_description.symbol_list['MV']:
+                tr_base[k] = v
+
+        while (not iter_successful_flag):
+            self.model_history_data[self.iter_count]['tr'] = self.trust_radius
+            # calculate the optimal input
+            try:
+                optimized_input_m, input_after_normal_step_m, solve_status_m = self.optimize_for_u(self.trust_radius, tr_base)
+            except Exception as e:
+                optimized_input_m = self.current_point
+                input_after_normal_step_m = self.current_point
+                self.model_history_data[self.iter_count]['event'] = "primary optimization failed"
+            if solve_status_m == PyomoModelSolvingStatus.OPTIMIZATION_FAILED:
+                optimized_input_m = self.current_point
+                input_after_normal_step_m = self.current_point
+                self.model_history_data[self.iter_count]['event'] = "primary optimization failed"
+            try:
+                optimized_input_b, input_after_normal_step_b, solve_status_b = self.optimize_for_u_backup_model(self.trust_radius, tr_base)
+            except Exception as e:
+                input_after_normal_step_b = self.current_point
+                optimized_input_b = self.current_point
+                self.model_history_data[self.iter_count]['event'] = "backup optimization failed"
+            if solve_status_b == PyomoModelSolvingStatus.OPTIMIZATION_FAILED:
+                input_after_normal_step_b = self.current_point
+                optimized_input_b = self.current_point
+                self.model_history_data[self.iter_count]['event'] = "backup optimization failed"
+
+            self.model_history_data[self.iter_count]['sigma'] = self.sigma
+            # bound the input
+            mv_bounds = self.problem_description.bounds
+            filtered_input_m = self.adapt_to_bound_mv(optimized_input_m, mv_bounds)
+            filtered_input_b = self.adapt_to_bound_mv(optimized_input_b, mv_bounds)
+
+            # iter count
+            if self.iter_count >= self.options['max_iter']+1:
+                self.iter_count += 1
+                break
+            self.iter_count += 1
+            self.model_history_data[self.iter_count] = {}
+            self.plant_history_data[self.iter_count] = {}
+            self.input_history_data[self.iter_count] = {}
+            # print(self.input_history_data)
+
+            if self.options['adaptive_sigma']:
+                # check sigma is large enough
+                # the primary model part
+                model_trial_point_output_m = self.get_model_simulation_result([filtered_input_m])[0]
+                obj_var_name = self.problem_description.symbol_list['OBJ']
+                obj_after_optimization_m = self.model_history_data[self.iter_count][obj_var_name] / \
+                                         self.problem_description.scaling_factors[obj_var_name]
+                infeasibility_sq_m = 0
+                for con_var_name in self.problem_description.symbol_list['CON']:
+                    infeasibility_sq_m += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
+                                        self.problem_description.scaling_factors[con_var_name] ** 2
+                infeasibility_m = numpy.sqrt(infeasibility_sq_m)
+                merit_m = obj_after_optimization_m + infeasibility_m * self.sigma
+                base_infeasibility_m = self.model_history_data[base_iteration]['m_base_infeasibility']
+                base_obj_m = self.model_history_data[base_iteration]['m_base_obj_for_merit']
+                base_merit_m = base_obj_m + base_infeasibility_m * self.sigma
+
+                output_after_normal_step_m = self.get_model_simulation_result([input_after_normal_step_m])[0]
+                obj_after_normal_step_m = output_after_normal_step_m[obj_var_name] / \
+                                        self.problem_description.scaling_factors[obj_var_name]
+
+                if (base_infeasibility_m - infeasibility_m < self.options['feasibility_tol']):
+                    # in this case, the feasibility progress is insignificant
+                    sigma_m = self.sigma
+                elif (base_merit_m - merit_m) / (base_infeasibility_m - infeasibility_m) / self.sigma < self.options[
+                    "sigma_kappa"]:
+                    # in this case, if sigma increases,
+                    # it must be that (base_obj-obj_after_normal_step)<0
+                    sigma_m = max(self.sigma,
+                                     (base_obj_m - obj_after_normal_step_m) / (self.options["sigma_kappa"] - 1) / \
+                                     (base_infeasibility_m - infeasibility_m) + 1)
+                    print("sigma_m=%f" % sigma_m)
+                else:
+                    sigma_m = self.sigma
+
+                # the backup model part
+                model_trial_point_output_b = self.get_backup_model_simulation_result([filtered_input_b])[0]
+                obj_var_name = self.problem_description.symbol_list['OBJ']
+                obj_after_optimization_b = self.model_history_data[self.iter_count]['b_'+obj_var_name] / \
+                                           self.problem_description.scaling_factors[obj_var_name]
+                infeasibility_sq_b = 0
+                for con_var_name in self.problem_description.symbol_list['CON']:
+                    infeasibility_sq_b += max(self.model_history_data[self.iter_count]['b_'+con_var_name], 0) ** 2 / \
+                                          self.problem_description.scaling_factors[con_var_name] ** 2
+                infeasibility_b = numpy.sqrt(infeasibility_sq_b)
+                merit_b = obj_after_optimization_b + infeasibility_b * self.sigma
+                base_infeasibility_b = self.model_history_data[base_iteration]['b_base_infeasibility']
+                base_obj_b = self.model_history_data[base_iteration]['b_base_obj_for_merit']
+                base_merit_b = base_obj_b + base_infeasibility_b * self.sigma
+
+                output_after_normal_step_b = self.get_backup_model_simulation_result([input_after_normal_step_b])[0]
+                obj_after_normal_step_b = output_after_normal_step_b[obj_var_name] / \
+                                          self.problem_description.scaling_factors[obj_var_name]
+
+                if (base_infeasibility_b - infeasibility_b < self.options['feasibility_tol']):
+                    # in this case, the feasibility progress is insignificant
+                    sigma_b = self.sigma
+                elif (base_merit_b - merit_b) / (base_infeasibility_b - infeasibility_b) / self.sigma < self.options[
+                    "sigma_kappa"]:
+                    # in this case, if sigma increases,
+                    # it must be that (base_obj-obj_after_normal_step)<0
+                    sigma_b = max(self.sigma,
+                                  (base_obj_b - obj_after_normal_step_b) / (self.options["sigma_kappa"] - 1) / \
+                                  (base_infeasibility_b - infeasibility_b) + 1)
+                    print("sigma_b=%f" % sigma_b)
+                else:
+                    sigma_b = self.sigma
+            else:
+                sigma_m = self.sigma
+                sigma_b = self.sigma
+
+            # model selection
+            # calculate relevent data from the primary model
+            model_trial_point_output_m = self.get_model_simulation_result([filtered_input_m])[0]
+            obj_var_name = self.problem_description.symbol_list['OBJ']
+            obj_m = self.model_history_data[self.iter_count][obj_var_name] / \
+                  self.problem_description.scaling_factors[obj_var_name]
+            self.model_history_data[self.iter_count]['m_obj_for_merit'] = obj_m
+            infeasibility_sq_m = 0
+            for con_var_name in self.problem_description.symbol_list['CON']:
+                infeasibility_sq_m += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
+                                    self.problem_description.scaling_factors[con_var_name] ** 2
+            infeasibility_m = numpy.sqrt(infeasibility_sq_m)
+            self.model_history_data[self.iter_count]['m_infeasibility'] = infeasibility_m
+            merit_m = obj_m + infeasibility_m * sigma_m
+            self.model_history_data[self.iter_count]['m_merit'] = merit_m
+            base_merit_m = self.model_history_data[base_iteration]['m_base_obj_for_merit'] + \
+                         self.model_history_data[base_iteration]['m_base_infeasibility'] * sigma_m
+            self.model_history_data[self.iter_count]['m_base_merit'] = base_merit_m
+
+            # calculate relevent data from the backup model
+            model_trial_point_output_b = self.get_backup_model_simulation_result([filtered_input_b])[0]
+            obj_var_name = self.problem_description.symbol_list['OBJ']
+            obj_b = self.model_history_data[self.iter_count]['b_'+obj_var_name] / \
+                    self.problem_description.scaling_factors[obj_var_name]
+            self.model_history_data[self.iter_count]['b_obj_for_merit'] = obj_b
+            infeasibility_sq_b = 0
+            for con_var_name in self.problem_description.symbol_list['CON']:
+                infeasibility_sq_b += max(self.model_history_data[self.iter_count]['b_'+con_var_name], 0) ** 2 / \
+                                      self.problem_description.scaling_factors[con_var_name] ** 2
+            infeasibility_b = numpy.sqrt(infeasibility_sq_b)
+            self.model_history_data[self.iter_count]['b_infeasibility'] = infeasibility_b
+            merit_b = obj_b + infeasibility_b * sigma_b
+            self.model_history_data[self.iter_count]['b_merit'] = merit_b
+            base_merit_b = self.model_history_data[base_iteration]['b_base_obj_for_merit'] + \
+                           self.model_history_data[base_iteration]['b_base_infeasibility'] * sigma_b
+            self.model_history_data[self.iter_count]['b_base_merit'] = base_merit_b
+
+            # compare the two models
+            selected = 'm'
+            c_improvement_m = self.model_history_data[base_iteration]['m_base_infeasibility']-\
+                        infeasibility_m
+            c_improvement_b = self.model_history_data[base_iteration]['b_base_infeasibility'] - \
+                              infeasibility_b
+            f_improvement_m = base_merit_m - merit_m
+            f_improvement_b = base_merit_b - merit_b
+            if (c_improvement_m < self.options['feasibility_tol'] and c_improvement_b > \
+                    self.options['feasibility_tol']):
+                if c_improvement_m < c_improvement_b*self.options['kappa_r']:
+                    selected='b'
+            if (f_improvement_m < self.options['stationarity_tol'] and f_improvement_b > \
+                    self.options['stationarity_tol']):
+                if f_improvement_m/sigma_m < f_improvement_b/sigma_b*self.options['kappa_r']:
+                    selected='b'
+            if selected == 'm':
+                filtered_input = filtered_input_m
+                self.model_history_data[self.iter_count]['base_merit'] = \
+                    self.model_history_data[self.iter_count]['m_base_merit']
+                self.model_history_data[self.iter_count]['merit'] = \
+                    self.model_history_data[self.iter_count]['m_merit']
+                self.model_history_data[self.iter_count-1]['selected_model'] = 1
+            elif selected == 'b':
+                filtered_input = filtered_input_b
+                self.model_history_data[self.iter_count]['base_merit'] = \
+                    self.model_history_data[self.iter_count]['b_base_merit']
+                self.model_history_data[self.iter_count]['merit'] = \
+                    self.model_history_data[self.iter_count]['b_merit']
+                self.model_history_data[self.iter_count-1]['selected_model'] = 2
+
+            # set specification and store input data
+            self.current_point = filtered_input
+            for k, v in self.current_point.items():
+                self.input_history_data[self.iter_count-1][k] = v
+
+            if self.spec_function is not None:
+                self.current_spec = self.spec_function.__call__(self.iter_count)
+                for k, v in self.current_spec.items():
+                    self.input_history_data[self.iter_count-1][k] = v
+
+            # implement the trial point
+            plant_trial_point_output = self.get_plant_simulation_result([filtered_input])[0]
+            obj_var_name = self.problem_description.symbol_list['OBJ']
+            obj = self.plant_history_data[self.iter_count][obj_var_name] / \
+                  self.problem_description.scaling_factors[obj_var_name]
+            self.plant_history_data[self.iter_count]['obj_for_merit'] = obj
+            infeasibility_sq = 0
+            for con_var_name in self.problem_description.symbol_list['CON']:
+                infeasibility_sq += max(self.plant_history_data[self.iter_count][con_var_name], 0) ** 2 / \
+                                    self.problem_description.scaling_factors[con_var_name] ** 2
+            infeasibility = numpy.sqrt(infeasibility_sq)
+            self.plant_history_data[self.iter_count]['infeasibility'] = infeasibility
+            merit = obj + infeasibility * self.sigma
+            self.plant_history_data[self.iter_count]['merit'] = merit
+            base_merit = self.plant_history_data[base_iteration]['base_obj_for_merit'] + \
+                         self.plant_history_data[base_iteration]['base_infeasibility'] * self.sigma
+            self.plant_history_data[self.iter_count]['base_merit'] = base_merit
+
+            # accept the trial point
+            flag_infeasible = False
+            for con_name in self.problem_description.symbol_list['CON']:
+                if plant_trial_point_output[con_name] > self.options['feasibility_tol']:
+                    flag_infeasible = True
+                    break
+            if self.model_history_data[self.iter_count]['base_merit'] < self.model_history_data[self.iter_count][
+                'merit']:
+                # Because the solver is not a global optimization solver, it is possible
+                # that the model merit function increases. In this case, we ask for backtracking.
+                self.model_history_data[self.iter_count - 1]['event'] = "model merit increases"
+                rho = -2
+                # if self.plant_history_data[base_iteration]['merit'] -\
+                #                self.plant_history_data[self.iter_count]['merit'] >0:
+                #     rho = 0.1
+                # else:
+                #     rho = -2
+            else:
+                if (not flag_infeasible) and \
+                        abs(self.plant_history_data[self.iter_count]['base_merit'] -
+                            self.plant_history_data[self.iter_count]['merit']) < self.options[
+                    'stationarity_tol']:
+                    iter_successful_flag = True
+                    self.model_history_data[self.iter_count - 1]['event'] = "plant converges"
+                    self.model_history_data[self.iter_count - 1]['rho'] = 1
+                    continue
+                else:
+                    if self.model_history_data[self.iter_count]['base_merit'] - \
+                            self.model_history_data[self.iter_count]['merit'] > 1e-6:
+                        rho = (self.plant_history_data[self.iter_count]['base_merit'] -
+                               self.plant_history_data[self.iter_count]['merit']) / \
+                              (self.model_history_data[self.iter_count]['base_merit'] -
+                               self.model_history_data[self.iter_count]['merit'])
+                    else:
+                        rho = (self.plant_history_data[self.iter_count]['base_merit'] -
+                               self.plant_history_data[self.iter_count]['merit']) / 1e-6
+            self.model_history_data[self.iter_count - 1]['rho'] = rho
+
+            # update trust-region radius
+            if rho < self.options["eta1"]:
+                gamma = self.options['gamma1']
+            elif rho < self.options["eta2"]:
+                gamma = self.options['gamma2']
+                iter_successful_flag = True
+            else:
+                gamma = self.options['gamma3']
+                iter_successful_flag = True
+            self.trust_radius *= gamma
+            if self.trust_radius < 1e-8:
+                self.trust_radius = 1e-8
+                self.model_history_data[self.iter_count - 1]['event'] = "trust region too small"
+            if self.trust_radius > self.options['max_trust_radius']:
+                self.trust_radius = self.options['max_trust_radius']
+                self.model_history_data[self.iter_count - 1]['event'] = "trust region too large"
+            self.model_history_data[self.iter_count - 1]['tr_adjusted'] = self.trust_radius
 

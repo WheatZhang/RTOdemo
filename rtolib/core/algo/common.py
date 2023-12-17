@@ -89,6 +89,17 @@ class Algorithm():
         for k, v in self.current_parameter_value.items():
             self.model_history_data[0][k] = v
 
+    def set_initial_backup_model_parameters(self, initial_parameter_value):
+        # set parameter
+        self.current_backup_parameter_value = {}
+        for p in self.backup_model_simulator.pyomo_model.parameters.keys():
+            if p in initial_parameter_value.keys():
+                self.current_backup_parameter_value[p] = initial_parameter_value[p]
+            else:
+                self.current_backup_parameter_value[p] = self.backup_model_simulator.pyomo_model.default_value[p]
+        for k, v in self.current_backup_parameter_value.items():
+            self.model_history_data[0]["b_"+k] = v
+
     def available_measurements(self):
         for k in self.problem_description.symbol_list['CV']:
             yield k
@@ -194,6 +205,10 @@ class Algorithm():
         for k, v in self.current_parameter_value.items():
             self.model_history_data[self.iter_count][k] = v
 
+    def store_backup_model_adaptation_data(self):
+        for k, v in self.current_backup_parameter_value.items():
+            self.model_history_data[self.iter_count]["b_"+k] = v
+
     def current_point_model_simulation(self, current_point):
         # get model simulation result with and without modifiers
         outputs, solve_status = self.model_simulator.simulate(current_point,
@@ -212,6 +227,21 @@ class Algorithm():
             if i == 0:
                 for k, v in outputs.items():
                     self.model_history_data[self.iter_count][k] = v
+
+            for k in self.available_measurements():
+                if k + '_unmodified' in outputs.keys():
+                    model_output_data[i][k] = outputs[k + '_unmodified']
+        return model_output_data
+
+    def get_backup_model_simulation_result(self, trial_points):
+        model_output_data = [{} for i in range(len(trial_points))]
+        for i, p in enumerate(trial_points):
+            outputs, solve_status = self.backup_model_simulator.simulate(p, param_values=self.current_backup_parameter_value,
+                                                                  use_homo=self.options["homotopy_simulation"])
+            # TODO:deal with solve status
+            if i == 0:
+                for k, v in outputs.items():
+                    self.model_history_data[self.iter_count]['b_'+k] = v
 
             for k in self.available_measurements():
                 if k + '_unmodified' in outputs.keys():
@@ -269,6 +299,16 @@ class MA_type_Algorithm(Algorithm):
             else:
                 if k[1] + "_" + k[0] + "_lam" not in self.skipped_modifiers:
                     self.current_parameter_value[k[1] + "_" + k[0] + "_lam"] = v
+
+    def update_modifiers_backup_model(self, plant_output_data, model_output_data):
+        modifiers = self.perturbation_method.calculate_modifiers(plant_output_data, model_output_data)
+        for k, v in modifiers.items():
+            if k[1] is None:
+                if k[0]+"_eps" not in self.skipped_modifiers:
+                    self.current_backup_parameter_value[k[0] + "_eps"] = v
+            else:
+                if k[1] + "_" + k[0] + "_lam" not in self.skipped_modifiers:
+                    self.current_backup_parameter_value[k[1] + "_" + k[0] + "_lam"] = v
 
 
 
