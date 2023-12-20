@@ -2,7 +2,7 @@ from pyomo.environ import ConcreteModel, Var, Objective, Expression,\
     TerminationCondition, value, SolverStatus, minimize, ConstraintList, Constraint,\
     NonNegativeReals, sqrt
 from rtolib.core.pyomo_model import PyomoModel, PyomoModelWithModifiers,\
-    PyomoModelSolvingStatus
+    ModelSolvingStatus
 from rtolib.core.black_box_model import BlackBoxModel, BlackBoxModelWithModifiers
 from rtolib.core.basic import ProblemDescription
 import rtolib.util.init_value as init_value
@@ -142,9 +142,9 @@ class PyomoOptimizer(Optimizer):
                 results.solver.termination_condition == TerminationCondition.optimal)):
             print("in solving original optimization problem")
             print(results.solver.termination_condition)
-            solve_status = PyomoModelSolvingStatus.OPTIMIZATION_FAILED
+            solve_status = ModelSolvingStatus.OPTIMIZATION_FAILED
         else:
-            solve_status = PyomoModelSolvingStatus.OK
+            solve_status = ModelSolvingStatus.OK
         inputs = {}
         for ip in self.pyomo_model.input_variables.keys():
             var = self.pyomo_model.input_variables[ip].__call__(self.model)
@@ -227,9 +227,9 @@ class TrustRegionOptimizer(PyomoOptimizer):
         if not ((results.solver.status == SolverStatus.ok) and (
                 results.solver.termination_condition == TerminationCondition.optimal)):
             print(results.solver.termination_condition)
-            solve_status = PyomoModelSolvingStatus.OPTIMIZATION_FAILED
+            solve_status = ModelSolvingStatus.OPTIMIZATION_FAILED
         else:
-            solve_status = PyomoModelSolvingStatus.OK
+            solve_status = ModelSolvingStatus.OK
         inputs = {}
         for ip in self.pyomo_model.input_variables.keys():
             var = self.pyomo_model.input_variables[ip].__call__(self.model)
@@ -353,9 +353,9 @@ class PenaltyTrustRegionOptimizer(PyomoOptimizer):
         if not ((results.solver.status == SolverStatus.ok) and (
                 results.solver.termination_condition == TerminationCondition.optimal)):
             print(results.solver.termination_condition)
-            solve_status = PyomoModelSolvingStatus.OPTIMIZATION_FAILED
+            solve_status = ModelSolvingStatus.OPTIMIZATION_FAILED
         else:
-            solve_status = PyomoModelSolvingStatus.OK
+            solve_status = ModelSolvingStatus.OK
         inputs = {}
         for ip in self.pyomo_model.input_variables.keys():
             var = self.pyomo_model.input_variables[ip].__call__(self.model)
@@ -474,9 +474,9 @@ class CompoStepTrustRegionOptimizer(PyomoOptimizer):
         if not ((results.solver.status == SolverStatus.ok) and (
                 results.solver.termination_condition == TerminationCondition.optimal)):
             print(results.solver.termination_condition)
-            solve_status = PyomoModelSolvingStatus.OPTIMIZATION_FAILED
+            solve_status = ModelSolvingStatus.OPTIMIZATION_FAILED
         else:
-            solve_status = PyomoModelSolvingStatus.OK
+            solve_status = ModelSolvingStatus.OK
 
         input_after_normal_step = {}
         for ip in self.pyomo_model.input_variables.keys():
@@ -499,9 +499,9 @@ class CompoStepTrustRegionOptimizer(PyomoOptimizer):
         if not ((results.solver.status == SolverStatus.ok) and (
                 results.solver.termination_condition == TerminationCondition.optimal)):
             print(results.solver.termination_condition)
-            solve_status = PyomoModelSolvingStatus.OPTIMIZATION_FAILED
+            solve_status = ModelSolvingStatus.OPTIMIZATION_FAILED
         else:
-            solve_status = PyomoModelSolvingStatus.OK
+            solve_status = ModelSolvingStatus.OK
 
         # return result
         inputs = {}
@@ -527,7 +527,7 @@ class BlackBoxOptimizer(Optimizer):
     def set_solver_options(self, options):
         raise NotImplementedError()
 
-class CompoStepTrustRegionBBMOptimizer(BlackBoxOptimizer)
+class CompoStepTrustRegionBBMOptimizer(BlackBoxOptimizer):
     '''
     Black box optimizer
     '''
@@ -542,20 +542,91 @@ class CompoStepTrustRegionBBMOptimizer(BlackBoxOptimizer)
         self.black_box_model.set_base_point(base_point)
 
     def set_solver_options(self, solution_method_name, options):
+        '''
+        :param solution_method_name:
+        :param options: For PSO:
+        options["population"]=50
+        options["max_iter"]=50
+        options["inertia"]=0.8
+        options["c1"]=0.5
+        options["c2"]=0.5
+
+        :return:
+        '''
         self.solution_method_name = solution_method_name
         self.options = options
 
-    def optimize(self, tr_radius, tr_base, xi_N):
+    def optimize(self, tr_radius, tr_base, xi_N, objective_scaling=1e3):
+        # get mv bounds
+        lb = []
+        ub = []
+        for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
+            lb.append(self.problem_description.bounds[mv_name][0])
+            ub.append(self.problem_description.bounds[mv_name][1])
+
         def normal_step_problem_obj(x):
             input_dict = {}
             for i,mv_name in enumerate(self.problem_description.symbol_list['MV']):
                 input_dict[mv_name] = x[i]
-
+            output_dict = self.black_box_model.simulate(input_dict)
+            infeasibility_sq = 0
             for con_var_name in self.problem_description.symbol_list['CON']:
+                infeasibility_sq+=(output_dict[con_var_name]/max(0,self.problem_description.scaling_factors[con_var_name]))**2
+            return infeasibility_sq
 
+        def normal_step_problem_tr_con(x):
+            radius_sq = 0
+            for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
+                radius_sq+=(x[i]-tr_base[mv_name])**2/(self.problem_description.scaling_factors[mv_name]**2)
+            return max(radius_sq-(tr_radius*xi_N)**2, 0)
 
-        # pop=population w=inertia
-        pso = PSO(func=obj_func, n_dim=2, pop=10, max_iter=50, lb=[0, 0], ub=[0.4, 100], \
-                  w=0.8, c1=0.5, c2=0.5, constraint_ueq=constraint_ueq)
-        pso.run()
-        print('best_x is ', pso.gbest_x, 'best_y is', pso.gbest_y)
+        # solve normal step optimization problem
+        pso_normal_problem = PSO(func=normal_step_problem_obj, n_dim=len(lb), pop=self.options['population'], \
+                                 max_iter=self.options["max_iter"], lb=lb, ub=ub, \
+                                 w=self.options["inertia"], c1=self.options["c1"], \
+                                 c2=self.options["c2"], constraint_ueq=(normal_step_problem_tr_con,))
+        pso_normal_problem.run()
+        x_after_normal_step = pso_normal_problem.gbest_x
+        tr_infeasibility_sq_after_normal_step = pso_normal_problem.gbest_y
+        input_after_normal_step = {}
+        for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
+            input_after_normal_step[mv_name] = x_after_normal_step[i]
+
+        def tangential_step_problem_obj(x):
+            input_dict = {}
+            for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
+                input_dict[mv_name] = x[i]
+            output_dict = self.black_box_model.simulate(input_dict)
+            return output_dict[self.problem_description.symbol_list['OBJ']]*objective_scaling
+
+        def tangential_step_problem_c_con(x):
+            input_dict = {}
+            for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
+                input_dict[mv_name] = x[i]
+            output_dict = self.black_box_model.simulate(input_dict)
+            infeasibility_sq = 0
+            for con_var_name in self.problem_description.symbol_list['CON']:
+                infeasibility_sq += (output_dict[con_var_name] / max(0,
+                                 self.problem_description.scaling_factors[con_var_name]))**2
+            return max(infeasibility_sq-tr_infeasibility_sq_after_normal_step, 0)
+
+        def tangential_step_problem_tr_con(x):
+            radius_sq = 0
+            for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
+                radius_sq += (x[i] - tr_base[mv_name]) ** 2 / (self.problem_description.scaling_factors[mv_name] ** 2)
+            return max(radius_sq - tr_radius ** 2, 0)
+
+        # solve tangential step optimization problem
+        pso_normal_problem = PSO(func=tangential_step_problem_obj, n_dim=len(lb), pop=self.options['population'], \
+                                 max_iter=self.options["max_iter"], lb=lb, ub=ub, \
+                                 w=self.options["inertia"], c1=self.options["c1"], \
+                                 c2=self.options["c2"], constraint_ueq=(tangential_step_problem_c_con,\
+                                                                        tangential_step_problem_tr_con))
+        pso_normal_problem.run()
+        x_after_tangential_step = pso_normal_problem.gbest_x
+        inputs = {}
+        for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
+            inputs[mv_name] = x_after_tangential_step[i]
+
+        solve_status = ModelSolvingStatus.OK
+        return inputs, input_after_normal_step, solve_status

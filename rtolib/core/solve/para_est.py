@@ -1,7 +1,7 @@
 from pyomo.environ import ConcreteModel, Var, Objective, Constraint,\
     TerminationCondition, value, SolverStatus, RangeSet, ConstraintList, Block
 from rtolib.core.pyomo_model import PyomoModel, PyomoModelWithModifiers,\
-    PyomoModelSolvingStatus
+    ModelSolvingStatus
 from rtolib.core.basic import ProblemDescription
 import rtolib.util.init_value as init_value
 
@@ -207,12 +207,12 @@ class PyomoMultiDataPointParamEstimator(ParameterEstimator):
                 if not ((results.solver.status == SolverStatus.ok) and (
                         results.solver.termination_condition == TerminationCondition.optimal)):
                     print(results.solver.termination_condition)
-                    solve_status = PyomoModelSolvingStatus.OPTIMIZATION_FAILED
+                    solve_status = ModelSolvingStatus.OPTIMIZATION_FAILED
                 else:
                     if use_homo and value(block.homotopy_simulation_obj) > 1e-4:
-                        solve_status = PyomoModelSolvingStatus.HOMOTOPY_TARGET_NOT_REACHED
+                        solve_status = ModelSolvingStatus.HOMOTOPY_TARGET_NOT_REACHED
                     else:
-                        solve_status = PyomoModelSolvingStatus.OK
+                        solve_status = ModelSolvingStatus.OK
                 #TODO: deal with solve_status
 
                 # print(solve_status)
@@ -258,7 +258,7 @@ class PyomoMultiDataPointParamEstimator(ParameterEstimator):
         if not ((results.solver.status == SolverStatus.ok) and (
                 results.solver.termination_condition == TerminationCondition.optimal)):
             print(results.solver.termination_condition)
-            solve_status = PyomoModelSolvingStatus.OPTIMIZATION_FAILED
+            solve_status = ModelSolvingStatus.OPTIMIZATION_FAILED
 
             return para_backup
         else:

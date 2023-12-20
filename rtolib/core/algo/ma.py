@@ -242,7 +242,7 @@ class ModifierAdaptationTR(ModifierAdaptation):
             self.model_history_data[self.iter_count]['tr'] = self.trust_radius
             optimized_input, solve_status = self.optimize_for_u(self.trust_radius, tr_base)
 
-            if solve_status == PyomoModelSolvingStatus.OPTIMIZATION_FAILED:
+            if solve_status == ModelSolvingStatus.OPTIMIZATION_FAILED:
                 # starting point infeasible
                 self.set_current_point(self.current_point)
                 self.iter_count += 1
@@ -505,7 +505,7 @@ class ModifierAdaptationPenaltyTR(ModifierAdaptationTR):
             except Exception as e:
                 optimized_input = self.current_point
                 self.model_history_data[self.iter_count]['event'] = "optimization failed"
-            if solve_status == PyomoModelSolvingStatus.OPTIMIZATION_FAILED:
+            if solve_status == ModelSolvingStatus.OPTIMIZATION_FAILED:
                 optimized_input = self.current_point
                 self.model_history_data[self.iter_count]['event'] = "optimization failed"
 
@@ -762,7 +762,7 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
             except Exception as e:
                 optimized_input = self.current_point
                 self.model_history_data[self.iter_count]['event'] = "optimization failed"
-            if solve_status == PyomoModelSolvingStatus.OPTIMIZATION_FAILED:
+            if solve_status == ModelSolvingStatus.OPTIMIZATION_FAILED:
                 optimized_input = self.current_point
                 self.model_history_data[self.iter_count]['event'] = "optimization failed"
 
@@ -1179,7 +1179,7 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                 optimized_input_m = self.current_point
                 input_after_normal_step_m = self.current_point
                 self.model_history_data[self.iter_count]['event'] = "primary optimization failed"
-            # if solve_status_m == PyomoModelSolvingStatus.OPTIMIZATION_FAILED:
+            # if solve_status_m == ModelSolvingStatus.OPTIMIZATION_FAILED:
             #     optimized_input_m = self.current_point
             #     input_after_normal_step_m = self.current_point
             #     self.model_history_data[self.iter_count]['event'] = "primary optimization failed"
@@ -1189,7 +1189,7 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                 input_after_normal_step_b = self.current_point
                 optimized_input_b = self.current_point
                 self.model_history_data[self.iter_count]['event'] = "backup optimization failed"
-            if solve_status_b == PyomoModelSolvingStatus.OPTIMIZATION_FAILED:
+            if solve_status_b == ModelSolvingStatus.OPTIMIZATION_FAILED:
                 input_after_normal_step_b = self.current_point
                 optimized_input_b = self.current_point
                 self.model_history_data[self.iter_count]['event'] = "backup optimization failed"

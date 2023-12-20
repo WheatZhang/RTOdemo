@@ -5,13 +5,14 @@ from rtolib.util.misc import get_attr_function, modified_output_function
 import copy
 from enum import Enum
 
-__name__ = ['PyomoModelSolvingStatus','PyomoModel',
+__name__ = ['ModelSolvingStatus','PyomoModel',
            'ModifierType','PyomoModelWithModifiers']
 
-class PyomoModelSolvingStatus(Enum):
+class ModelSolvingStatus(Enum):
     OK = 1
     HOMOTOPY_TARGET_NOT_REACHED = 2
     OPTIMIZATION_FAILED = 3
+    PREMATURE_RESULT = 4
     OTHER = 0
 
 

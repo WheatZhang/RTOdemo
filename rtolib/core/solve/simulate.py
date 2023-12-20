@@ -1,7 +1,7 @@
 from pyomo.environ import ConcreteModel, Var, Objective, Constraint, Expression,\
     TerminationCondition, value, SolverStatus
 from rtolib.core.pyomo_model import PyomoModel, PyomoModelWithModifiers,\
-    PyomoModelSolvingStatus
+    ModelSolvingStatus
 from rtolib.core.basic import ProblemDescription
 import rtolib.util.init_value as init_value
 
@@ -114,12 +114,12 @@ class PyomoSimulator(Simulator):
                 results.solver.termination_condition == TerminationCondition.optimal)):
             print(results.solver.termination_condition)
             # self.model.display(r"F:\Research\RTOdemo\debug\WO\result\display.txt")
-            solve_status = PyomoModelSolvingStatus.OPTIMIZATION_FAILED
+            solve_status = ModelSolvingStatus.OPTIMIZATION_FAILED
         else:
             if use_homo and value(self.model.homotopy_simulation_obj) >1e-4:
-                solve_status = PyomoModelSolvingStatus.HOMOTOPY_TARGET_NOT_REACHED
+                solve_status = ModelSolvingStatus.HOMOTOPY_TARGET_NOT_REACHED
             else:
-                solve_status = PyomoModelSolvingStatus.OK
+                solve_status = ModelSolvingStatus.OK
         outputs = {}
         for op in self.pyomo_model.output_variables.keys():
             var = self.pyomo_model.output_variables[op].__call__(self.model)

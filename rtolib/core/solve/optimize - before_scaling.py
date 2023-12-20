@@ -2,7 +2,7 @@ from pyomo.environ import ConcreteModel, Var, Objective, Expression,\
     TerminationCondition, value, SolverStatus, minimize, ConstraintList, Constraint,\
     NonNegativeReals, sqrt
 from rtolib.core.pyomo_model import PyomoModel, PyomoModelWithModifiers,\
-    PyomoModelSolvingStatus
+    ModelSolvingStatus
 from rtolib.core.basic import ProblemDescription
 import rtolib.util.init_value as init_value
 import numpy
@@ -136,9 +136,9 @@ class PyomoOptimizer(Optimizer):
         if not ((results.solver.status == SolverStatus.ok) and (
                 results.solver.termination_condition == TerminationCondition.optimal)):
             print(results.solver.termination_condition)
-            solve_status = PyomoModelSolvingStatus.OPTIMIZATION_FAILED
+            solve_status = ModelSolvingStatus.OPTIMIZATION_FAILED
         else:
-            solve_status = PyomoModelSolvingStatus.OK
+            solve_status = ModelSolvingStatus.OK
         inputs = {}
         for ip in self.pyomo_model.input_variables.keys():
             var = self.pyomo_model.input_variables[ip].__call__(self.model)
@@ -221,9 +221,9 @@ class TrustRegionOptimizer(PyomoOptimizer):
         if not ((results.solver.status == SolverStatus.ok) and (
                 results.solver.termination_condition == TerminationCondition.optimal)):
             print(results.solver.termination_condition)
-            solve_status = PyomoModelSolvingStatus.OPTIMIZATION_FAILED
+            solve_status = ModelSolvingStatus.OPTIMIZATION_FAILED
         else:
-            solve_status = PyomoModelSolvingStatus.OK
+            solve_status = ModelSolvingStatus.OK
         inputs = {}
         for ip in self.pyomo_model.input_variables.keys():
             var = self.pyomo_model.input_variables[ip].__call__(self.model)
@@ -346,9 +346,9 @@ class PenaltyTrustRegionOptimizer(PyomoOptimizer):
         if not ((results.solver.status == SolverStatus.ok) and (
                 results.solver.termination_condition == TerminationCondition.optimal)):
             print(results.solver.termination_condition)
-            solve_status = PyomoModelSolvingStatus.OPTIMIZATION_FAILED
+            solve_status = ModelSolvingStatus.OPTIMIZATION_FAILED
         else:
-            solve_status = PyomoModelSolvingStatus.OK
+            solve_status = ModelSolvingStatus.OK
         inputs = {}
         for ip in self.pyomo_model.input_variables.keys():
             var = self.pyomo_model.input_variables[ip].__call__(self.model)
@@ -467,9 +467,9 @@ class CompoStepTrustRegionOptimizer(PyomoOptimizer):
         if not ((results.solver.status == SolverStatus.ok) and (
                 results.solver.termination_condition == TerminationCondition.optimal)):
             print(results.solver.termination_condition)
-            solve_status = PyomoModelSolvingStatus.OPTIMIZATION_FAILED
+            solve_status = ModelSolvingStatus.OPTIMIZATION_FAILED
         else:
-            solve_status = PyomoModelSolvingStatus.OK
+            solve_status = ModelSolvingStatus.OK
 
         # trust-region optimization - tangential step
         getattr(self.model, "tr_radius").fix(tr_radius)
@@ -487,9 +487,9 @@ class CompoStepTrustRegionOptimizer(PyomoOptimizer):
         if not ((results.solver.status == SolverStatus.ok) and (
                 results.solver.termination_condition == TerminationCondition.optimal)):
             print(results.solver.termination_condition)
-            solve_status = PyomoModelSolvingStatus.OPTIMIZATION_FAILED
+            solve_status = ModelSolvingStatus.OPTIMIZATION_FAILED
         else:
-            solve_status = PyomoModelSolvingStatus.OK
+            solve_status = ModelSolvingStatus.OK
 
         # return result
         inputs = {}
