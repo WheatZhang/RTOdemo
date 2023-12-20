@@ -1,0 +1,96 @@
+Model unknown
+
+  Variables:
+    Ka : Size=2, Index=Reactions
+        Key : Lower            : Value              : Upper            : Fixed : Stale : Domain
+          1 :      109450000.0 :  328349903.7133066 :      328350000.0 :  True :  True :  Reals
+          2 : 21550000000000.0 : 21550005699572.574 : 64650000000000.0 :  True :  True :  Reals
+    Kb : Size=2, Index=Reactions
+        Key : Lower  : Value              : Upper              : Fixed : Stale : Domain
+          1 : 4038.8 :  8362.047715681374 : 12116.400000000001 :  True :  True :  Reals
+          2 : 6219.0 : 12435.127220800552 :            18657.0 :  True :  True :  Reals
+    Fb : Size=1, Index=None
+        Key  : Lower : Value             : Upper : Fixed : Stale : Domain
+        None :     3 : 4.985237680809851 :     6 : False : False : NonNegativeReals
+    Tr : Size=1, Index=None
+        Key  : Lower : Value             : Upper : Fixed : Stale : Domain
+        None :    70 : 89.96337199450349 :   100 : False : False :  Reals
+    Fr : Size=1, Index=None
+        Key  : Lower : Value             : Upper : Fixed : Stale : Domain
+        None :     0 : 6.812737680809851 :  None : False : False : NonNegativeReals
+    XFr : Size=6, Index=Components
+        Key : Lower : Value                  : Upper : Fixed : Stale : Domain
+          A :     0 :    0.08757371038504787 :     1 : False : False :  Reals
+          B :     0 :     0.4054482466000299 :     1 : False : False :  Reals
+          C :     0 : -1.716590618797901e-44 :     1 : False : False :  Reals
+          E :     0 :      0.291260840106249 :     1 : False : False :  Reals
+          G :     0 :    0.10513017428332318 :     1 : False : False :  Reals
+          P :     0 :     0.1105870286253501 :     1 : False : False :  Reals
+    K : Size=2, Index=Reactions
+        Key : Lower : Value                : Upper : Fixed : Stale : Domain
+          1 :  None : 0.032739878643593526 :  None : False : False :  Reals
+          2 :  None : 0.028884332138125347 :  None : False : False :  Reals
+    profit_eps : Size=1, Index=None
+        Key  : Lower : Value : Upper : Fixed : Stale : Domain
+        None :  None :     0 :  None :  True :  True :  Reals
+    Tr_profit_lam : Size=1, Index=None
+        Key  : Lower : Value : Upper : Fixed : Stale : Domain
+        None :  None :     0 :  None :  True :  True :  Reals
+    Fb_profit_lam : Size=1, Index=None
+        Key  : Lower : Value : Upper : Fixed : Stale : Domain
+        None :  None :     0 :  None :  True :  True :  Reals
+    Tr_base : Size=1, Index=None
+        Key  : Lower : Value             : Upper : Fixed : Stale : Domain
+        None :  None : 89.96337248690266 :  None :  True : False :  Reals
+    Fb_base : Size=1, Index=None
+        Key  : Lower : Value             : Upper : Fixed : Stale : Domain
+        None :  None : 4.785237776372481 :  None :  True : False :  Reals
+    Fb_homo : Size=1, Index=None
+        Key  : Lower : Value              : Upper : Fixed : Stale : Domain
+        None :  None : 4.9852377763724816 :  None :  True :  True :  Reals
+    Tr_homo : Size=1, Index=None
+        Key  : Lower : Value             : Upper : Fixed : Stale : Domain
+        None :  None : 89.96337248690266 :  None :  True :  True :  Reals
+    Ka1_homo : Size=1, Index=None
+        Key  : Lower : Value             : Upper : Fixed : Stale : Domain
+        None :  None : 328349903.7133066 :  None :  True :  True :  Reals
+    Ka2_homo : Size=1, Index=None
+        Key  : Lower : Value              : Upper : Fixed : Stale : Domain
+        None :  None : 21550005699572.574 :  None :  True :  True :  Reals
+    Kb1_homo : Size=1, Index=None
+        Key  : Lower : Value             : Upper : Fixed : Stale : Domain
+        None :  None : 8362.047715681374 :  None :  True :  True :  Reals
+    Kb2_homo : Size=1, Index=None
+        Key  : Lower : Value              : Upper : Fixed : Stale : Domain
+        None :  None : 12435.127220800552 :  None :  True :  True :  Reals
+    profit_eps_homo : Size=1, Index=None
+        Key  : Lower : Value : Upper : Fixed : Stale : Domain
+        None :  None :     0 :  None :  True :  True :  Reals
+    Tr_profit_lam_homo : Size=1, Index=None
+        Key  : Lower : Value : Upper : Fixed : Stale : Domain
+        None :  None :     0 :  None :  True :  True :  Reals
+    Fb_profit_lam_homo : Size=1, Index=None
+        Key  : Lower : Value : Upper : Fixed : Stale : Domain
+        None :  None :     0 :  None :  True :  True :  Reals
+
+  Objectives:
+    homotopy_simulation_obj : Size=1, Index=None, Active=True
+        Key  : Active : Value
+        None :   True : 1.1556785780230293e-16
+
+  Constraints:
+    react_massblnc : Size=6
+        Key : Lower : Body                    : Upper
+          A :   0.0 :   2.498001805406602e-16 :   0.0
+          B :   0.0 :  2.7755575615628914e-17 :   0.0
+          C :   0.0 :   1.169468159120916e-43 :   0.0
+          E :   0.0 :  -6.661338147750939e-16 :   0.0
+          G :   0.0 : -1.1102230246251565e-16 :   0.0
+          P :   0.0 : -3.3306690738754696e-16 :   0.0
+    overall_massblnc : Size=1
+        Key  : Lower : Body                   : Upper
+        None :   0.0 : -8.881784197001252e-16 :   0.0
+    kinetic_coff : Size=2
+        Key : Lower : Body                  : Upper
+          1 :   0.0 : 3.469446951953614e-16 :   0.0
+          2 :   0.0 : -1.97758476261356e-15 :   0.0

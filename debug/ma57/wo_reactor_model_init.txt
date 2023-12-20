@@ -1,0 +1,40 @@
+Fb	4
+
+Fb0	4.77
+
+Fr	5
+
+K
+Reactions
+1	0.1
+2	0.1
+
+Ka
+Reactions
+1	218900000.0
+2	43100000000000.0
+
+Kb
+Reactions
+1	8077.6
+2	12438
+
+Tr	90
+
+Tr0	78.2
+
+XFr
+Components
+A	None
+B	None
+C	None
+E	None
+G	None
+P	None
+
+phi_0th_term	0
+
+phi_1st_Fb_term	0
+
+phi_1st_Tr_term	0
+

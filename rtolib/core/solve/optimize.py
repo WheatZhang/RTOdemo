@@ -3,9 +3,11 @@ from pyomo.environ import ConcreteModel, Var, Objective, Expression,\
     NonNegativeReals, sqrt
 from rtolib.core.pyomo_model import PyomoModel, PyomoModelWithModifiers,\
     PyomoModelSolvingStatus
+from rtolib.core.black_box_model import BlackBoxModel, BlackBoxModelWithModifiers
 from rtolib.core.basic import ProblemDescription
 import rtolib.util.init_value as init_value
 import numpy
+from sko.PSO import PSO
 
 
 class Optimizer():
@@ -507,3 +509,53 @@ class CompoStepTrustRegionOptimizer(PyomoOptimizer):
             var = self.pyomo_model.input_variables[ip].__call__(self.model)
             inputs[ip] = value(var)
         return inputs, input_after_normal_step, solve_status
+
+
+class BlackBoxOptimizer(Optimizer):
+    def __init__(self, black_box_model):
+        assert isinstance(black_box_model, BlackBoxModel)
+        self.black_box_model = black_box_model
+    def build(self, problem_description):
+        raise NotImplementedError()
+
+    def optimize(self):
+        raise NotImplementedError()
+
+    def set_base_point(self, base_point):
+        raise NotImplementedError()
+
+    def set_solver_options(self, options):
+        raise NotImplementedError()
+
+class CompoStepTrustRegionBBMOptimizer(BlackBoxOptimizer)
+    '''
+    Black box optimizer
+    '''
+    def build(self, problem_description):
+        assert isinstance(problem_description, ProblemDescription)
+        self.problem_description = problem_description
+        self.black_box_model.build()
+
+    def set_base_point(self, base_point):
+        if not isinstance(self.black_box_model, BlackBoxModelWithModifiers):
+            raise AttributeError('this model does not have base point')
+        self.black_box_model.set_base_point(base_point)
+
+    def set_solver_options(self, solution_method_name, options):
+        self.solution_method_name = solution_method_name
+        self.options = options
+
+    def optimize(self, tr_radius, tr_base, xi_N):
+        def normal_step_problem_obj(x):
+            input_dict = {}
+            for i,mv_name in enumerate(self.problem_description.symbol_list['MV']):
+                input_dict[mv_name] = x[i]
+
+            for con_var_name in self.problem_description.symbol_list['CON']:
+
+
+        # pop=population w=inertia
+        pso = PSO(func=obj_func, n_dim=2, pop=10, max_iter=50, lb=[0, 0], ub=[0.4, 100], \
+                  w=0.8, c1=0.5, c2=0.5, constraint_ueq=constraint_ueq)
+        pso.run()
+        print('best_x is ', pso.gbest_x, 'best_y is', pso.gbest_y)

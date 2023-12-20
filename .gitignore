@@ -1,4 +1,3 @@
-/debug/
 /external/
 /rtolib/model/penicillin/
 /rtolib/model/quadratic/
@@ -7,3 +6,4 @@
 **/data/
 /example/TR/data/
 /example/TR/pic/
+/debug/air_sep_ex/

@@ -1,0 +1,14 @@
+#===================================
+#
+#      Optimization Spec
+#
+#===================================
+#	OptimizerName		InitValue			NameInFuQiWenThesis
+#	FeedMFlow		4030.7598214285717	FEED
+#	FeedSplitterOut1Ratio	0.184			TA Frac
+#	FeedSplitterOut2Ratio	0.5170000000000001	MA_Frac
+#	HPCCondPrdtMFlow	1381.0500000000002	40-LIN
+#	LPCExt46MFlow		1750.8401785714286	52-WN
+#	LPCExt15MFlow		647.4299107142858	47-ARC
+#	ASCCondRefRatio		27.9663			ASC_Reflux
+#	OxSplitterOutARatio	0.8980740937650191	LOX_Frac

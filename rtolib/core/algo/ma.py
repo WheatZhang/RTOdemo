@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 import numpy
+import numpy as np
 
 from rtolib.core.algo.common import MA_type_Algorithm
 from rtolib.core.pyomo_model import *
@@ -10,6 +11,9 @@ import copy
 from rtolib.util.init_value import to_template, load_init_from_template
 
 
+# TODO: solver parameter tuning
+# TODO: each solver should be seperate
+# TODO: fallback policy
 class ModifierAdaptation(MA_type_Algorithm):
 
     def set_problem(self, problem_description,
@@ -60,8 +64,6 @@ class ModifierAdaptation(MA_type_Algorithm):
         self.model_optimizer.build(self.problem_description)
 
         # set solver
-        # TODO: solver parameter tuning
-        # TODO: each solver should be seperate
         default_options={'max_iter':500,
                          "tol":1e-10}
         solver1 = SolverFactory('ipopt', executable=self.solver_executable)
@@ -182,7 +184,6 @@ class ModifierAdaptationTR(ModifierAdaptation):
         optimized_input, solve_status = self.model_optimizer.optimize(input_values, tr_radius, tr_base,
                                                                       param_values=self.current_parameter_value,
                                                                       use_homo=self.options["homotopy_optimization"])
-        # TODO:deal with solve status, fallback strategy
         return optimized_input, solve_status
 
     def initialize_simulation(self, starting_point, initial_parameter_value):
@@ -368,7 +369,6 @@ class ModifierAdaptationMaxTR(ModifierAdaptation):
         optimized_input, solve_status = self.model_optimizer.optimize(input_values, self.options['max_trust_radius'], tr_base,
                                                                       param_values=self.current_parameter_value,
                                                                       use_homo=self.options["homotopy_optimization"])
-        # TODO:deal with solve status, fallback strategy
         return optimized_input, solve_status
 
 
@@ -898,6 +898,25 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
                 self.model_history_data[self.iter_count - 1]['event'] = "trust region too large"
             self.model_history_data[self.iter_count-1]['tr_adjusted'] = self.trust_radius
 
+    def project_to_trust_region(self, optimized_input, current_point, trust_radius):
+        norm = self.length_of_the_trial_step(optimized_input, current_point)
+        if norm < trust_radius:
+            ret=optimized_input
+        else:
+            coeff = trust_radius/norm
+            ret = {}
+            for mv in mvs:
+                ret[mv]=current_point[mv]+(optimized_input[mv]-current_point[mv])*coeff
+        return ret
+
+    def length_of_the_trial_step(self, optimized_input, current_point):
+        mvs = self.problem_description.symbol_list['MV']
+        norm = 0
+        for mv in mvs:
+            norm += ((optimized_input[mv] - current_point[mv]) / self.problem_description.scaling_factors[mv]) ** 2
+        norm = np.sqrt(norm)
+        return norm
+
 
 class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
     def set_problem(self, problem_description,
@@ -939,8 +958,6 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
         self.backup_model_optimizer.build(self.problem_description)
 
         # set solver
-        # TODO: solver parameter tuning
-        # TODO: each solver should be seperate
         default_options={'max_iter':500,
                          "tol":1e-10}
         solver4 = SolverFactory('ipopt', executable=self.solver_executable)
@@ -953,11 +970,16 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
         # set basepoint
         self.backup_model_simulator.set_base_point(self.current_point)
         self.backup_model_optimizer.set_base_point(self.current_point)
+
+        # set trust radius for the backup problem
+        self.trust_radius_backup = self.options["initial_trust_radius"]
     def register_option(self):
         super().register_option()
         self.available_options["kappa_r"] = ("[0,1]", 0.5)
+        self.available_options["separate_tr_management"] = ("bool", False)
 
     def optimize_for_u(self, tr_radius, tr_base):
+        print("primary model opt")
         return super().optimize_for_u(tr_radius, tr_base)
 
     def optimize_for_u_backup_model(self, tr_radius, tr_base):
@@ -969,6 +991,7 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
         if self.spec_function is not None:
             for k, v in self.current_spec.items():
                 input_values[k] = v
+        print("backup model opt")
         optimized_input, input_after_normal_step, solve_status = self.backup_model_optimizer.optimize(input_values, tr_radius,
                                                                                                tr_base,
                                                                                                self.options['xi_N'],
@@ -986,8 +1009,9 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
         if self.iter_count == 1:
             # If we want to add some print information, do it here.
             self.model_history_data[1]['rho'] = ""
+            self.model_history_data[1]['rho_b'] = ""
             self.model_history_data[1]['tr'] = ""
-            self.model_history_data[1]['tr_adjusted'] = ""
+            self.model_history_data[1]['tr_b'] = ""
             self.model_history_data[1]['event'] = ""
             obj_var_name = self.problem_description.symbol_list['OBJ']
             self.model_history_data[1]['base_'+obj_var_name] = ""
@@ -1140,19 +1164,27 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
 
         while (not iter_successful_flag):
             self.model_history_data[self.iter_count]['tr'] = self.trust_radius
+            self.model_history_data[self.iter_count]['tr_b'] = self.trust_radius_backup
             # calculate the optimal input
+            # tr_base equals self.current_point
             try:
                 optimized_input_m, input_after_normal_step_m, solve_status_m = self.optimize_for_u(self.trust_radius, tr_base)
+                optimized_input_m = self.project_to_trust_region(optimized_input_m, self.current_point, self.trust_radius)
+                input_after_normal_step_m = self.project_to_trust_region(input_after_normal_step_m, self.current_point, self.trust_radius)
+                from rtolib.util.misc import distance_of_two_dicts
+                print("in optimization")
+                print(self.trust_radius)
+                # print(distance_of_two_dicts(optimized_input_m, self.current_point))
             except Exception as e:
                 optimized_input_m = self.current_point
                 input_after_normal_step_m = self.current_point
                 self.model_history_data[self.iter_count]['event'] = "primary optimization failed"
-            if solve_status_m == PyomoModelSolvingStatus.OPTIMIZATION_FAILED:
-                optimized_input_m = self.current_point
-                input_after_normal_step_m = self.current_point
-                self.model_history_data[self.iter_count]['event'] = "primary optimization failed"
+            # if solve_status_m == PyomoModelSolvingStatus.OPTIMIZATION_FAILED:
+            #     optimized_input_m = self.current_point
+            #     input_after_normal_step_m = self.current_point
+            #     self.model_history_data[self.iter_count]['event'] = "primary optimization failed"
             try:
-                optimized_input_b, input_after_normal_step_b, solve_status_b = self.optimize_for_u_backup_model(self.trust_radius, tr_base)
+                optimized_input_b, input_after_normal_step_b, solve_status_b = self.optimize_for_u_backup_model(self.trust_radius_backup, tr_base)
             except Exception as e:
                 input_after_normal_step_b = self.current_point
                 optimized_input_b = self.current_point
@@ -1181,6 +1213,9 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
             if self.options['adaptive_sigma']:
                 # check sigma is large enough
                 # the primary model part
+                from rtolib.util.misc import distance_of_two_dicts
+                # print("in adapting sigma")
+                # print(distance_of_two_dicts(filtered_input_m, self.current_point))
                 model_trial_point_output_m = self.get_model_simulation_result([filtered_input_m])[0]
                 obj_var_name = self.problem_description.symbol_list['OBJ']
                 obj_after_optimization_m = self.model_history_data[self.iter_count][obj_var_name] / \
@@ -1191,6 +1226,7 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                                         self.problem_description.scaling_factors[con_var_name] ** 2
                 infeasibility_m = numpy.sqrt(infeasibility_sq_m)
                 merit_m = obj_after_optimization_m + infeasibility_m * self.sigma
+                print(base_iteration)
                 base_infeasibility_m = self.model_history_data[base_iteration]['m_base_infeasibility']
                 base_obj_m = self.model_history_data[base_iteration]['m_base_obj_for_merit']
                 base_merit_m = base_obj_m + base_infeasibility_m * self.sigma
@@ -1251,6 +1287,9 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
 
             # model selection
             # calculate relevent data from the primary model
+            # from rtolib.util.misc import distance_of_two_dicts
+            # print("in model switching")
+            # print(distance_of_two_dicts(filtered_input_m, self.current_point)) # it becomes 0?!
             model_trial_point_output_m = self.get_model_simulation_result([filtered_input_m])[0]
             obj_var_name = self.problem_description.symbol_list['OBJ']
             obj_m = self.model_history_data[self.iter_count][obj_var_name] / \
@@ -1294,12 +1333,16 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                               infeasibility_b
             f_improvement_m = base_merit_m - merit_m
             f_improvement_b = base_merit_b - merit_b
+            if self.iter_count > 20:
+                print("here")
             if (c_improvement_m < self.options['feasibility_tol'] and c_improvement_b > \
-                    self.options['feasibility_tol']):
+                    self.options['feasibility_tol']) or \
+                    (c_improvement_m < -self.options['feasibility_tol'] and c_improvement_b >0):
                 if c_improvement_m < c_improvement_b*self.options['kappa_r']:
                     selected='b'
             if (f_improvement_m < self.options['stationarity_tol'] and f_improvement_b > \
-                    self.options['stationarity_tol']):
+                    self.options['stationarity_tol']) or \
+                    (f_improvement_m < -self.options['stationarity_tol'] and f_improvement_b >0):
                 if f_improvement_m/sigma_m < f_improvement_b/sigma_b*self.options['kappa_r']:
                     selected='b'
             if selected == 'm':
@@ -1309,6 +1352,7 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                 self.model_history_data[self.iter_count]['merit'] = \
                     self.model_history_data[self.iter_count]['m_merit']
                 self.model_history_data[self.iter_count-1]['selected_model'] = 1
+                self.sigma = sigma_m
             elif selected == 'b':
                 filtered_input = filtered_input_b
                 self.model_history_data[self.iter_count]['base_merit'] = \
@@ -1316,8 +1360,10 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                 self.model_history_data[self.iter_count]['merit'] = \
                     self.model_history_data[self.iter_count]['b_merit']
                 self.model_history_data[self.iter_count-1]['selected_model'] = 2
+                self.sigma = sigma_b
 
             # set specification and store input data
+            len_trial_step = self.length_of_the_trial_step(filtered_input, self.current_point)
             self.current_point = filtered_input
             for k, v in self.current_point.items():
                 self.input_history_data[self.iter_count-1][k] = v
@@ -1345,59 +1391,175 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                          self.plant_history_data[base_iteration]['base_infeasibility'] * self.sigma
             self.plant_history_data[self.iter_count]['base_merit'] = base_merit
 
+            # calculate the merit function for the two models using the new sigma
+            model_trial_point_output_m = self.get_model_simulation_result([filtered_input])[0]
+            obj_var_name = self.problem_description.symbol_list['OBJ']
+            obj_m = self.model_history_data[self.iter_count][obj_var_name] / \
+                    self.problem_description.scaling_factors[obj_var_name]
+            self.model_history_data[self.iter_count]['m_obj_for_merit'] = obj_m
+            infeasibility_sq_m = 0
+            for con_var_name in self.problem_description.symbol_list['CON']:
+                infeasibility_sq_m += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
+                                      self.problem_description.scaling_factors[con_var_name] ** 2
+            infeasibility_m = numpy.sqrt(infeasibility_sq_m)
+            self.model_history_data[self.iter_count]['m_infeasibility'] = infeasibility_m
+            merit_m = obj_m + infeasibility_m * self.sigma
+            self.model_history_data[self.iter_count]['m_merit'] = merit_m
+            base_merit_m = self.model_history_data[base_iteration]['m_base_obj_for_merit'] + \
+                           self.model_history_data[base_iteration]['m_base_infeasibility'] * self.sigma
+            self.model_history_data[self.iter_count]['m_base_merit'] = base_merit_m
+
+            # calculate relevent data from the backup model
+            model_trial_point_output_b = self.get_backup_model_simulation_result([filtered_input])[0]
+            obj_var_name = self.problem_description.symbol_list['OBJ']
+            obj_b = self.model_history_data[self.iter_count]['b_' + obj_var_name] / \
+                    self.problem_description.scaling_factors[obj_var_name]
+            self.model_history_data[self.iter_count]['b_obj_for_merit'] = obj_b
+            infeasibility_sq_b = 0
+            for con_var_name in self.problem_description.symbol_list['CON']:
+                infeasibility_sq_b += max(self.model_history_data[self.iter_count]['b_' + con_var_name], 0) ** 2 / \
+                                      self.problem_description.scaling_factors[con_var_name] ** 2
+            infeasibility_b = numpy.sqrt(infeasibility_sq_b)
+            self.model_history_data[self.iter_count]['b_infeasibility'] = infeasibility_b
+            merit_b = obj_b + infeasibility_b * self.sigma
+            self.model_history_data[self.iter_count]['b_merit'] = merit_b
+            base_merit_b = self.model_history_data[base_iteration]['b_base_obj_for_merit'] + \
+                           self.model_history_data[base_iteration]['b_base_infeasibility'] * self.sigma
+            self.model_history_data[self.iter_count]['b_base_merit'] = base_merit_b
+
+            if selected == 'm':
+                self.model_history_data[self.iter_count]['base_merit'] = \
+                    self.model_history_data[self.iter_count]['m_base_merit']
+                self.model_history_data[self.iter_count]['merit'] = \
+                    self.model_history_data[self.iter_count]['m_merit']
+            elif selected == 'b':
+                self.model_history_data[self.iter_count]['base_merit'] = \
+                    self.model_history_data[self.iter_count]['b_base_merit']
+                self.model_history_data[self.iter_count]['merit'] = \
+                    self.model_history_data[self.iter_count]['b_merit']
+
             # accept the trial point
             flag_infeasible = False
             for con_name in self.problem_description.symbol_list['CON']:
                 if plant_trial_point_output[con_name] > self.options['feasibility_tol']:
                     flag_infeasible = True
                     break
-            if self.model_history_data[self.iter_count]['base_merit'] < self.model_history_data[self.iter_count][
-                'merit']:
-                # Because the solver is not a global optimization solver, it is possible
-                # that the model merit function increases. In this case, we ask for backtracking.
-                self.model_history_data[self.iter_count - 1]['event'] = "model merit increases"
-                rho = -2
-                # if self.plant_history_data[base_iteration]['merit'] -\
-                #                self.plant_history_data[self.iter_count]['merit'] >0:
-                #     rho = 0.1
-                # else:
-                #     rho = -2
-            else:
-                if (not flag_infeasible) and \
-                        abs(self.plant_history_data[self.iter_count]['base_merit'] -
-                            self.plant_history_data[self.iter_count]['merit']) < self.options[
-                    'stationarity_tol']:
-                    iter_successful_flag = True
-                    self.model_history_data[self.iter_count - 1]['event'] = "plant converges"
-                    self.model_history_data[self.iter_count - 1]['rho'] = 1
-                    continue
+
+            if not self.options["separate_tr_management"]:
+                if self.model_history_data[self.iter_count]['base_merit'] < self.model_history_data[self.iter_count][
+                    'merit']:
+                    self.model_history_data[self.iter_count - 1]['event'] = "model merit increases"
+                    rho = -2
                 else:
-                    if self.model_history_data[self.iter_count]['base_merit'] - \
-                            self.model_history_data[self.iter_count]['merit'] > 1e-6:
-                        rho = (self.plant_history_data[self.iter_count]['base_merit'] -
-                               self.plant_history_data[self.iter_count]['merit']) / \
-                              (self.model_history_data[self.iter_count]['base_merit'] -
-                               self.model_history_data[self.iter_count]['merit'])
+                    if (not flag_infeasible) and \
+                            abs(self.plant_history_data[self.iter_count]['base_merit'] -
+                                self.plant_history_data[self.iter_count]['merit']) < self.options[
+                        'stationarity_tol']:
+                        iter_successful_flag = True
+                        self.model_history_data[self.iter_count - 1]['event'] = "plant converges"
+                        self.model_history_data[self.iter_count - 1]['rho'] = 1
+                        continue
                     else:
-                        rho = (self.plant_history_data[self.iter_count]['base_merit'] -
-                               self.plant_history_data[self.iter_count]['merit']) / 1e-6
-            self.model_history_data[self.iter_count - 1]['rho'] = rho
+                        if self.model_history_data[self.iter_count]['base_merit'] - \
+                                self.model_history_data[self.iter_count]['merit'] > 1e-6:
+                            rho = (self.plant_history_data[self.iter_count]['base_merit'] -
+                                   self.plant_history_data[self.iter_count]['merit']) / \
+                                  (self.model_history_data[self.iter_count]['base_merit'] -
+                                   self.model_history_data[self.iter_count]['merit'])
+                        else:
+                            rho = (self.plant_history_data[self.iter_count]['base_merit'] -
+                                   self.plant_history_data[self.iter_count]['merit']) / 1e-6
+                self.model_history_data[self.iter_count - 1]['rho'] = rho
 
-            # update trust-region radius
-            if rho < self.options["eta1"]:
-                gamma = self.options['gamma1']
-            elif rho < self.options["eta2"]:
-                gamma = self.options['gamma2']
-                iter_successful_flag = True
+                # update trust-region radius
+                if rho < self.options["eta1"]:
+                    gamma = self.options['gamma1']
+                elif rho < self.options["eta2"]:
+                    gamma = self.options['gamma2']
+                    iter_successful_flag = True
+                else:
+                    gamma = self.options['gamma3']
+                    iter_successful_flag = True
+                self.trust_radius *= gamma
+                if self.trust_radius < 1e-8:
+                    self.trust_radius = 1e-8
+                    self.model_history_data[self.iter_count - 1]['event'] = "trust region too small"
+                if self.trust_radius > self.options['max_trust_radius']:
+                    self.trust_radius = self.options['max_trust_radius']
+                    self.model_history_data[self.iter_count - 1]['event'] = "trust region too large"
+                self.model_history_data[self.iter_count - 1]['tr_adjusted'] = self.trust_radius
+                self.trust_radius_backup = self.trust_radius
             else:
-                gamma = self.options['gamma3']
-                iter_successful_flag = True
-            self.trust_radius *= gamma
-            if self.trust_radius < 1e-8:
-                self.trust_radius = 1e-8
-                self.model_history_data[self.iter_count - 1]['event'] = "trust region too small"
-            if self.trust_radius > self.options['max_trust_radius']:
-                self.trust_radius = self.options['max_trust_radius']
-                self.model_history_data[self.iter_count - 1]['event'] = "trust region too large"
-            self.model_history_data[self.iter_count - 1]['tr_adjusted'] = self.trust_radius
+                if self.model_history_data[self.iter_count]['base_merit'] < self.model_history_data[self.iter_count][
+                    'merit']:
+                    self.model_history_data[self.iter_count - 1]['event'] = "final merit increases"
+                    rho = -2
+                else:
+                    if (not flag_infeasible) and \
+                            abs(self.plant_history_data[self.iter_count]['base_merit'] -
+                                self.plant_history_data[self.iter_count]['merit']) < self.options[
+                        'stationarity_tol']:
+                        iter_successful_flag = True
+                        self.model_history_data[self.iter_count - 1]['event'] = "plant converges"
+                        self.model_history_data[self.iter_count - 1]['rho'] = 1
+                        continue
+                # calculate rho for the primary model optimization problem
+                model_improvement = self.model_history_data[self.iter_count]['m_base_merit'] - \
+                            self.model_history_data[self.iter_count]['m_merit']
+                if model_improvement >= 0 and model_improvement < 1e-4:
+                    model_improvement = 1e-4
+                elif model_improvement <= 0 and model_improvement > -1e-4:
+                    model_improvement = -1e-4
+                rho_m = (self.plant_history_data[self.iter_count]['base_merit'] -
+                               self.plant_history_data[self.iter_count]['merit']) / model_improvement
+                self.model_history_data[self.iter_count - 1]['rho'] = rho
 
+                # calculate rho for the backup model optimization problem
+                model_improvement = self.model_history_data[self.iter_count]['b_base_merit'] - \
+                                    self.model_history_data[self.iter_count]['b_merit']
+                if model_improvement >= 0 and model_improvement < 1e-4:
+                    model_improvement = 1e-4
+                elif model_improvement <= 0 and model_improvement > -1e-4:
+                    model_improvement = -1e-4
+                rho_b = (self.plant_history_data[self.iter_count]['base_merit'] -
+                         self.plant_history_data[self.iter_count]['merit']) / model_improvement
+                self.model_history_data[self.iter_count - 1]['rho_b'] = rho
+
+                if selected == 'm':
+                    rho = rho_m
+                elif selected == 'b':
+                    rho = rho_b
+
+                # update trust-region radius
+                if rho_m < self.options["eta1"] and self.trust_radius >= len_trial_step:
+                    gamma_m = self.options['gamma1']
+                elif rho_m > self.options["eta2"] and self.trust_radius < len_trial_step:
+                    gamma_m = self.options['gamma3']
+                else:
+                    gamma_m = 1
+                self.trust_radius *= gamma_m
+
+                if rho_b < self.options["eta1"] and self.trust_radius_backup >= len_trial_step:
+                    gamma_b = self.options['gamma1']
+                elif rho_b > self.options["eta2"] and self.trust_radius_backup < len_trial_step:
+                    gamma_b = self.options['gamma3']
+                else:
+                    gamma_b = 1
+                self.trust_radius_backup *= gamma_b
+
+                if self.trust_radius < 1e-8:
+                    self.trust_radius = 1e-8
+                    self.model_history_data[self.iter_count - 1]['event'] = "model trust region too small"
+                if self.trust_radius > self.options['max_trust_radius']:
+                    self.trust_radius = self.options['max_trust_radius']
+                    self.model_history_data[self.iter_count - 1]['event'] = "model trust region too large"
+                if self.trust_radius_backup < 1e-8:
+                    self.trust_radius_backup = 1e-8
+                    self.model_history_data[self.iter_count - 1]['event'] = "backup trust region too small"
+                if self.trust_radius_backup > self.options['max_trust_radius']:
+                    self.trust_radius_backup = self.options['max_trust_radius']
+                    self.model_history_data[self.iter_count - 1]['event'] = "backup trust region too large"
+
+                # set successful flag
+                if rho >= self.options["eta1"]:
+                    iter_successful_flag = True

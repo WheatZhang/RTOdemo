@@ -7,6 +7,13 @@ def is_value_dict_same(dict1, dict2):
             return False
     return True
 
+def distance_of_two_dicts(dict1, dict2):
+    norm = 0
+    for k in dict1.keys():
+        norm+=(dict1[k]-dict2[k])**2
+    norm = np.sqrt(norm)
+    return norm
+
 
 def save_iteration_data_in_dict(history_data, filename):
     headers = history_data[1].keys()

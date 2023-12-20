@@ -139,7 +139,7 @@ def draw_compare_unconstrained_wo_adchem(folder, pic_filename):
     ax.yaxis.set_major_locator(y_major_locator)
 
     plt.tight_layout(pad=0.5, w_pad=0.5, h_pad=0.5)
-    plt.savefig(pic_filename, dpi=600)
+    plt.savefig(pic_filename, dpi=300)
     plt.close()
 def draw_compare_unconstrained_wo(folder, pic_filename):
     # pic_filename="pic/overall_pic0-0.png"
