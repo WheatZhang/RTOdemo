@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 import numpy
-import numpy as np
-
 from rtolib.core.algo.common import MA_type_Algorithm
 from rtolib.core.pyomo_model import *
 from rtolib.core.solve import PyomoSimulator,PyomoOptimizer,TrustRegionOptimizer, PenaltyTrustRegionOptimizer,\
-CompoStepTrustRegionOptimizer
+CompoStepTrustRegionOptimizer, CompoStepTrustRegionBBMOptimizer, BlackBoxOptimizer
+from rtolib.core.black_box_model import BlackBoxModelWithModifiers, BlackBoxModel
 import copy
 from rtolib.util.init_value import to_template, load_init_from_template
 
@@ -70,8 +69,9 @@ class ModifierAdaptation(MA_type_Algorithm):
         self.plant_simulator.set_solver(solver1, tee=False, default_options=default_options)
         solver2 = SolverFactory('ipopt', executable=self.solver_executable)
         self.model_simulator.set_solver(solver2, tee=False, default_options=default_options)
-        solver3 = SolverFactory('ipopt', executable=self.solver_executable)
-        self.model_optimizer.set_solver(solver3, tee=False, default_options=default_options)
+        if isinstance(self.model_optimizer, PyomoOptimizer):
+            solver3 = SolverFactory('ipopt', executable=self.solver_executable)
+            self.model_optimizer.set_solver(solver3, tee=False, default_options=default_options)
 
         self.iter_count = 0
         self.input_history_data[0] = {}
@@ -609,6 +609,7 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
                     spec_function,
                     modifier_type,
                     skipped_modifiers=[],
+                    black_box_model=None,
                     ):
         self.problem_description = problem_description
         self.plant_simulator = PyomoSimulator(plant)
@@ -622,7 +623,10 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
         else:
             raise ValueError("Not applicable")
         self.model_simulator = PyomoSimulator(PyomoModelWithModifiers(model, modifier_type, mvs, cvs))
-        self.model_optimizer = CompoStepTrustRegionOptimizer(PyomoModelWithModifiers(model, modifier_type, mvs, cvs))
+        if black_box_model is None:
+            self.model_optimizer = CompoStepTrustRegionOptimizer(PyomoModelWithModifiers(model, modifier_type, mvs, cvs))
+        else:
+            self.model_optimizer = CompoStepTrustRegionBBMOptimizer(BlackBoxModelWithModifiers(black_box_model, mvs, cvs))
         self.perturbation_method = perturbation_method
         self.noise_generator = noise_generator
         self.solver_executable = solver_executable
@@ -645,9 +649,17 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
         if self.spec_function is not None:
             for k, v in self.current_spec.items():
                 input_values[k] = v
-        optimized_input, input_after_normal_step, solve_status = self.model_optimizer.optimize(input_values, tr_radius, tr_base, self.options['xi_N'],
+        if isinstance(self.model_optimizer, PyomoOptimizer):
+            optimized_input, input_after_normal_step, solve_status = \
+                self.model_optimizer.optimize(input_values, tr_radius, tr_base, self.options['xi_N'],
                                                                       param_values=self.current_parameter_value,
                                                                       use_homo=self.options["homotopy_optimization"])
+        elif isinstance(self.model_optimizer, BlackBoxOptimizer):
+            optimized_input, input_after_normal_step, solve_status = \
+                self.model_optimizer.optimize(tr_radius, tr_base, self.options['xi_N'], \
+                                              modifiers_value=self.current_parameter_value)
+        else:
+            raise TypeError("unknown optimizer type")
         return optimized_input, input_after_normal_step, solve_status
 
     def one_step_simulation(self):
@@ -760,6 +772,7 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
             try:
                 optimized_input, input_after_normal_step, solve_status = self.optimize_for_u(self.trust_radius, tr_base)
             except Exception as e:
+                raise e
                 optimized_input = self.current_point
                 self.model_history_data[self.iter_count]['event'] = "optimization failed"
             if solve_status == ModelSolvingStatus.OPTIMIZATION_FAILED:
@@ -914,7 +927,7 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
         norm = 0
         for mv in mvs:
             norm += ((optimized_input[mv] - current_point[mv]) / self.problem_description.scaling_factors[mv]) ** 2
-        norm = np.sqrt(norm)
+        norm = numpy.sqrt(norm)
         return norm
 
 
@@ -928,7 +941,8 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                     solver_executable,
                     spec_function,
                     modifier_type,
-                    skipped_modifiers=[]):
+                    skipped_modifiers=[],
+                    black_box_model=None):
         self.problem_description = problem_description
         self.plant_simulator = PyomoSimulator(plant)
         mvs = self.problem_description.symbol_list['MV']
@@ -942,7 +956,10 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
             raise ValueError("Not applicable")
         # TODO: FOR MODELS OTHER THAN PYOMO TYPE
         self.model_simulator = PyomoSimulator(PyomoModelWithModifiers(model, modifier_type, mvs, cvs))
-        self.model_optimizer = CompoStepTrustRegionOptimizer(PyomoModelWithModifiers(model, modifier_type, mvs, cvs))
+        if black_box_model is None:
+            self.model_optimizer = CompoStepTrustRegionOptimizer(PyomoModelWithModifiers(model, modifier_type, mvs, cvs))
+        else:
+            self.model_optimizer = CompoStepTrustRegionBBMOptimizer(BlackBoxModelWithModifiers(black_box_model))
         self.backup_model_simulator = PyomoSimulator(PyomoModelWithModifiers(backup_model, modifier_type, mvs, cvs))
         self.backup_model_optimizer = CompoStepTrustRegionOptimizer(PyomoModelWithModifiers(backup_model, modifier_type, mvs, cvs))
         self.perturbation_method = perturbation_method

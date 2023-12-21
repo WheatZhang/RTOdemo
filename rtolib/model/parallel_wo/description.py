@@ -25,6 +25,8 @@ scaling_factors = {
         "Tr1":20,
         "Tr2":20,
         "Tr3":20,
+        "cost":10,
+        "con":1,
     }
 default_values = {
         "Fb1":5,

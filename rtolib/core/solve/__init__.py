@@ -1,4 +1,4 @@
 from .simulate import PyomoSimulator
 from .optimize import PyomoOptimizer, TrustRegionOptimizer, PenaltyTrustRegionOptimizer,\
-    CompoStepTrustRegionOptimizer
+    CompoStepTrustRegionOptimizer, CompoStepTrustRegionBBMOptimizer, BlackBoxOptimizer
 from .para_est import PyomoMultiDataPointParamEstimator, PyomoGradientParamEstimator

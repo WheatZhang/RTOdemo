@@ -43,13 +43,15 @@ class BlackBoxModelWithModifiers(BlackBoxModel):
             if name in self.modifiers_value.keys():
                 self.modifiers_value[name] = modifiers_value[name]
             else:
-                raise KeyError("unknown modifier name %s"%name)
+                if name.endwith('_eps') or name.endwith('_lam'):
+                    raise KeyError("unknown modifier name %s"%name)
+
     def simulate(self, input_dict):
         output_dict = self.base_bb_model.simulate(input_dict)
         for cv in self.modifier_cvs:
-            output_dict += self.modifiers_value[cv + "_eps"]
+            output_dict[cv] += self.modifiers_value[cv + "_eps"]
             temp = 0
             for mv in self.modifier_mvs:
                 temp += self.modifiers_value[mv+"_"+cv + "_lam"] * (input_dict[mv]-self.base_input[mv])
-            output_dict += temp
+            output_dict[cv] += temp
         return output_dict

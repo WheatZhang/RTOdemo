@@ -541,22 +541,30 @@ class CompoStepTrustRegionBBMOptimizer(BlackBoxOptimizer):
             raise AttributeError('this model does not have base point')
         self.black_box_model.set_base_point(base_point)
 
-    def set_solver_options(self, solution_method_name, options):
+    def set_solver_options(self, solution_method_name, options={}):
         '''
         :param solution_method_name:
-        :param options: For PSO:
-        options["population"]=50
-        options["max_iter"]=50
-        options["inertia"]=0.8
-        options["c1"]=0.5
-        options["c2"]=0.5
+        :param options:
 
         :return:
         '''
         self.solution_method_name = solution_method_name
-        self.options = options
+        if solution_method_name == "PSO":
+            default_options = {}
+            default_options["population"] = 20
+            default_options["max_iter"] = 5
+            default_options["inertia"] = 0.8
+            default_options["c1"] = 0.5
+            default_options["c2"] = 0.5
+        for k,v in options.items():
+            default_options[k] = v
+        self.options = default_options
 
-    def optimize(self, tr_radius, tr_base, xi_N, objective_scaling=1e3):
+    def optimize_direct_solve_con_problem(self, tr_radius, tr_base, xi_N, modifiers_value, objective_scaling=1e3):
+        # set modifiers
+        assert(isinstance(self.black_box_model, BlackBoxModelWithModifiers))
+        self.black_box_model.set_modifiers(modifiers_value)
+
         # get mv bounds
         lb = []
         ub = []
@@ -578,7 +586,7 @@ class CompoStepTrustRegionBBMOptimizer(BlackBoxOptimizer):
             radius_sq = 0
             for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
                 radius_sq+=(x[i]-tr_base[mv_name])**2/(self.problem_description.scaling_factors[mv_name]**2)
-            return max(radius_sq-(tr_radius*xi_N)**2, 0)
+            return radius_sq-(tr_radius*xi_N)**2
 
         # solve normal step optimization problem
         pso_normal_problem = PSO(func=normal_step_problem_obj, n_dim=len(lb), pop=self.options['population'], \
@@ -586,11 +594,12 @@ class CompoStepTrustRegionBBMOptimizer(BlackBoxOptimizer):
                                  w=self.options["inertia"], c1=self.options["c1"], \
                                  c2=self.options["c2"], constraint_ueq=(normal_step_problem_tr_con,))
         pso_normal_problem.run()
-        x_after_normal_step = pso_normal_problem.gbest_x
-        tr_infeasibility_sq_after_normal_step = pso_normal_problem.gbest_y
+        x_after_normal_step = pso_normal_problem.gbest_x[0]
+        tr_infeasibility_sq_after_normal_step = normal_step_problem_obj(x_after_normal_step)
         input_after_normal_step = {}
         for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
             input_after_normal_step[mv_name] = x_after_normal_step[i]
+        print(tr_infeasibility_sq_after_normal_step)
 
         def tangential_step_problem_obj(x):
             input_dict = {}
@@ -608,7 +617,7 @@ class CompoStepTrustRegionBBMOptimizer(BlackBoxOptimizer):
             for con_var_name in self.problem_description.symbol_list['CON']:
                 infeasibility_sq += (output_dict[con_var_name] / max(0,
                                  self.problem_description.scaling_factors[con_var_name]))**2
-            return max(infeasibility_sq-tr_infeasibility_sq_after_normal_step, 0)
+            return infeasibility_sq-tr_infeasibility_sq_after_normal_step
 
         def tangential_step_problem_tr_con(x):
             radius_sq = 0
@@ -622,6 +631,78 @@ class CompoStepTrustRegionBBMOptimizer(BlackBoxOptimizer):
                                  w=self.options["inertia"], c1=self.options["c1"], \
                                  c2=self.options["c2"], constraint_ueq=(tangential_step_problem_c_con,\
                                                                         tangential_step_problem_tr_con))
+        pso_normal_problem.run()
+        x_after_tangential_step = pso_normal_problem.gbest_x[0]
+        inputs = {}
+        for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
+            inputs[mv_name] = x_after_tangential_step[i]
+
+        solve_status = ModelSolvingStatus.OK
+        return inputs, input_after_normal_step, solve_status
+
+    def optimize(self, tr_radius, tr_base, xi_N, modifiers_value, objective_scaling=1e3):
+        sigma = 1e4
+        # set modifiers
+        assert(isinstance(self.black_box_model, BlackBoxModelWithModifiers))
+        self.black_box_model.set_modifiers(modifiers_value)
+
+        # get mv bounds
+        lb = []
+        ub = []
+        for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
+            lb.append(self.problem_description.bounds[mv_name][0])
+            ub.append(self.problem_description.bounds[mv_name][1])
+
+        def normal_step_problem_obj(x):
+            input_dict = {}
+            for i,mv_name in enumerate(self.problem_description.symbol_list['MV']):
+                input_dict[mv_name] = x[i]
+            output_dict = self.black_box_model.simulate(input_dict)
+            infeasibility_sq = 0
+            for con_var_name in self.problem_description.symbol_list['CON']:
+                infeasibility_sq+=(output_dict[con_var_name]/max(0,self.problem_description.scaling_factors[con_var_name]))**2
+            radius_sq = 0
+            for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
+                radius_sq += (x[i] - tr_base[mv_name]) ** 2 / (self.problem_description.scaling_factors[mv_name] ** 2)
+            return infeasibility_sq+sigma*max(numpy.sqrt(radius_sq)-(tr_radius*xi_N),0)
+
+        # solve normal step optimization problem
+        pso_normal_problem = PSO(func=normal_step_problem_obj, n_dim=len(lb), pop=self.options['population'], \
+                                 max_iter=self.options["max_iter"], lb=lb, ub=ub, \
+                                 w=self.options["inertia"], c1=self.options["c1"], \
+                                 c2=self.options["c2"])
+        pso_normal_problem.run()
+        x_after_normal_step = pso_normal_problem.gbest_x
+        print(x_after_normal_step)
+        tr_infeasibility_sq_after_normal_step = normal_step_problem_obj(x_after_normal_step)
+        input_after_normal_step = {}
+        for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
+            input_after_normal_step[mv_name] = x_after_normal_step[i]
+        print(tr_infeasibility_sq_after_normal_step)
+
+        def tangential_step_problem_obj(x):
+            input_dict = {}
+            for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
+                input_dict[mv_name] = x[i]
+            output_dict = self.black_box_model.simulate(input_dict)
+            infeasibility_sq = 0
+            for con_var_name in self.problem_description.symbol_list['CON']:
+                infeasibility_sq += (output_dict[con_var_name] / max(0,
+                         self.problem_description.scaling_factors[con_var_name])) ** 2
+            infeasibility_penalty = max(numpy.sqrt(infeasibility_sq)-\
+                                        numpy.sqrt(tr_infeasibility_sq_after_normal_step),0)
+            radius_sq = 0
+            for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
+                radius_sq += (x[i] - tr_base[mv_name]) ** 2 / (self.problem_description.scaling_factors[mv_name] ** 2)
+            tr_penalty = max(sqrt(radius_sq) - tr_radius, 0)
+            return output_dict[self.problem_description.symbol_list['OBJ']]*objective_scaling+\
+                sigma*(infeasibility_penalty+tr_penalty)
+
+        # solve tangential step optimization problem
+        pso_normal_problem = PSO(func=tangential_step_problem_obj, n_dim=len(lb), pop=self.options['population'], \
+                                 max_iter=self.options["max_iter"], lb=lb, ub=ub, \
+                                 w=self.options["inertia"], c1=self.options["c1"], \
+                                 c2=self.options["c2"])
         pso_normal_problem.run()
         x_after_tangential_step = pso_normal_problem.gbest_x
         inputs = {}

@@ -11,12 +11,12 @@ class RTO_Plant_Parallel_WO(PyomoModel):
         self.noised_outputs = {
         }
         self.input_variables = {
-            "Fb1": (lambda m: m.Fb1),
-            "Fb2": (lambda m: m.Fb2),
-            "Fb3": (lambda m: m.Fb3),
-            "Tr1": (lambda m: m.Tr1),
-            "Tr2": (lambda m: m.Tr2),
-            "Tr3": (lambda m: m.Tr3),
+            "Fb1": (lambda m: m.reactor_block[1].Fb),
+            "Fb2": (lambda m: m.reactor_block[2].Fb),
+            "Fb3": (lambda m: m.reactor_block[3].Fb),
+            "Tr1": (lambda m: m.reactor_block[1].Tr),
+            "Tr2": (lambda m: m.reactor_block[2].Tr),
+            "Tr3": (lambda m: m.reactor_block[3].Tr),
         }
         self.parameters = {
         }
@@ -26,7 +26,7 @@ class RTO_Plant_Parallel_WO(PyomoModel):
         }
         self.initial_value_file = os.path.join(os.path.dirname(__file__) + r"\plant_init_value.txt")
 
-    def build_body(self, wocstr):
+    def build_body(self, parallel_wocstr):
         parallel_wocstr.block_index = Set(initialize=[1, 2, 3])
 
         def block_rule(wocstr):
@@ -88,7 +88,7 @@ class RTO_Plant_Parallel_WO(PyomoModel):
         for i in parallel_wocstr.block_index:
             parallel_wocstr.reactor_block[i].Fa = Fa[i]
 
-    def build_rto(self, wocstr, cv_func):
+    def build_rto(self, parallel_wocstr, cv_func):
         def Fb_con(m):
             return sum([parallel_wocstr.reactor_block[i].Fb for i in parallel_wocstr.block_index]) - 12
 
