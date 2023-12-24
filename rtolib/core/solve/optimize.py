@@ -8,11 +8,27 @@ from rtolib.core.basic import ProblemDescription
 import rtolib.util.init_value as init_value
 import numpy
 from sko.PSO import PSO
-
+from rtolib.util.misc import square_circle_mapping
 
 class Optimizer():
     def optimize(self, param_values=None):
         return NotImplementedError()
+
+    def adapt_to_bound_mv(self, optimized_input, mv_bounds, print_warning=False):
+        bounded_input = {}
+        # for k in self.problem_description.symbol_list['MV']:
+        for k in optimized_input.keys():
+            bounded_input[k] = optimized_input[k]
+            if mv_bounds[k][0] is not None and optimized_input[k] <= mv_bounds[k][0]:
+                if print_warning:
+                    print("MV %s reaches its lower bound." % k)
+                bounded_input[k] = mv_bounds[k][0]
+            if mv_bounds[k][0] is not None and optimized_input[k] >= mv_bounds[k][1]:
+                if print_warning:
+                    print("MV %s reaches its upper bound." % k)
+                bounded_input[k] = mv_bounds[k][1]
+        return bounded_input
+
 
 
 class PyomoOptimizer(Optimizer):
@@ -640,8 +656,8 @@ class CompoStepTrustRegionBBMOptimizer(BlackBoxOptimizer):
         solve_status = ModelSolvingStatus.OK
         return inputs, input_after_normal_step, solve_status
 
-    def optimize(self, tr_radius, tr_base, xi_N, modifiers_value, objective_scaling=1e3):
-        sigma = 1e4
+    def optimize(self, tr_radius, tr_base, xi_N, modifiers_value, objective_scaling=1):
+        sigma = 1e6
         # set modifiers
         assert(isinstance(self.black_box_model, BlackBoxModelWithModifiers))
         self.black_box_model.set_modifiers(modifiers_value)
@@ -649,22 +665,25 @@ class CompoStepTrustRegionBBMOptimizer(BlackBoxOptimizer):
         # get mv bounds
         lb = []
         ub = []
+        mv_scaling = []
         for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
-            lb.append(self.problem_description.bounds[mv_name][0])
-            ub.append(self.problem_description.bounds[mv_name][1])
+            lb.append(-1)
+            ub.append(1)
+            mv_scaling.append(self.problem_description.scaling_factors[mv_name])
 
         def normal_step_problem_obj(x):
+            x = square_circle_mapping(x, tr_radius*xi_N, mv_scaling)
+            for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
+                x[i]+=tr_base[mv_name]
             input_dict = {}
             for i,mv_name in enumerate(self.problem_description.symbol_list['MV']):
                 input_dict[mv_name] = x[i]
+            input_dict = self.adapt_to_bound_mv(input_dict, self.problem_description.bounds)
             output_dict = self.black_box_model.simulate(input_dict)
             infeasibility_sq = 0
             for con_var_name in self.problem_description.symbol_list['CON']:
-                infeasibility_sq+=(output_dict[con_var_name]/max(0,self.problem_description.scaling_factors[con_var_name]))**2
-            radius_sq = 0
-            for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
-                radius_sq += (x[i] - tr_base[mv_name]) ** 2 / (self.problem_description.scaling_factors[mv_name] ** 2)
-            return infeasibility_sq+sigma*max(numpy.sqrt(radius_sq)-(tr_radius*xi_N),0)
+                infeasibility_sq+=(max(0,output_dict[con_var_name])/self.problem_description.scaling_factors[con_var_name])**2
+            return infeasibility_sq
 
         # solve normal step optimization problem
         pso_normal_problem = PSO(func=normal_step_problem_obj, n_dim=len(lb), pop=self.options['population'], \
@@ -672,42 +691,51 @@ class CompoStepTrustRegionBBMOptimizer(BlackBoxOptimizer):
                                  w=self.options["inertia"], c1=self.options["c1"], \
                                  c2=self.options["c2"])
         pso_normal_problem.run()
-        x_after_normal_step = pso_normal_problem.gbest_x
-        print(x_after_normal_step)
-        tr_infeasibility_sq_after_normal_step = normal_step_problem_obj(x_after_normal_step)
+        gbest_x_after_normal_step = pso_normal_problem.gbest_x
+        x_after_normal_step = square_circle_mapping(gbest_x_after_normal_step, tr_radius*xi_N, mv_scaling)
+        for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
+            x_after_normal_step[i] += tr_base[mv_name]
+        tr_infeasibility_sq_after_normal_step = normal_step_problem_obj(gbest_x_after_normal_step)
+        print("infeasibility after normal step: %.6e"%numpy.sqrt(tr_infeasibility_sq_after_normal_step))
         input_after_normal_step = {}
         for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
             input_after_normal_step[mv_name] = x_after_normal_step[i]
-        print(tr_infeasibility_sq_after_normal_step)
+        input_after_normal_step = self.adapt_to_bound_mv(input_after_normal_step, self.problem_description.bounds)
 
         def tangential_step_problem_obj(x):
+            x = square_circle_mapping(x, tr_radius, mv_scaling)
+            for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
+                x[i] += tr_base[mv_name]
             input_dict = {}
             for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
                 input_dict[mv_name] = x[i]
+            input_dict = self.adapt_to_bound_mv(input_dict, self.problem_description.bounds)
             output_dict = self.black_box_model.simulate(input_dict)
             infeasibility_sq = 0
             for con_var_name in self.problem_description.symbol_list['CON']:
-                infeasibility_sq += (output_dict[con_var_name] / max(0,
-                         self.problem_description.scaling_factors[con_var_name])) ** 2
+                infeasibility_sq += (max(0,output_dict[con_var_name]) /
+                         self.problem_description.scaling_factors[con_var_name]) ** 2
             infeasibility_penalty = max(numpy.sqrt(infeasibility_sq)-\
                                         numpy.sqrt(tr_infeasibility_sq_after_normal_step),0)
-            radius_sq = 0
-            for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
-                radius_sq += (x[i] - tr_base[mv_name]) ** 2 / (self.problem_description.scaling_factors[mv_name] ** 2)
-            tr_penalty = max(sqrt(radius_sq) - tr_radius, 0)
             return output_dict[self.problem_description.symbol_list['OBJ']]*objective_scaling+\
-                sigma*(infeasibility_penalty+tr_penalty)
+                sigma*infeasibility_penalty
 
         # solve tangential step optimization problem
-        pso_normal_problem = PSO(func=tangential_step_problem_obj, n_dim=len(lb), pop=self.options['population'], \
+        pso_tangential_problem = PSO(func=tangential_step_problem_obj, n_dim=len(lb), pop=self.options['population'], \
                                  max_iter=self.options["max_iter"], lb=lb, ub=ub, \
                                  w=self.options["inertia"], c1=self.options["c1"], \
                                  c2=self.options["c2"])
-        pso_normal_problem.run()
-        x_after_tangential_step = pso_normal_problem.gbest_x
+        pso_tangential_problem.run()
+        gbest_after_tangential_step = pso_tangential_problem.gbest_x
+        x_after_tangential_step = square_circle_mapping(gbest_after_tangential_step, tr_radius, mv_scaling)
+        for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
+            x_after_tangential_step[i] += tr_base[mv_name]
         inputs = {}
         for i, mv_name in enumerate(self.problem_description.symbol_list['MV']):
             inputs[mv_name] = x_after_tangential_step[i]
-
+        inputs = self.adapt_to_bound_mv(inputs, self.problem_description.bounds)
         solve_status = ModelSolvingStatus.OK
+        print(inputs)
+        tr_infeasibility_sq_after_tangential_step = normal_step_problem_obj(gbest_after_tangential_step)
+        print("infeasibility after tangential step: %.6e" % numpy.sqrt(tr_infeasibility_sq_after_tangential_step))
         return inputs, input_after_normal_step, solve_status

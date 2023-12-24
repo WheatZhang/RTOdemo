@@ -53,3 +53,28 @@ def get_hypercube_sampling(dimension, n_data, lb, ub, seed=1):
         for j in range(dimension):
             sample_X[i,j] = s[j] * (ub[j] - lb[j]) + lb[j]
     return sample_X
+
+def square_circle_mapping(x, radius, circle_scaling):
+    '''
+    x in [-1,1]^n
+    :param x: ndarray
+    :param radius:
+    :param circle_scaling: ndarray or list
+    :return:
+    '''
+    dimension = x.shape[0]
+    x_abs = np.zeros((dimension,))
+    for i in range(dimension):
+        x_abs[i] = abs(x[i])
+    max_element = np.max(x_abs)
+    if max_element < 1e-5:
+        k_shrink = 1
+    else:
+        for i in range(dimension):
+            x_abs[i] *= 1/max_element
+        k_shrink = np.linalg.norm(x_abs)
+    ret = np.zeros((dimension,))
+    for i in range(dimension):
+        ret[i] = x[i]/k_shrink*radius*circle_scaling[i]
+    return ret
+

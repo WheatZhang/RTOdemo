@@ -772,7 +772,7 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
             try:
                 optimized_input, input_after_normal_step, solve_status = self.optimize_for_u(self.trust_radius, tr_base)
             except Exception as e:
-                raise e
+                # raise e
                 optimized_input = self.current_point
                 self.model_history_data[self.iter_count]['event'] = "optimization failed"
             if solve_status == ModelSolvingStatus.OPTIMIZATION_FAILED:
@@ -870,6 +870,7 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
                 # Because the solver is not a global optimization solver, it is possible
                 # that the model merit function increases. In this case, we ask for backtracking.
                 self.model_history_data[self.iter_count-1]['event'] = "model merit increases"
+                print("model merit increases")
                 rho = -2
                 # if self.plant_history_data[base_iteration]['merit'] -\
                 #                self.plant_history_data[self.iter_count]['merit'] >0:
@@ -918,7 +919,7 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
         else:
             coeff = trust_radius/norm
             ret = {}
-            for mv in mvs:
+            for mv in current_point.keys():
                 ret[mv]=current_point[mv]+(optimized_input[mv]-current_point[mv])*coeff
         return ret
 
@@ -959,7 +960,7 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
         if black_box_model is None:
             self.model_optimizer = CompoStepTrustRegionOptimizer(PyomoModelWithModifiers(model, modifier_type, mvs, cvs))
         else:
-            self.model_optimizer = CompoStepTrustRegionBBMOptimizer(BlackBoxModelWithModifiers(black_box_model))
+            self.model_optimizer = CompoStepTrustRegionBBMOptimizer(BlackBoxModelWithModifiers(black_box_model, mvs, cvs))
         self.backup_model_simulator = PyomoSimulator(PyomoModelWithModifiers(backup_model, modifier_type, mvs, cvs))
         self.backup_model_optimizer = CompoStepTrustRegionOptimizer(PyomoModelWithModifiers(backup_model, modifier_type, mvs, cvs))
         self.perturbation_method = perturbation_method
@@ -1191,10 +1192,11 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                 from rtolib.util.misc import distance_of_two_dicts
                 print("in optimization")
                 print(self.trust_radius)
+                # raise Exception("for testing")
                 # print(distance_of_two_dicts(optimized_input_m, self.current_point))
             except Exception as e:
-                optimized_input_m = self.current_point
-                input_after_normal_step_m = self.current_point
+                optimized_input_m = base_input #self.current_point
+                input_after_normal_step_m = base_input #self.current_point
                 self.model_history_data[self.iter_count]['event'] = "primary optimization failed"
             # if solve_status_m == ModelSolvingStatus.OPTIMIZATION_FAILED:
             #     optimized_input_m = self.current_point
@@ -1203,12 +1205,12 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
             try:
                 optimized_input_b, input_after_normal_step_b, solve_status_b = self.optimize_for_u_backup_model(self.trust_radius_backup, tr_base)
             except Exception as e:
-                input_after_normal_step_b = self.current_point
-                optimized_input_b = self.current_point
+                input_after_normal_step_b = base_input #self.current_point
+                optimized_input_b = base_input #self.current_point
                 self.model_history_data[self.iter_count]['event'] = "backup optimization failed"
             if solve_status_b == ModelSolvingStatus.OPTIMIZATION_FAILED:
-                input_after_normal_step_b = self.current_point
-                optimized_input_b = self.current_point
+                input_after_normal_step_b = base_input #self.current_point
+                optimized_input_b = base_input #self.current_point
                 self.model_history_data[self.iter_count]['event'] = "backup optimization failed"
 
             self.model_history_data[self.iter_count]['sigma'] = self.sigma
@@ -1243,7 +1245,7 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                                         self.problem_description.scaling_factors[con_var_name] ** 2
                 infeasibility_m = numpy.sqrt(infeasibility_sq_m)
                 merit_m = obj_after_optimization_m + infeasibility_m * self.sigma
-                print(base_iteration)
+                print("base_iteration: %d"%base_iteration)
                 base_infeasibility_m = self.model_history_data[base_iteration]['m_base_infeasibility']
                 base_obj_m = self.model_history_data[base_iteration]['m_base_obj_for_merit']
                 base_merit_m = base_obj_m + base_infeasibility_m * self.sigma
@@ -1311,6 +1313,8 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
             obj_var_name = self.problem_description.symbol_list['OBJ']
             obj_m = self.model_history_data[self.iter_count][obj_var_name] / \
                   self.problem_description.scaling_factors[obj_var_name]
+            # print(base_input)
+            # print(filtered_input_m)
             self.model_history_data[self.iter_count]['m_obj_for_merit'] = obj_m
             infeasibility_sq_m = 0
             for con_var_name in self.problem_description.symbol_list['CON']:
@@ -1350,6 +1354,10 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                               infeasibility_b
             f_improvement_m = base_merit_m - merit_m
             f_improvement_b = base_merit_b - merit_b
+            print("c_improvement_m = %.6e"%c_improvement_m)
+            print("c_improvement_b = %.6e"%c_improvement_b)
+            print("f_improvement_m = %.6e"%f_improvement_m)
+            print("f_improvement_b = %.6e"%f_improvement_b)
             if self.iter_count > 20:
                 print("here")
             if (c_improvement_m < self.options['feasibility_tol'] and c_improvement_b > \
@@ -1408,52 +1416,38 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                          self.plant_history_data[base_iteration]['base_infeasibility'] * self.sigma
             self.plant_history_data[self.iter_count]['base_merit'] = base_merit
 
-            # calculate the merit function for the two models using the new sigma
-            model_trial_point_output_m = self.get_model_simulation_result([filtered_input])[0]
-            obj_var_name = self.problem_description.symbol_list['OBJ']
-            obj_m = self.model_history_data[self.iter_count][obj_var_name] / \
-                    self.problem_description.scaling_factors[obj_var_name]
-            self.model_history_data[self.iter_count]['m_obj_for_merit'] = obj_m
-            infeasibility_sq_m = 0
-            for con_var_name in self.problem_description.symbol_list['CON']:
-                infeasibility_sq_m += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
-                                      self.problem_description.scaling_factors[con_var_name] ** 2
-            infeasibility_m = numpy.sqrt(infeasibility_sq_m)
-            self.model_history_data[self.iter_count]['m_infeasibility'] = infeasibility_m
-            merit_m = obj_m + infeasibility_m * self.sigma
-            self.model_history_data[self.iter_count]['m_merit'] = merit_m
-            base_merit_m = self.model_history_data[base_iteration]['m_base_obj_for_merit'] + \
-                           self.model_history_data[base_iteration]['m_base_infeasibility'] * self.sigma
-            self.model_history_data[self.iter_count]['m_base_merit'] = base_merit_m
-
-            # calculate relevent data from the backup model
-            model_trial_point_output_b = self.get_backup_model_simulation_result([filtered_input])[0]
-            obj_var_name = self.problem_description.symbol_list['OBJ']
-            obj_b = self.model_history_data[self.iter_count]['b_' + obj_var_name] / \
-                    self.problem_description.scaling_factors[obj_var_name]
-            self.model_history_data[self.iter_count]['b_obj_for_merit'] = obj_b
-            infeasibility_sq_b = 0
-            for con_var_name in self.problem_description.symbol_list['CON']:
-                infeasibility_sq_b += max(self.model_history_data[self.iter_count]['b_' + con_var_name], 0) ** 2 / \
-                                      self.problem_description.scaling_factors[con_var_name] ** 2
-            infeasibility_b = numpy.sqrt(infeasibility_sq_b)
-            self.model_history_data[self.iter_count]['b_infeasibility'] = infeasibility_b
-            merit_b = obj_b + infeasibility_b * self.sigma
-            self.model_history_data[self.iter_count]['b_merit'] = merit_b
-            base_merit_b = self.model_history_data[base_iteration]['b_base_obj_for_merit'] + \
-                           self.model_history_data[base_iteration]['b_base_infeasibility'] * self.sigma
-            self.model_history_data[self.iter_count]['b_base_merit'] = base_merit_b
-
             if selected == 'm':
-                self.model_history_data[self.iter_count]['base_merit'] = \
-                    self.model_history_data[self.iter_count]['m_base_merit']
-                self.model_history_data[self.iter_count]['merit'] = \
-                    self.model_history_data[self.iter_count]['m_merit']
+                # calculate the merit function for the two models using the new sigma
+                model_trial_point_output_m = self.get_model_simulation_result([filtered_input])[0]
+                obj_var_name = self.problem_description.symbol_list['OBJ']
+                obj_m = self.model_history_data[self.iter_count][obj_var_name] / \
+                        self.problem_description.scaling_factors[obj_var_name]
+                infeasibility_sq_m = 0
+                for con_var_name in self.problem_description.symbol_list['CON']:
+                    infeasibility_sq_m += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
+                                          self.problem_description.scaling_factors[con_var_name] ** 2
+                infeasibility_m = numpy.sqrt(infeasibility_sq_m)
+                merit_m = obj_m + infeasibility_m * self.sigma
+                self.model_history_data[self.iter_count]['merit'] = merit_m
+                base_merit_m = self.model_history_data[base_iteration]['m_base_obj_for_merit'] + \
+                               self.model_history_data[base_iteration]['m_base_infeasibility'] * self.sigma
+                self.model_history_data[self.iter_count]['base_merit'] = base_merit_m
             elif selected == 'b':
-                self.model_history_data[self.iter_count]['base_merit'] = \
-                    self.model_history_data[self.iter_count]['b_base_merit']
-                self.model_history_data[self.iter_count]['merit'] = \
-                    self.model_history_data[self.iter_count]['b_merit']
+                # calculate relevent data from the backup model
+                model_trial_point_output_b = self.get_backup_model_simulation_result([filtered_input])[0]
+                obj_var_name = self.problem_description.symbol_list['OBJ']
+                obj_b = self.model_history_data[self.iter_count]['b_' + obj_var_name] / \
+                        self.problem_description.scaling_factors[obj_var_name]
+                infeasibility_sq_b = 0
+                for con_var_name in self.problem_description.symbol_list['CON']:
+                    infeasibility_sq_b += max(self.model_history_data[self.iter_count]['b_' + con_var_name], 0) ** 2 / \
+                                          self.problem_description.scaling_factors[con_var_name] ** 2
+                infeasibility_b = numpy.sqrt(infeasibility_sq_b)
+                merit_b = obj_b + infeasibility_b * self.sigma
+                self.model_history_data[self.iter_count]['merit'] = merit_b
+                base_merit_b = self.model_history_data[base_iteration]['b_base_obj_for_merit'] + \
+                               self.model_history_data[base_iteration]['b_base_infeasibility'] * self.sigma
+                self.model_history_data[self.iter_count]['b_base_merit'] = base_merit_b
 
             # accept the trial point
             flag_infeasible = False

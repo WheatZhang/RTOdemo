@@ -107,7 +107,7 @@ class Algorithm():
         for k in self.problem_description.symbol_list['CON']:
             yield k
 
-    def filter_mv(self, optimized_input, mv_bounds):
+    def filter_mv(self, optimized_input, mv_bounds, print_warning=True):
         prev_iter_spec = self.spec_function.__call__(self.iter_count-1)
         filter_flag = True
         for k, v in prev_iter_spec.items():
@@ -123,10 +123,12 @@ class Algorithm():
             else:
                 filtered_input[k] = optimized_input[k]
             if mv_bounds[k][0] is not None and filtered_input[k] <= mv_bounds[k][0]:
-                print("MV %s reaches its lower bound." % k)
+                if print_warning:
+                    print("MV %s reaches its lower bound." % k)
                 filtered_input[k] = mv_bounds[k][0]
             if mv_bounds[k][1] is not None and filtered_input[k] >= mv_bounds[k][1]:
-                print("MV %s reaches its upper bound." % k)
+                if print_warning:
+                    print("MV %s reaches its upper bound." % k)
                 filtered_input[k] = mv_bounds[k][1]
         return filtered_input
 
