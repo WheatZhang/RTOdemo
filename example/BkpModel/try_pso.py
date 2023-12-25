@@ -256,9 +256,9 @@ def compo_step_TR_QuadraticBlackbox_model(perturbation_stepsize, starting_point,
 
 def compo_step_backup_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
                                  population, pso_max_iter,\
-                                 initial_trust_radius, max_trust_radius,xi_N,kappa_r,\
+                                 initial_trust_radius, max_trust_radius,xi_N,kappa_b,\
                noise_filename, solver_executable, print_iter_data, max_iter,\
-               result_filename_header):
+               result_filename_header, separate_tr_management):
     '''
 
     :param perturbation_stepsize: dict
@@ -288,11 +288,11 @@ def compo_step_backup_TR_blackbox_model(perturbation_stepsize, starting_point, s
         "sigma": sigma,
         "max_trust_radius":max_trust_radius,
         "initial_trust_radius":initial_trust_radius,
-        "kappa_r": kappa_r,
+        "kappa_b": kappa_b,
         'feasibility_tol': global_parameter["feasibility_tol"],
         "stationarity_tol": global_parameter["stationarity_tol"],
         'adaptive_sigma': True,
-        "separate_tr_management":True,
+        "separate_tr_management":separate_tr_management,
     }
     rto_algorithm.set_algorithm_option(options)
 
@@ -386,17 +386,17 @@ def do_test():
     #             noise_filename, solver_executable, print_iter_data, max_iter, \
     #             result_filename_header)
     # ------------------------------------
-    # print("\nTesting CompoStep_TR_MA with black-box model2")
-    # population, pso_max_iter = 50, 50
-    # result_filename_header = result_filename_folder + "CompoStep_TR_Blackbox2_"
-    # compo_step_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
-    #                              population, pso_max_iter, initial_trust_radius, max_trust_radius, \
-    #                              xi_N, \
-    #                              noise_filename, solver_executable, print_iter_data, max_iter, \
-    #                              result_filename_header)
+    print("\nTesting CompoStep_TR_MA with black-box model2")
+    population, pso_max_iter = 50, 50
+    result_filename_header = result_filename_folder + "CompoStep_TR_Blackbox2_"
+    compo_step_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
+                                 population, pso_max_iter, initial_trust_radius, max_trust_radius, \
+                                 xi_N, \
+                                 noise_filename, solver_executable, print_iter_data, max_iter, \
+                                 result_filename_header)
     # ------------------------------------
     # print("\nTesting CompoStep_TR_MA with quadratic black-box model")
-    # population, pso_max_iter = 500, 100
+    # population, pso_max_iter = 500, 500
     # result_filename_header = result_filename_folder + "CompoStep_TR_QBlackbox_"
     # compo_step_TR_QuadraticBlackbox_model(perturbation_stepsize, starting_point, sigma, \
     #                              population, pso_max_iter, initial_trust_radius, max_trust_radius, \
@@ -404,25 +404,45 @@ def do_test():
     #                              noise_filename, solver_executable, print_iter_data, max_iter, \
     #                              result_filename_header)
     # ------------------------------------
-    print("\nTesting Backup CompoStep_TR_MA with black-box model")
-    population, pso_max_iter = 20, 20
-    kappa_r = 0.2
-    result_filename_header = result_filename_folder + "CompoStep_TR_BackupBBM_"
-    compo_step_backup_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
-                     population, pso_max_iter, \
-                     initial_trust_radius, max_trust_radius, xi_N, kappa_r, \
-                     noise_filename, solver_executable, print_iter_data, max_iter, \
-                     result_filename_header)
+    # print("\nTesting Backup CompoStep_TR_MA with black-box model")
+    # population, pso_max_iter = 20, 20
+    # kappa_b = 0.2
+    # result_filename_header = result_filename_folder + "CompoStep_TR_BackupBBM_"
+    # compo_step_backup_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
+    #                  population, pso_max_iter, \
+    #                  initial_trust_radius, max_trust_radius, xi_N, kappa_b, \
+    #                  noise_filename, solver_executable, print_iter_data, max_iter, \
+    #                  result_filename_header, separate_tr_management=False)
     # ------------------------------------
-    print("\nTesting Backup CompoStep_TR_MA with black-box model")
-    population, pso_max_iter = 20, 20
-    kappa_r = 0.8
-    result_filename_header = result_filename_folder + "CompoStep_TR_BackupBBM2_"
-    compo_step_backup_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
-                                        population, pso_max_iter, \
-                                        initial_trust_radius, max_trust_radius, xi_N, kappa_r, \
-                                        noise_filename, solver_executable, print_iter_data, max_iter, \
-                                        result_filename_header)
+    # print("\nTesting Backup CompoStep_TR_MA with black-box model")
+    # population, pso_max_iter = 20, 20
+    # kappa_b = 0.8
+    # result_filename_header = result_filename_folder + "CompoStep_TR_BackupBBM2_"
+    # compo_step_backup_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
+    #                                     population, pso_max_iter, \
+    #                                     initial_trust_radius, max_trust_radius, xi_N, kappa_b, \
+    #                                     noise_filename, solver_executable, print_iter_data, max_iter, \
+    #                                     result_filename_header, separate_tr_management=False)
+    # ------------------------------------
+    # print("\nTesting Backup CompoStep_TR_MA with black-box model")
+    # population, pso_max_iter = 20, 20
+    # kappa_b = 0.2
+    # result_filename_header = result_filename_folder + "CompoStep_TR_BackupBBM_DM_"
+    # compo_step_backup_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
+    #                                     population, pso_max_iter, \
+    #                                     initial_trust_radius, max_trust_radius, xi_N, kappa_b, \
+    #                                     noise_filename, solver_executable, print_iter_data, max_iter, \
+    #                                     result_filename_header, separate_tr_management=True)
+    # ------------------------------------
+    # print("\nTesting Backup CompoStep_TR_MA with black-box model")
+    # population, pso_max_iter = 20, 20
+    # kappa_b = 0.8
+    # result_filename_header = result_filename_folder + "CompoStep_TR_BackupBBM2_DM_"
+    # compo_step_backup_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
+    #                                     population, pso_max_iter, \
+    #                                     initial_trust_radius, max_trust_radius, xi_N, kappa_b, \
+    #                                     noise_filename, solver_executable, print_iter_data, max_iter, \
+    #                                     result_filename_header, separate_tr_management=True)
 
 
 def plot_profile_original_tr():
@@ -462,14 +482,19 @@ def plot_profile_original_tr():
     # plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
     #          linestyle='--')
     plt.plot(range(1,max_iter+1), compo_step_plant_data.loc[1:max_iter, 'cost'], \
-             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
+             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2,\
+             label="IPOPT")
     plt.plot(range(1, max_iter + 1), compo_step_plant_data2.loc[1:max_iter, 'cost'], \
-             marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
+             marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth,\
+             label="PSO,population=20")
     plt.plot(range(1, max_iter + 1), compo_step_plant_data3.loc[1:max_iter, 'cost'], \
-             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
+             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth,\
+             label="PSO,population=50")
     plt.plot(range(1, max_iter + 1), compo_step_plant_data4.loc[1:max_iter, 'cost'], \
-             marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
+             marker='o', c='green', markersize=global_marker_size, linewidth=linewidth,\
+             label="PSO,population=500")
     plt.ylabel("plant cost")
+    plt.legend()
     plt.subplot(512)
     # optimal = 0 * np.ones(max_iter + 1)
     # plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -511,7 +536,7 @@ def plot_profile_original_tr():
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), compo_step_input_data4.loc[1:max_iter, 'Fb3'], \
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel(r"Fb")
+    plt.ylabel(r"$F_B$")
     plt.subplot(514)
     # optimal = 9.369 * np.ones(max_iter + 1)
     # plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -540,7 +565,7 @@ def plot_profile_original_tr():
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), compo_step_input_data4.loc[1:max_iter, 'Tr3'], \
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel(r"Tr")
+    plt.ylabel(r"$T_R$")
     plt.subplot(515)
     plt.plot(range(1, max_iter + 1), compo_step_model_data.loc[1:max_iter, 'tr'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
@@ -550,36 +575,54 @@ def plot_profile_original_tr():
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), compo_step_model_data4.loc[1:max_iter, 'tr'], \
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel(r"tr")
+    plt.ylabel(r"$||\Delta_k||$")
     plt.xlabel("#iteration")
 
     plt.savefig("pic/try_pso/profile_original_tr", dpi=600)
     plt.close()
 
-def plot_profile_backup_algo():
+def plot_profile_backup_algo(separate_tr_management):
     max_iter=20
     global_marker_size = 2
     linewidth=1
     compo_step_plant_data = pandas.read_csv("data/try_pso/CompoStep_TR_Pyomo_plant_data.txt", \
                                       index_col=0, header=0, sep='\t')
-    backup_plant_data = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM_plant_data.txt", \
+    if separate_tr_management:
+        backup_plant_data = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM_DM_plant_data.txt", \
+                                                index_col=0, header=0, sep='\t')
+        backup_plant_data2 = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM2_DM_plant_data.txt", \
                                             index_col=0, header=0, sep='\t')
-    backup_plant_data2 = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM2_plant_data.txt", \
-                                        index_col=0, header=0, sep='\t')
+    else:
+        backup_plant_data = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM_plant_data.txt", \
+                                            index_col=0, header=0, sep='\t')
+        backup_plant_data2 = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM2_plant_data.txt", \
+                                             index_col=0, header=0, sep='\t')
 
     compo_step_model_data = pandas.read_csv("data/try_pso/CompoStep_TR_Pyomo_model_data.txt", \
                                       index_col=0, header=0, sep='\t')
-    backup_model_data = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM_model_data.txt", \
+    if separate_tr_management:
+        backup_model_data = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM_DM_model_data.txt", \
+                                                index_col=0, header=0, sep='\t')
+        backup_model_data2 = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM2_DM_model_data.txt", \
                                             index_col=0, header=0, sep='\t')
-    backup_model_data2 = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM2_model_data.txt", \
-                                        index_col=0, header=0, sep='\t')
+    else:
+        backup_model_data = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM_model_data.txt", \
+                                            index_col=0, header=0, sep='\t')
+        backup_model_data2 = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM2_model_data.txt", \
+                                             index_col=0, header=0, sep='\t')
 
     compo_step_input_data = pandas.read_csv("data/try_pso/CompoStep_TR_Pyomo_input_data.txt", \
                                             index_col=0, header=0, sep='\t')
-    backup_input_data = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM_input_data.txt", \
+    if separate_tr_management:
+        backup_input_data = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM_DM_input_data.txt", \
+                                                index_col=0, header=0, sep='\t')
+        backup_input_data2 = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM2_DM_input_data.txt", \
                                             index_col=0, header=0, sep='\t')
-    backup_input_data2 = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM2_input_data.txt", \
-                                        index_col=0, header=0, sep='\t')
+    else:
+        backup_input_data = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM_input_data.txt", \
+                                            index_col=0, header=0, sep='\t')
+        backup_input_data2 = pandas.read_csv("data/try_pso/CompoStep_TR_BackupBBM2_input_data.txt", \
+                                             index_col=0, header=0, sep='\t')
 
     fig = plt.figure(figsize=(6,10))
     plt.subplot(611)
@@ -587,12 +630,16 @@ def plot_profile_backup_algo():
     # plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
     #          linestyle='--')
     plt.plot(range(1,max_iter+1), compo_step_plant_data.loc[1:max_iter, 'cost'], \
-             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
+             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2,\
+             label="IPOPT")
     plt.plot(range(1, max_iter + 1), backup_plant_data.loc[1:max_iter, 'cost'], \
-             marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
+             marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth,\
+             label="PSO,$\kappa_b=0.2$")
     plt.plot(range(1, max_iter + 1), backup_plant_data2.loc[1:max_iter, 'cost'], \
-             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
+             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth,\
+             label="PSO,$\kappa_b=0.8$")
     plt.ylabel("plant cost")
+    plt.legend()
     plt.subplot(612)
     # optimal = 0 * np.ones(max_iter + 1)
     # plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -626,7 +673,7 @@ def plot_profile_backup_algo():
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), backup_input_data2.loc[1:max_iter, 'Fb3'], \
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel(r"Fb")
+    plt.ylabel(r"$F_B$")
     plt.subplot(614)
     # optimal = 9.369 * np.ones(max_iter + 1)
     # plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -649,7 +696,7 @@ def plot_profile_backup_algo():
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), backup_input_data2.loc[1:max_iter, 'Tr3'], \
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel(r"Tr")
+    plt.ylabel(r"$T_R$")
     plt.subplot(615)
     plt.plot(range(1, max_iter + 1), compo_step_model_data.loc[1:max_iter, 'tr'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
@@ -657,7 +704,12 @@ def plot_profile_backup_algo():
              marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), backup_model_data2.loc[1:max_iter, 'tr'], \
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel(r"tr")
+    if separate_tr_management:
+        plt.plot(range(1, max_iter + 1), backup_model_data.loc[1:max_iter, 'tr_b'], \
+                 marker='^', c='blue', ls="--", markersize=global_marker_size, linewidth=linewidth)
+        plt.plot(range(1, max_iter + 1), backup_model_data2.loc[1:max_iter, 'tr_b'], \
+                 marker='^', c='red', ls="--", markersize=global_marker_size, linewidth=linewidth)
+    plt.ylabel(r"$||\Delta_k||$")
     plt.subplot(616)
     plt.plot(range(1, max_iter + 1), np.ones(shape=(max_iter,)), \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth * 2)
@@ -665,15 +717,21 @@ def plot_profile_backup_algo():
              marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), backup_model_data2.loc[1:max_iter, 'selected_model'], \
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel("selected_model")
+    plt.ylabel("selected model")
+    plt.yticks([1, 2], ["m", "b"])
+    plt.ylim(0.5, 2.5)
     plt.xlabel("#iteration")
 
-    plt.savefig("pic/try_pso/profile_backup", dpi=600)
+    if separate_tr_management:
+        plt.savefig("pic/try_pso/profile_backup_dm", dpi=600)
+    else:
+        plt.savefig("pic/try_pso/profile_backup_no_dm", dpi=600)
     plt.close()
 
 
 if __name__ == "__main__":
     # generate_noise_file()
     do_test()
-    # plot_profile_original_tr()
-    plot_profile_backup_algo()
+    plot_profile_original_tr()
+    # plot_profile_backup_algo(separate_tr_management=True)
+    # plot_profile_backup_algo(separate_tr_management=False)

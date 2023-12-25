@@ -993,7 +993,7 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
         self.trust_radius_backup = self.options["initial_trust_radius"]
     def register_option(self):
         super().register_option()
-        self.available_options["kappa_r"] = ("[0,1]", 0.5)
+        self.available_options["kappa_b"] = ("[0,1]", 0.5)
         self.available_options["separate_tr_management"] = ("bool", True)
         self.available_options["skip_backup"] = ("bool", False)
 
@@ -1364,12 +1364,12 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
             if (c_improvement_m < self.options['feasibility_tol'] and c_improvement_b > \
                     self.options['feasibility_tol']) or \
                     (c_improvement_m < -self.options['feasibility_tol'] and c_improvement_b >0):
-                if c_improvement_m < c_improvement_b*self.options['kappa_r']:
+                if c_improvement_m < c_improvement_b*self.options['kappa_b']:
                     selected='b'
             if (f_improvement_m < self.options['stationarity_tol'] and f_improvement_b > \
                     self.options['stationarity_tol']) or \
                     (f_improvement_m < -self.options['stationarity_tol'] and f_improvement_b >0):
-                if f_improvement_m/sigma_m < f_improvement_b/sigma_b*self.options['kappa_r']:
+                if f_improvement_m/sigma_m < f_improvement_b/sigma_b*self.options['kappa_b']:
                     selected='b'
             if self.options['skip_backup']:
                 selected='m'
@@ -1526,7 +1526,7 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                     model_improvement = -1e-4
                 rho_m = (self.plant_history_data[self.iter_count]['base_merit'] -
                                self.plant_history_data[self.iter_count]['merit']) / model_improvement
-                self.model_history_data[self.iter_count - 1]['rho'] = rho
+                self.model_history_data[self.iter_count - 1]['rho'] = rho_m
 
                 # calculate rho for the backup model optimization problem
                 model_improvement = self.model_history_data[self.iter_count]['b_base_merit'] - \
@@ -1537,7 +1537,7 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                     model_improvement = -1e-4
                 rho_b = (self.plant_history_data[self.iter_count]['base_merit'] -
                          self.plant_history_data[self.iter_count]['merit']) / model_improvement
-                self.model_history_data[self.iter_count - 1]['rho_b'] = rho
+                self.model_history_data[self.iter_count - 1]['rho_b'] = rho_b
 
                 if selected == 'm':
                     rho = rho_m
@@ -1545,17 +1545,17 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                     rho = rho_b
 
                 # update trust-region radius
-                if rho_m < self.options["eta1"] and self.trust_radius >= len_trial_step:
+                if rho_m < self.options["eta1"] and self.trust_radius >= len_trial_step-1e-5:
                     gamma_m = self.options['gamma1']
-                elif rho_m > self.options["eta2"] and self.trust_radius < len_trial_step:
+                elif rho_m > self.options["eta2"] and (self.trust_radius <= len_trial_step+1e-5 or selected == 'm'):
                     gamma_m = self.options['gamma3']
                 else:
                     gamma_m = 1
                 self.trust_radius *= gamma_m
 
-                if rho_b < self.options["eta1"] and self.trust_radius_backup >= len_trial_step:
+                if rho_b < self.options["eta1"] and self.trust_radius_backup >= len_trial_step-1e-5:
                     gamma_b = self.options['gamma1']
-                elif rho_b > self.options["eta2"] and self.trust_radius_backup < len_trial_step:
+                elif rho_b > self.options["eta2"] and (self.trust_radius_backup <= len_trial_step+1e-5 or selected == 'b'):
                     gamma_b = self.options['gamma3']
                 else:
                     gamma_b = 1

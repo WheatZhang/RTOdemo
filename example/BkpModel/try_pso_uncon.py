@@ -279,7 +279,7 @@ def do_test():
     initial_trust_radius = 0.2
     sigma = 100
     xi_N = 0.5
-    kappa_r=0.2
+    kappa_b=0.2
     max_trust_radius=1
 
     # ------------------------------------

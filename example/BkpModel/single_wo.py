@@ -160,7 +160,7 @@ def compo_step_TR_MA(model_name, perturbation_stepsize, starting_point, sigma, i
     save_iteration_data_in_dict(rto_algorithm.input_history_data, result_filename_header + "input_data.txt")
 
 def compo_step_TR_MA_Backup_Model(backup_model_name, perturbation_stepsize, starting_point, sigma, initial_trust_radius, \
-                                  max_trust_radius,xi_N,kappa_r,\
+                                  max_trust_radius,xi_N,kappa_b,\
                noise_filename, solver_executable, print_iter_data, max_iter,\
                result_filename_header, separate_tr_management, skip_backup=False):
     if backup_model_name == "rigorous_nonlinear":
@@ -188,7 +188,7 @@ def compo_step_TR_MA_Backup_Model(backup_model_name, perturbation_stepsize, star
         "sigma": sigma,
         "max_trust_radius":max_trust_radius,
         "initial_trust_radius":initial_trust_radius,
-        "kappa_r": kappa_r,
+        "kappa_b": kappa_b,
         'feasibility_tol': global_parameter["feasibility_tol"],
         "stationarity_tol": global_parameter["stationarity_tol"],
         'adaptive_sigma': True,
@@ -258,7 +258,7 @@ def do_test():
     initial_trust_radius = 0.1
     sigma = 100
     xi_N = 0.5
-    kappa_r=0.2
+    kappa_b=0.2
     max_trust_radius=0.4
     model_types = ['rigorous_nonlinear', 'quadratic', 'linear']
     suffix = {
@@ -284,26 +284,26 @@ def do_test():
     #             result_filename_header)
     # ------------------------------------
     # print("\nTesting CompoStep_TR with Backup model")
-    # for model in ['quadratic', 'linear']:
-    #     result_filename_header = result_filename_folder + "BackupSepDelta_"+suffix[model]+"_"
-    #     compo_step_TR_MA_Backup_Model(model, perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius, \
-    #                      xi_N, kappa_r,\
-    #                      noise_filename, solver_executable, print_iter_data, max_iter, \
-    #                      result_filename_header, separate_tr_management=True)
-    #
+    for model in ['quadratic', 'linear']:
+        result_filename_header = result_filename_folder + "BackupSepDelta_"+suffix[model]+"_"
+        compo_step_TR_MA_Backup_Model(model, perturbation_stepsize, starting_point, sigma, initial_trust_radius, max_trust_radius, \
+                         xi_N, kappa_b,\
+                         noise_filename, solver_executable, print_iter_data, max_iter, \
+                         result_filename_header, separate_tr_management=True)
+
     #     result_filename_header = result_filename_folder + "BackupIndDelta_" + suffix[model] + "_"
     #     compo_step_TR_MA_Backup_Model(model, perturbation_stepsize, starting_point, sigma, initial_trust_radius,
     #                                   max_trust_radius, \
-    #                                   xi_N, kappa_r, \
+    #                                   xi_N, kappa_b, \
     #                                   noise_filename, solver_executable, print_iter_data, max_iter, \
     #                                   result_filename_header, separate_tr_management=False)
-    result_filename_header = result_filename_folder + "NoBackup"
-    compo_step_TR_MA_Backup_Model('quadratic', perturbation_stepsize, starting_point, sigma, initial_trust_radius,
-                                  max_trust_radius, \
-                             xi_N, kappa_r,\
-                         noise_filename, solver_executable, print_iter_data, max_iter, \
-                         result_filename_header, separate_tr_management=False,\
-                                  skip_backup=True)
+    # result_filename_header = result_filename_folder + "NoBackup"
+    # compo_step_TR_MA_Backup_Model('quadratic', perturbation_stepsize, starting_point, sigma, initial_trust_radius,
+    #                               max_trust_radius, \
+    #                          xi_N, kappa_b,\
+    #                      noise_filename, solver_executable, print_iter_data, max_iter, \
+    #                      result_filename_header, separate_tr_management=False,\
+    #                               skip_backup=True)
 
 def plot_profile_MA():
     max_iter=30
@@ -336,12 +336,13 @@ def plot_profile_MA():
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
              linestyle='--')
     plt.plot(range(1,max_iter+1), ma_plant_data1.loc[1:max_iter, 'cost'], \
-             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
+             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2, label='Detailed')
     plt.plot(range(1, max_iter + 1), ma_plant_data2.loc[1:max_iter, 'cost'], \
-             marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
+             marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth, label='Quadratic')
     plt.plot(range(1, max_iter + 1), ma_plant_data3.loc[1:max_iter, 'cost'], \
-             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth/2)
+             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth/2, label='Zero')
     plt.ylabel("plant cost")
+    plt.legend()
     plt.subplot(512)
     optimal = 0 * np.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -363,7 +364,7 @@ def plot_profile_MA():
              marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), ma_input_data3.loc[1:max_iter, 'Fa'], \
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth/2)
-    plt.ylabel(r"Fa")
+    plt.ylabel(r"$F_A$")
     plt.subplot(514)
     optimal = 9.369 * np.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -374,7 +375,7 @@ def plot_profile_MA():
              marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), ma_input_data3.loc[1:max_iter, 'Fb'], \
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth/2)
-    plt.ylabel(r"Fb")
+    plt.ylabel(r"$F_B$")
     plt.subplot(515)
     optimal = 91.2 * np.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -385,7 +386,7 @@ def plot_profile_MA():
              marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), ma_input_data3.loc[1:max_iter, 'Tr'], \
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth/2)
-    plt.ylabel(r"Tr")
+    plt.ylabel(r"$T_R$")
     plt.xlabel("#iteration")
 
     plt.savefig("pic/single_wo/profile_MA", dpi=600)
@@ -428,14 +429,15 @@ def plot_profile_TR():
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
              linestyle='--')
     plt.plot(range(1,max_iter+1), compo_step_plant_data1.loc[1:max_iter, 'cost'], \
-             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
+             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2, label='Detailed')
     plt.plot(range(1, max_iter + 1), compo_step_plant_data2.loc[1:max_iter, 'cost'], \
-             marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
+             marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth, label='Quadratic')
     plt.plot(range(1, max_iter + 1), compo_step_plant_data3.loc[1:max_iter, 'cost'], \
-             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
+             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth, label='Zero')
     plt.plot(range(1, max_iter + 1), compo_step_plant_data4.loc[1:max_iter, 'cost'], \
-             marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
+             marker='o', c='green', markersize=global_marker_size, linewidth=linewidth, label='MaxIterExcceeded')
     plt.ylabel("plant cost")
+    plt.legend()
     plt.subplot(612)
     optimal = 0 * np.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -461,7 +463,7 @@ def plot_profile_TR():
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), compo_step_input_data4.loc[1:max_iter, 'Fa'], \
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel(r"Fa")
+    plt.ylabel(r"$F_A$")
     plt.subplot(614)
     optimal = 9.369 * np.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -474,7 +476,7 @@ def plot_profile_TR():
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), compo_step_input_data4.loc[1:max_iter, 'Fb'], \
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel(r"Fb")
+    plt.ylabel(r"$F_B$")
     plt.subplot(615)
     optimal = 91.2 * np.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -487,7 +489,7 @@ def plot_profile_TR():
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), compo_step_input_data4.loc[1:max_iter, 'Tr'], \
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel(r"Tr")
+    plt.ylabel(r"$T_R$")
     plt.subplot(616)
     plt.plot(range(1, max_iter + 1), compo_step_model_data1.loc[1:max_iter, 'tr'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
@@ -497,7 +499,7 @@ def plot_profile_TR():
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), compo_step_model_data4.loc[1:max_iter, 'tr'], \
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel(r"tr")
+    plt.ylabel(r"$||\Delta_k||$")
     plt.xlabel("#iteration")
 
     plt.savefig("pic/single_wo/profile_TR", dpi=600)
@@ -540,14 +542,15 @@ def plot_profile_Backup():
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
              linestyle='--')
     plt.plot(range(1,max_iter+1), compo_step_plant_data1.loc[1:max_iter, 'cost'], \
-             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
+             marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2, label="Quadratic,individual $\Delta_k$")
     plt.plot(range(1, max_iter + 1), compo_step_plant_data2.loc[1:max_iter, 'cost'], \
-             marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth)
+             marker='o', c='blue', markersize=global_marker_size, linewidth=linewidth, label="Linear,individual $\Delta_k$")
     plt.plot(range(1, max_iter + 1), compo_step_plant_data3.loc[1:max_iter, 'cost'], \
-             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
+             marker='o', c='red', markersize=global_marker_size, linewidth=linewidth, label="Quadratic,shared $\Delta_k$")
     plt.plot(range(1, max_iter + 1), compo_step_plant_data4.loc[1:max_iter, 'cost'], \
-             marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
+             marker='o', c='green', markersize=global_marker_size, linewidth=linewidth, label="Linear,shared $\Delta_k$")
     plt.ylabel("plant cost")
+    plt.legend()
     plt.subplot(712)
     optimal = 0 * np.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -573,7 +576,7 @@ def plot_profile_Backup():
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), compo_step_input_data4.loc[1:max_iter, 'Fa'], \
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel(r"Fa")
+    plt.ylabel(r"$F_A$")
     plt.subplot(714)
     optimal = 9.369 * np.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -586,7 +589,7 @@ def plot_profile_Backup():
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), compo_step_input_data4.loc[1:max_iter, 'Fb'], \
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel(r"Fb")
+    plt.ylabel(r"$F_B$")
     plt.subplot(715)
     optimal = 91.2 * np.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -599,7 +602,7 @@ def plot_profile_Backup():
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), compo_step_input_data4.loc[1:max_iter, 'Tr'], \
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel(r"Tr")
+    plt.ylabel(r"$T_R$")
     plt.subplot(716)
     plt.plot(range(1, max_iter + 1), compo_step_model_data1.loc[1:max_iter, 'tr'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
@@ -613,7 +616,7 @@ def plot_profile_Backup():
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), compo_step_model_data4.loc[1:max_iter, 'tr'], \
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel(r"tr")
+    plt.ylabel(r"$||\Delta_k||$")
     plt.subplot(717)
     plt.plot(range(1, max_iter + 1), compo_step_model_data1.loc[1:max_iter, 'selected_model'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth * 2)
@@ -623,7 +626,9 @@ def plot_profile_Backup():
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), compo_step_model_data4.loc[1:max_iter, 'selected_model'], \
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
-    plt.ylabel("selected_model")
+    plt.ylabel("selected model")
+    plt.yticks([1,2], ["m","b"])
+    plt.ylim(0.5,2.5)
     plt.xlabel("#iteration")
 
     plt.savefig("pic/single_wo/profile_Backup", dpi=600)
@@ -631,7 +636,7 @@ def plot_profile_Backup():
 
 if __name__ == "__main__":
     # generate_noise_file()
-    do_test()
-    # plot_profile_MA()
+    # do_test()
+    plot_profile_MA()
     plot_profile_TR()
-    # plot_profile_Backup()
+    plot_profile_Backup()

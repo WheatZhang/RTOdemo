@@ -36,7 +36,25 @@ def unfix_mvs(model):
 
 
 def nominal_optimization():
-    model = get_full_asu_model(build_constraint=True)
+    '''
+    binary_coeff=-0.01238, iterations = 81
+    {'FeedMFlow': 4030.761542015044, 'FeedSplitterOut1Ratio': 0.18402973851281232,
+    'FeedSplitterOut2Ratio': 0.5170164329011614, 'HPCCondPrdtMFlow': 1381.045926899585,
+    'LPCExt46MFlow': 1750.8448603091485, 'LPCExt15MFlow': 647.4296890235756,
+    'ASCCondRefRatio': 27.966333753879805, 'OxSplitterOutARatio': 0.08354167049712301,
+    'OBJ': 7378.754395715636}
+
+    binary_coeff=-0.015, iterations = 302
+    {'FeedMFlow': 4086.0037360855003, 'FeedSplitterOut1Ratio': 0.18154168241091428,
+    'FeedSplitterOut2Ratio': 0.5235463025900136, 'HPCCondPrdtMFlow': 1402.9400273571484,
+    'LPCExt46MFlow': 1793.0412318958624, 'LPCExt15MFlow': 633.524517727619,
+    'ASCCondRefRatio': 28.14249703353321, 'OxSplitterOutARatio': 0.09843645583070242,
+    'OBJ': 7231.011764329876}
+
+    :return:
+    '''
+    model = get_full_asu_model(build_constraint=True, binary_coeff=-0.01238)
+    # model = get_full_asu_model(build_constraint=True, binary_coeff=-0.015)
     unfix_mvs(model)
     ivt.load_init_from_template(model, "OriSSOFilled.txt")
 
