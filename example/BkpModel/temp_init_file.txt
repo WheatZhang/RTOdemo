@@ -1,0 +1,61 @@
+Fa	4.000000020185469
+
+Fa_base	4.000000020185469
+
+Fa_con_lam	0.018009140542729618
+
+Fa_con_lam_homo	0
+
+Fa_cost_lam	-68.40150199423078
+
+Fa_cost_lam_homo	0
+
+Fa_homo	0
+
+Fb	8.28319048599421
+
+Fb_base	8.28319048599421
+
+Fb_con_lam	-0.012021502292236528
+
+Fb_con_lam_homo	0
+
+Fb_cost_lam	41.28418670461542
+
+Fb_cost_lam_homo	0
+
+Fb_homo	0
+
+Tr	85.85646083411304
+
+Tr_base	85.85645083411303
+
+Tr_con_lam	0.00365001929236719
+
+Tr_con_lam_homo	0
+
+Tr_cost_lam	-9.520330786472186
+
+Tr_cost_lam_homo	0
+
+Tr_homo	0
+
+XFr
+Components
+A	0.12730563345520085
+B	0.3739200304194638
+C	-7.174648137343064e-43
+E	0.27600197530224346
+G	0.12715705975795533
+P	0.09561530106513663
+
+con_eps	-0.007916936434171545
+
+con_eps_homo	0
+
+cost_eps	-186.55490216323187
+
+cost_eps_homo	0
+
+e	0.0
+

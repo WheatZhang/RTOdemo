@@ -108,12 +108,13 @@ class Algorithm():
             yield k
 
     def filter_mv(self, optimized_input, mv_bounds, print_warning=True):
-        prev_iter_spec = self.spec_function.__call__(self.iter_count-1)
         filter_flag = True
-        for k, v in prev_iter_spec.items():
-            if abs(v - self.current_spec[k]) > 1e-6:
-                filter_flag = False
-                break
+        if self.spec_function is not None:
+            prev_iter_spec = self.spec_function.__call__(self.iter_count - 1)
+            for k, v in prev_iter_spec.items():
+                if abs(v - self.current_spec[k]) > 1e-6:
+                    filter_flag = False
+                    break
         filtered_input = {}
         for k in self.problem_description.symbol_list['MV']:
             if filter_flag:

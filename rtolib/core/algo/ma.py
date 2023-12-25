@@ -994,7 +994,8 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
     def register_option(self):
         super().register_option()
         self.available_options["kappa_r"] = ("[0,1]", 0.5)
-        self.available_options["separate_tr_management"] = ("bool", False)
+        self.available_options["separate_tr_management"] = ("bool", True)
+        self.available_options["skip_backup"] = ("bool", False)
 
     def optimize_for_u(self, tr_radius, tr_base):
         print("primary model opt")
@@ -1190,8 +1191,8 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                 optimized_input_m = self.project_to_trust_region(optimized_input_m, self.current_point, self.trust_radius)
                 input_after_normal_step_m = self.project_to_trust_region(input_after_normal_step_m, self.current_point, self.trust_radius)
                 from rtolib.util.misc import distance_of_two_dicts
-                print("in optimization")
-                print(self.trust_radius)
+                # print("in optimization")
+                # print(self.trust_radius)
                 # raise Exception("for testing")
                 # print(distance_of_two_dicts(optimized_input_m, self.current_point))
             except Exception as e:
@@ -1358,8 +1359,8 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
             print("c_improvement_b = %.6e"%c_improvement_b)
             print("f_improvement_m = %.6e"%f_improvement_m)
             print("f_improvement_b = %.6e"%f_improvement_b)
-            if self.iter_count > 20:
-                print("here")
+            # if self.iter_count > 20:
+                # print("here")
             if (c_improvement_m < self.options['feasibility_tol'] and c_improvement_b > \
                     self.options['feasibility_tol']) or \
                     (c_improvement_m < -self.options['feasibility_tol'] and c_improvement_b >0):
@@ -1370,6 +1371,8 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                     (f_improvement_m < -self.options['stationarity_tol'] and f_improvement_b >0):
                 if f_improvement_m/sigma_m < f_improvement_b/sigma_b*self.options['kappa_r']:
                     selected='b'
+            if self.options['skip_backup']:
+                selected='m'
             if selected == 'm':
                 filtered_input = filtered_input_m
                 self.model_history_data[self.iter_count]['base_merit'] = \
