@@ -58,7 +58,8 @@ class PyomoSimulator(Simulator):
         for c in self.model.component_data_objects(
                 Constraint, descend_into=True):
             if c.upper is None or c.lower is None:
-                c.deactivate()
+                if c.name not in self.pyomo_model.model_inequality_constraints:
+                    c.deactivate()
         # load initial value file
         init_value.load_init_from_template(self.model, self.pyomo_model.initial_value_file, \
                                                        ignore_init_mismatch=True)
@@ -109,6 +110,7 @@ class PyomoSimulator(Simulator):
             self.model.homotopy_simulation_obj.deactivate()
         # solve the problem
         self.solver.options['tol'] = 1e-10
+        # results = self.solver.solve(self.model, tee=True)
         results = self.solver.solve(self.model, tee=self.tee)
         if not ((results.solver.status == SolverStatus.ok) and (
                 results.solver.termination_condition == TerminationCondition.optimal)):

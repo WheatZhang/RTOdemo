@@ -15,7 +15,32 @@ from rtolib.util.cvx_quadr import fit_convex_quadratic_model, get_hypercube_samp
 from rtolib.core.solve import PyomoSimulator
 from pyomo.environ import SolverFactory
 
-
+global_parameter={
+        "eta1": 0.01,
+        "eta2": 0.9,
+        "gamma1": 0.5,
+        "gamma2": 1,
+        "gamma3": 2,
+        "feasibility_tol": 1e-4,
+        "stationarity_tol": 1e-4,
+}
+pic_constant = 0.39370
+font_factor = np.sqrt(1/pic_constant)
+font_legend = {'family': 'Times New Roman',
+         'weight': 'normal',
+         'size': 17/font_factor/1.2,
+         }
+font_title = {'family': 'Times New Roman',
+              'size': 17/font_factor,
+              'weight': 'normal'
+              }
+font_label = {'family': 'Times New Roman',
+             'weight': 'normal',
+             'size': 17/font_factor,
+             }
+global_tick_size=17/font_factor
+plt.rcParams['xtick.direction'] = 'in'
+plt.rcParams['ytick.direction'] = 'in'
 global_parameter={
         "eta1": 0.01,
         "eta2": 0.9,
@@ -256,7 +281,7 @@ def do_test():
     print_iter_data = False
     max_iter = 30
     initial_trust_radius = 0.1
-    sigma = 100
+    sigma = 10 #100
     xi_N = 0.5
     kappa_b=0.2
     max_trust_radius=0.4
@@ -291,12 +316,12 @@ def do_test():
                          noise_filename, solver_executable, print_iter_data, max_iter, \
                          result_filename_header, separate_tr_management=True)
 
-    #     result_filename_header = result_filename_folder + "BackupIndDelta_" + suffix[model] + "_"
-    #     compo_step_TR_MA_Backup_Model(model, perturbation_stepsize, starting_point, sigma, initial_trust_radius,
-    #                                   max_trust_radius, \
-    #                                   xi_N, kappa_b, \
-    #                                   noise_filename, solver_executable, print_iter_data, max_iter, \
-    #                                   result_filename_header, separate_tr_management=False)
+        result_filename_header = result_filename_folder + "BackupIndDelta_" + suffix[model] + "_"
+        compo_step_TR_MA_Backup_Model(model, perturbation_stepsize, starting_point, sigma, initial_trust_radius,
+                                      max_trust_radius, \
+                                      xi_N, kappa_b, \
+                                      noise_filename, solver_executable, print_iter_data, max_iter, \
+                                      result_filename_header, separate_tr_management=False)
     # result_filename_header = result_filename_folder + "NoBackup"
     # compo_step_TR_MA_Backup_Model('quadratic', perturbation_stepsize, starting_point, sigma, initial_trust_radius,
     #                               max_trust_radius, \
@@ -342,7 +367,7 @@ def plot_profile_MA():
     plt.plot(range(1, max_iter + 1), ma_plant_data3.loc[1:max_iter, 'cost'], \
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth/2, label='Zero')
     plt.ylabel("plant cost")
-    plt.legend()
+    plt.legend(prop=font_legend)
     plt.subplot(512)
     optimal = 0 * np.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -437,7 +462,7 @@ def plot_profile_TR():
     plt.plot(range(1, max_iter + 1), compo_step_plant_data4.loc[1:max_iter, 'cost'], \
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth, label='MaxIterExcceeded')
     plt.ylabel("plant cost")
-    plt.legend()
+    plt.legend(prop=font_legend)
     plt.subplot(612)
     optimal = 0 * np.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -550,7 +575,7 @@ def plot_profile_Backup():
     plt.plot(range(1, max_iter + 1), compo_step_plant_data4.loc[1:max_iter, 'cost'], \
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth, label="Linear,shared $\Delta_k$")
     plt.ylabel("plant cost")
-    plt.legend()
+    plt.legend(prop=font_legend)
     plt.subplot(712)
     optimal = 0 * np.ones(max_iter + 1)
     plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
@@ -636,7 +661,7 @@ def plot_profile_Backup():
 
 if __name__ == "__main__":
     # generate_noise_file()
-    # do_test()
-    plot_profile_MA()
-    plot_profile_TR()
+    do_test()
+    # plot_profile_MA()
+    # plot_profile_TR()
     plot_profile_Backup()

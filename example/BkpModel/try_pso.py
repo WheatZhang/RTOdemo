@@ -21,7 +21,23 @@ global_parameter={
         "feasibility_tol": 1e-4,
         "stationarity_tol": 1e-4,
 }
-
+pic_constant = 0.39370
+font_factor = np.sqrt(1/pic_constant)
+font_legend = {'family': 'Times New Roman',
+         'weight': 'normal',
+         'size': 17/font_factor/1.2,
+         }
+font_title = {'family': 'Times New Roman',
+              'size': 17/font_factor,
+              'weight': 'normal'
+              }
+font_label = {'family': 'Times New Roman',
+             'weight': 'normal',
+             'size': 17/font_factor,
+             }
+global_tick_size=17/font_factor
+plt.rcParams['xtick.direction'] = 'in'
+plt.rcParams['ytick.direction'] = 'in'
 def generate_noise_file():
     noise_level = {
         'cost': 0,
@@ -386,14 +402,14 @@ def do_test():
     #             noise_filename, solver_executable, print_iter_data, max_iter, \
     #             result_filename_header)
     # ------------------------------------
-    print("\nTesting CompoStep_TR_MA with black-box model2")
-    population, pso_max_iter = 50, 50
-    result_filename_header = result_filename_folder + "CompoStep_TR_Blackbox2_"
-    compo_step_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
-                                 population, pso_max_iter, initial_trust_radius, max_trust_radius, \
-                                 xi_N, \
-                                 noise_filename, solver_executable, print_iter_data, max_iter, \
-                                 result_filename_header)
+    # print("\nTesting CompoStep_TR_MA with black-box model2")
+    # population, pso_max_iter = 50, 50
+    # result_filename_header = result_filename_folder + "CompoStep_TR_Blackbox2_"
+    # compo_step_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
+    #                              population, pso_max_iter, initial_trust_radius, max_trust_radius, \
+    #                              xi_N, \
+    #                              noise_filename, solver_executable, print_iter_data, max_iter, \
+    #                              result_filename_header)
     # ------------------------------------
     # print("\nTesting CompoStep_TR_MA with quadratic black-box model")
     # population, pso_max_iter = 500, 500
@@ -404,45 +420,45 @@ def do_test():
     #                              noise_filename, solver_executable, print_iter_data, max_iter, \
     #                              result_filename_header)
     # ------------------------------------
-    # print("\nTesting Backup CompoStep_TR_MA with black-box model")
-    # population, pso_max_iter = 20, 20
-    # kappa_b = 0.2
-    # result_filename_header = result_filename_folder + "CompoStep_TR_BackupBBM_"
-    # compo_step_backup_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
-    #                  population, pso_max_iter, \
-    #                  initial_trust_radius, max_trust_radius, xi_N, kappa_b, \
-    #                  noise_filename, solver_executable, print_iter_data, max_iter, \
-    #                  result_filename_header, separate_tr_management=False)
+    print("\nTesting Backup CompoStep_TR_MA with black-box model")
+    population, pso_max_iter = 20, 20
+    kappa_b = 0.2
+    result_filename_header = result_filename_folder + "CompoStep_TR_BackupBBM_"
+    compo_step_backup_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
+                     population, pso_max_iter, \
+                     initial_trust_radius, max_trust_radius, xi_N, kappa_b, \
+                     noise_filename, solver_executable, print_iter_data, max_iter, \
+                     result_filename_header, separate_tr_management=False)
     # ------------------------------------
-    # print("\nTesting Backup CompoStep_TR_MA with black-box model")
-    # population, pso_max_iter = 20, 20
-    # kappa_b = 0.8
-    # result_filename_header = result_filename_folder + "CompoStep_TR_BackupBBM2_"
-    # compo_step_backup_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
-    #                                     population, pso_max_iter, \
-    #                                     initial_trust_radius, max_trust_radius, xi_N, kappa_b, \
-    #                                     noise_filename, solver_executable, print_iter_data, max_iter, \
-    #                                     result_filename_header, separate_tr_management=False)
+    print("\nTesting Backup CompoStep_TR_MA with black-box model")
+    population, pso_max_iter = 20, 20
+    kappa_b = 0.8
+    result_filename_header = result_filename_folder + "CompoStep_TR_BackupBBM2_"
+    compo_step_backup_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
+                                        population, pso_max_iter, \
+                                        initial_trust_radius, max_trust_radius, xi_N, kappa_b, \
+                                        noise_filename, solver_executable, print_iter_data, max_iter, \
+                                        result_filename_header, separate_tr_management=False)
     # ------------------------------------
-    # print("\nTesting Backup CompoStep_TR_MA with black-box model")
-    # population, pso_max_iter = 20, 20
-    # kappa_b = 0.2
-    # result_filename_header = result_filename_folder + "CompoStep_TR_BackupBBM_DM_"
-    # compo_step_backup_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
-    #                                     population, pso_max_iter, \
-    #                                     initial_trust_radius, max_trust_radius, xi_N, kappa_b, \
-    #                                     noise_filename, solver_executable, print_iter_data, max_iter, \
-    #                                     result_filename_header, separate_tr_management=True)
+    print("\nTesting Backup CompoStep_TR_MA with black-box model")
+    population, pso_max_iter = 20, 20
+    kappa_b = 0.2
+    result_filename_header = result_filename_folder + "CompoStep_TR_BackupBBM_DM_"
+    compo_step_backup_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
+                                        population, pso_max_iter, \
+                                        initial_trust_radius, max_trust_radius, xi_N, kappa_b, \
+                                        noise_filename, solver_executable, print_iter_data, max_iter, \
+                                        result_filename_header, separate_tr_management=True)
     # ------------------------------------
-    # print("\nTesting Backup CompoStep_TR_MA with black-box model")
-    # population, pso_max_iter = 20, 20
-    # kappa_b = 0.8
-    # result_filename_header = result_filename_folder + "CompoStep_TR_BackupBBM2_DM_"
-    # compo_step_backup_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
-    #                                     population, pso_max_iter, \
-    #                                     initial_trust_radius, max_trust_radius, xi_N, kappa_b, \
-    #                                     noise_filename, solver_executable, print_iter_data, max_iter, \
-    #                                     result_filename_header, separate_tr_management=True)
+    print("\nTesting Backup CompoStep_TR_MA with black-box model")
+    population, pso_max_iter = 20, 20
+    kappa_b = 0.8
+    result_filename_header = result_filename_folder + "CompoStep_TR_BackupBBM2_DM_"
+    compo_step_backup_TR_blackbox_model(perturbation_stepsize, starting_point, sigma, \
+                                        population, pso_max_iter, \
+                                        initial_trust_radius, max_trust_radius, xi_N, kappa_b, \
+                                        noise_filename, solver_executable, print_iter_data, max_iter, \
+                                        result_filename_header, separate_tr_management=True)
 
 
 def plot_profile_original_tr():
@@ -478,9 +494,9 @@ def plot_profile_original_tr():
 
     fig = plt.figure(figsize=(6,9))
     plt.subplot(511)
-    # optimal = -210.33 * np.ones(max_iter + 1)
-    # plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
-    #          linestyle='--')
+    optimal = -545.1393 * np.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
+             linestyle='--')
     plt.plot(range(1,max_iter+1), compo_step_plant_data.loc[1:max_iter, 'cost'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2,\
              label="IPOPT")
@@ -494,11 +510,11 @@ def plot_profile_original_tr():
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth,\
              label="PSO,population=500")
     plt.ylabel("plant cost")
-    plt.legend()
+    plt.legend(prop=font_legend)
     plt.subplot(512)
-    # optimal = 0 * np.ones(max_iter + 1)
-    # plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
-    #          linestyle='--')
+    optimal = 0 * np.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
+             linestyle='--')
     plt.plot(range(1, max_iter + 1), compo_step_plant_data.loc[1:max_iter, 'con'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
     plt.plot(range(1, max_iter + 1), compo_step_plant_data2.loc[1:max_iter, 'con'], \
@@ -507,11 +523,18 @@ def plot_profile_original_tr():
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.plot(range(1, max_iter + 1), compo_step_plant_data4.loc[1:max_iter, 'con'], \
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
+    plt.ylim((-2,1))
     plt.ylabel("plant constraints")
     plt.subplot(513)
-    # optimal = 3.887 * np.ones(max_iter + 1)
-    # plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
-    #          linestyle='--')
+    optimal = 3.426431 * np.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, color='gray',
+             linestyle='--')
+    optimal = 4.006947 * np.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, color='gray',
+             linestyle='--')
+    optimal = 4.566622 * np.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, color='gray',
+             linestyle='--')
     plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'Fb1'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
     plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'Fb2'], \
@@ -538,9 +561,15 @@ def plot_profile_original_tr():
              marker='o', c='green', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel(r"$F_B$")
     plt.subplot(514)
-    # optimal = 9.369 * np.ones(max_iter + 1)
-    # plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
-    #          linestyle='--')
+    optimal = 83.09195 * np.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, color='gray',
+             linestyle='--')
+    optimal = 84.94781 * np.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, color='gray',
+             linestyle='--')
+    optimal = 86.50558 * np.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, color='gray',
+             linestyle='--')
     plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'Tr1'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth * 2)
     plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'Tr2'], \
@@ -626,9 +655,9 @@ def plot_profile_backup_algo(separate_tr_management):
 
     fig = plt.figure(figsize=(6,10))
     plt.subplot(611)
-    # optimal = -210.33 * np.ones(max_iter + 1)
-    # plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
-    #          linestyle='--')
+    optimal = -545.1393 * np.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
+             linestyle='--')
     plt.plot(range(1,max_iter+1), compo_step_plant_data.loc[1:max_iter, 'cost'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2,\
              label="IPOPT")
@@ -639,11 +668,11 @@ def plot_profile_backup_algo(separate_tr_management):
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth,\
              label="PSO,$\kappa_b=0.8$")
     plt.ylabel("plant cost")
-    plt.legend()
+    plt.legend(prop=font_legend)
     plt.subplot(612)
-    # optimal = 0 * np.ones(max_iter + 1)
-    # plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
-    #          linestyle='--')
+    optimal = 0 * np.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
+             linestyle='--')
     plt.plot(range(1, max_iter + 1), compo_step_plant_data.loc[1:max_iter, 'con'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
     plt.plot(range(1, max_iter + 1), backup_plant_data.loc[1:max_iter, 'con'], \
@@ -651,10 +680,17 @@ def plot_profile_backup_algo(separate_tr_management):
     plt.plot(range(1, max_iter + 1), backup_plant_data2.loc[1:max_iter, 'con'], \
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel("plant constraints")
+    plt.ylim((-2, 1))
     plt.subplot(613)
-    # optimal = 3.887 * np.ones(max_iter + 1)
-    # plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
-    #          linestyle='--')
+    optimal = 3.426431 * np.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, color='gray',
+             linestyle='--')
+    optimal = 4.006947 * np.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, color='gray',
+             linestyle='--')
+    optimal = 4.566622 * np.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, color='gray',
+             linestyle='--')
     plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'Fb1'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth*2)
     plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'Fb2'], \
@@ -675,9 +711,15 @@ def plot_profile_backup_algo(separate_tr_management):
              marker='o', c='red', markersize=global_marker_size, linewidth=linewidth)
     plt.ylabel(r"$F_B$")
     plt.subplot(614)
-    # optimal = 9.369 * np.ones(max_iter + 1)
-    # plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, label='Optimal', color='gray',
-    #          linestyle='--')
+    optimal = 83.09195 * np.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, color='gray',
+             linestyle='--')
+    optimal = 84.94781 * np.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, color='gray',
+             linestyle='--')
+    optimal = 86.50558 * np.ones(max_iter + 1)
+    plt.plot(range(max_iter + 1), optimal, linewidth=linewidth, color='gray',
+             linestyle='--')
     plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'Tr1'], \
              marker='o', c='black', markersize=global_marker_size, linewidth=linewidth * 2)
     plt.plot(range(1, max_iter + 1), compo_step_input_data.loc[1:max_iter, 'Tr2'], \
@@ -732,6 +774,6 @@ def plot_profile_backup_algo(separate_tr_management):
 if __name__ == "__main__":
     # generate_noise_file()
     do_test()
-    plot_profile_original_tr()
-    # plot_profile_backup_algo(separate_tr_management=True)
-    # plot_profile_backup_algo(separate_tr_management=False)
+    # plot_profile_original_tr()
+    plot_profile_backup_algo(separate_tr_management=True)
+    plot_profile_backup_algo(separate_tr_management=False)

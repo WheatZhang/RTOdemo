@@ -996,6 +996,7 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
         self.available_options["kappa_b"] = ("[0,1]", 0.5)
         self.available_options["separate_tr_management"] = ("bool", True)
         self.available_options["skip_backup"] = ("bool", False)
+        self.available_options["use_premature_solution"] = ("bool", True)
 
     def optimize_for_u(self, tr_radius, tr_base):
         print("primary model opt")
@@ -1020,6 +1021,7 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
         return optimized_input, input_after_normal_step, solve_status
     def one_step_simulation(self):
         print("Iteration %d" % self.iter_count)
+        flag_primary_model_fatal_error = False
 
         # initialize storage
         self.model_history_data[self.iter_count] = {}
@@ -1089,21 +1091,25 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
 
         # get model simulation result with and without modifiers
         model_output_data = self.get_model_simulation_result(trial_points)
-        obj_var_name = self.problem_description.symbol_list['OBJ']
-        obj = self.model_history_data[self.iter_count][obj_var_name] / \
-              self.problem_description.scaling_factors[obj_var_name]
-        self.model_history_data[self.iter_count]['m_obj_for_merit'] = obj
-        infeasibility_sq = 0
-        for con_var_name in self.problem_description.symbol_list['CON']:
-            infeasibility_sq += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
-                                self.problem_description.scaling_factors[con_var_name] ** 2
-        infeasibility = numpy.sqrt(infeasibility_sq)
-        self.model_history_data[self.iter_count]['m_infeasibility'] = infeasibility
-        merit = obj + infeasibility * self.sigma
-        self.model_history_data[self.iter_count]['m_merit'] = merit
+        if model_output_data is None:
+            print("model simulation fails when updating modifiers")
+            flag_primary_model_fatal_error=True
+        else:
+            obj_var_name = self.problem_description.symbol_list['OBJ']
+            obj = self.model_history_data[self.iter_count][obj_var_name] / \
+                  self.problem_description.scaling_factors[obj_var_name]
+            self.model_history_data[self.iter_count]['m_obj_for_merit'] = obj
+            infeasibility_sq = 0
+            for con_var_name in self.problem_description.symbol_list['CON']:
+                infeasibility_sq += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
+                                    self.problem_description.scaling_factors[con_var_name] ** 2
+            infeasibility = numpy.sqrt(infeasibility_sq)
+            self.model_history_data[self.iter_count]['m_infeasibility'] = infeasibility
+            merit = obj + infeasibility * self.sigma
+            self.model_history_data[self.iter_count]['m_merit'] = merit
 
-        # update modifiers
-        self.update_modifiers(plant_output_data, model_output_data)
+            # update modifiers
+            self.update_modifiers(plant_output_data, model_output_data)
 
         # get backup model simulation result with and without modifiers
         model_output_data = self.get_backup_model_simulation_result(trial_points)
@@ -1124,34 +1130,46 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
         self.update_modifiers_backup_model(plant_output_data, model_output_data)
 
         # set basepoint
-        self.model_simulator.set_base_point(self.current_point)
-        self.model_optimizer.set_base_point(self.current_point)
+        if not flag_primary_model_fatal_error:
+            self.model_simulator.set_base_point(self.current_point)
+            self.model_optimizer.set_base_point(self.current_point)
         self.backup_model_simulator.set_base_point(self.current_point)
         self.backup_model_optimizer.set_base_point(self.current_point)
 
-        self.store_model_adaptation_data()
+        if not flag_primary_model_fatal_error:
+            self.store_model_adaptation_data()
         self.store_backup_model_adaptation_data()
 
         # culculate_base_merit
-        base_model_output, solve_status = self.model_simulator.simulate(base_input,
-                                                                        param_values=self.current_parameter_value,
-                                                                        use_homo=self.options["homotopy_simulation"])
-        obj_var_name = self.problem_description.symbol_list['OBJ']
-        base_obj = base_model_output[obj_var_name] / \
-                   self.problem_description.scaling_factors[obj_var_name]
-        infeasibility_sq = 0
-        for con_var_name in self.problem_description.symbol_list['CON']:
-            infeasibility_sq += max(base_model_output[con_var_name], 0) ** 2 / \
-                                self.problem_description.scaling_factors[con_var_name] ** 2
-        base_infeasibility = numpy.sqrt(infeasibility_sq)
+        try:
+            base_model_output, solve_status = self.model_simulator.simulate(base_input,
+                                                                            param_values=self.current_parameter_value,
+                                                                            use_homo=self.options["homotopy_simulation"])
+        except Exception as e:
+            print(e)
+            print("model simulation failure when calculating base merit")
+            flag_primary_model_fatal_error = True
+        else:
+            if solve_status != ModelSolvingStatus.OK:
+                print("model simulation failure when calculating base merit")
+                flag_primary_model_fatal_error = True
+        if not flag_primary_model_fatal_error:
+            obj_var_name = self.problem_description.symbol_list['OBJ']
+            base_obj = base_model_output[obj_var_name] / \
+                       self.problem_description.scaling_factors[obj_var_name]
+            infeasibility_sq = 0
+            for con_var_name in self.problem_description.symbol_list['CON']:
+                infeasibility_sq += max(base_model_output[con_var_name], 0) ** 2 / \
+                                    self.problem_description.scaling_factors[con_var_name] ** 2
+            base_infeasibility = numpy.sqrt(infeasibility_sq)
 
-        self.model_history_data[base_iteration]['m_base_' + obj_var_name] = base_model_output[obj_var_name]
-        self.model_history_data[base_iteration]['m_base_obj_for_merit'] = base_obj
-        for con_var_name in self.problem_description.symbol_list['CON']:
-            self.model_history_data[base_iteration]['m_base_' + con_var_name] = base_model_output[con_var_name]
-        self.model_history_data[base_iteration]['m_base_infeasibility'] = base_infeasibility
-        merit = base_obj + base_infeasibility * self.sigma
-        self.model_history_data[base_iteration]['m_base_merit'] = merit
+            self.model_history_data[base_iteration]['m_base_' + obj_var_name] = base_model_output[obj_var_name]
+            self.model_history_data[base_iteration]['m_base_obj_for_merit'] = base_obj
+            for con_var_name in self.problem_description.symbol_list['CON']:
+                self.model_history_data[base_iteration]['m_base_' + con_var_name] = base_model_output[con_var_name]
+            self.model_history_data[base_iteration]['m_base_infeasibility'] = base_infeasibility
+            merit = base_obj + base_infeasibility * self.sigma
+            self.model_history_data[base_iteration]['m_base_merit'] = merit
 
         # culculate_base_merit for the backup model
         base_model_output, solve_status = self.backup_model_simulator.simulate(base_input,
@@ -1182,23 +1200,34 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                 tr_base[k] = v
 
         while (not iter_successful_flag):
+            flag_primary_model_iter_calc_failure = flag_primary_model_fatal_error
             self.model_history_data[self.iter_count]['tr'] = self.trust_radius
             self.model_history_data[self.iter_count]['tr_b'] = self.trust_radius_backup
             # calculate the optimal input
             # tr_base equals self.current_point
             try:
                 optimized_input_m, input_after_normal_step_m, solve_status_m = self.optimize_for_u(self.trust_radius, tr_base)
-                optimized_input_m = self.project_to_trust_region(optimized_input_m, self.current_point, self.trust_radius)
-                input_after_normal_step_m = self.project_to_trust_region(input_after_normal_step_m, self.current_point, self.trust_radius)
-                from rtolib.util.misc import distance_of_two_dicts
-                # print("in optimization")
-                # print(self.trust_radius)
-                # raise Exception("for testing")
-                # print(distance_of_two_dicts(optimized_input_m, self.current_point))
+                if solve_status != ModelSolvingStatus.OK:
+                    if self.options["use_premature_solution"]:
+                        optimized_input_m = self.project_to_trust_region(optimized_input_m, self.current_point, self.trust_radius)
+                        input_after_normal_step_m = self.project_to_trust_region(input_after_normal_step_m, self.current_point, self.trust_radius)
+                        # from rtolib.util.misc import distance_of_two_dicts
+                        # print("in optimization")
+                        # print(self.trust_radius)
+                        # raise Exception("for testing")
+                        # print(distance_of_two_dicts(optimized_input_m, self.current_point))
+                    else:
+                        optimized_input_m = base_input  # self.current_point
+                        input_after_normal_step_m = base_input  # self.current_point
+                        self.model_history_data[self.iter_count]['event'] = "primary optimization failed"
+                        print("primary model optimization failure")
+                        flag_primary_model_iter_calc_failure = True
             except Exception as e:
                 optimized_input_m = base_input #self.current_point
                 input_after_normal_step_m = base_input #self.current_point
                 self.model_history_data[self.iter_count]['event'] = "primary optimization failed"
+                print("primary model optimization failure")
+                flag_primary_model_iter_calc_failure = True
             # if solve_status_m == ModelSolvingStatus.OPTIMIZATION_FAILED:
             #     optimized_input_m = self.current_point
             #     input_after_normal_step_m = self.current_point
@@ -1233,39 +1262,54 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
             if self.options['adaptive_sigma']:
                 # check sigma is large enough
                 # the primary model part
-                from rtolib.util.misc import distance_of_two_dicts
+                # from rtolib.util.misc import distance_of_two_dicts
                 # print("in adapting sigma")
                 # print(distance_of_two_dicts(filtered_input_m, self.current_point))
-                model_trial_point_output_m = self.get_model_simulation_result([filtered_input_m])[0]
-                obj_var_name = self.problem_description.symbol_list['OBJ']
-                obj_after_optimization_m = self.model_history_data[self.iter_count][obj_var_name] / \
-                                         self.problem_description.scaling_factors[obj_var_name]
-                infeasibility_sq_m = 0
-                for con_var_name in self.problem_description.symbol_list['CON']:
-                    infeasibility_sq_m += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
-                                        self.problem_description.scaling_factors[con_var_name] ** 2
-                infeasibility_m = numpy.sqrt(infeasibility_sq_m)
-                merit_m = obj_after_optimization_m + infeasibility_m * self.sigma
-                print("base_iteration: %d"%base_iteration)
-                base_infeasibility_m = self.model_history_data[base_iteration]['m_base_infeasibility']
-                base_obj_m = self.model_history_data[base_iteration]['m_base_obj_for_merit']
-                base_merit_m = base_obj_m + base_infeasibility_m * self.sigma
+                if not flag_primary_model_iter_calc_failure:
+                    model_trial_point_output_m = self.get_model_simulation_result([filtered_input_m])[0]
+                    if model_trial_point_output_m is None:
+                        flag_primary_model_iter_calc_failure = False
+                        print("primary model simulation failure in evaluating trial point")
 
-                output_after_normal_step_m = self.get_model_simulation_result([input_after_normal_step_m])[0]
-                obj_after_normal_step_m = output_after_normal_step_m[obj_var_name] / \
-                                        self.problem_description.scaling_factors[obj_var_name]
+                if not flag_primary_model_iter_calc_failure:
+                    obj_var_name = self.problem_description.symbol_list['OBJ']
+                    obj_after_optimization_m = self.model_history_data[self.iter_count][obj_var_name] / \
+                                             self.problem_description.scaling_factors[obj_var_name]
+                    infeasibility_sq_m = 0
+                    for con_var_name in self.problem_description.symbol_list['CON']:
+                        infeasibility_sq_m += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
+                                            self.problem_description.scaling_factors[con_var_name] ** 2
+                    infeasibility_m = numpy.sqrt(infeasibility_sq_m)
+                    merit_m = obj_after_optimization_m + infeasibility_m * self.sigma
+                    print("base_iteration: %d"%base_iteration)
+                    base_infeasibility_m = self.model_history_data[base_iteration]['m_base_infeasibility']
+                    base_obj_m = self.model_history_data[base_iteration]['m_base_obj_for_merit']
+                    base_merit_m = base_obj_m + base_infeasibility_m * self.sigma
 
-                if (base_infeasibility_m - infeasibility_m < self.options['feasibility_tol']):
-                    # in this case, the feasibility progress is insignificant
-                    sigma_m = self.sigma
-                elif (base_merit_m - merit_m) / (base_infeasibility_m - infeasibility_m) / self.sigma < self.options[
-                    "sigma_kappa"]:
-                    # in this case, if sigma increases,
-                    # it must be that (base_obj-obj_after_normal_step)<0
-                    sigma_m = max(self.sigma,
-                                     (base_obj_m - obj_after_normal_step_m) / (self.options["sigma_kappa"] - 1) / \
-                                     (base_infeasibility_m - infeasibility_m) + 1)
-                    print("sigma_m=%f" % sigma_m)
+                if not flag_primary_model_iter_calc_failure:
+                    output_after_normal_step_m = self.get_model_simulation_result([input_after_normal_step_m])[0]
+                    if output_after_normal_step_m is None:
+                        flag_primary_model_iter_calc_failure = False
+                        print("primary model simulation failure in evaluating trial point")
+
+                if not flag_primary_model_iter_calc_failure:
+                    obj_after_normal_step_m = output_after_normal_step_m[obj_var_name] / \
+                                            self.problem_description.scaling_factors[obj_var_name]
+
+                if not flag_primary_model_iter_calc_failure:
+                    if (base_infeasibility_m - infeasibility_m < self.options['feasibility_tol']):
+                        # in this case, the feasibility progress is insignificant
+                        sigma_m = self.sigma
+                    elif (base_merit_m - merit_m) / (base_infeasibility_m - infeasibility_m) / self.sigma < self.options[
+                        "sigma_kappa"]:
+                        # in this case, if sigma increases,
+                        # it must be that (base_obj-obj_after_normal_step)<0
+                        sigma_m = max(self.sigma,
+                                         (base_obj_m - obj_after_normal_step_m) / (self.options["sigma_kappa"] - 1) / \
+                                         (base_infeasibility_m - infeasibility_m) + 1)
+                        print("sigma_m=%f" % sigma_m)
+                    else:
+                        sigma_m = self.sigma
                 else:
                     sigma_m = self.sigma
 
@@ -1307,27 +1351,29 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
 
             # model selection
             # calculate relevent data from the primary model
-            # from rtolib.util.misc import distance_of_two_dicts
-            # print("in model switching")
-            # print(distance_of_two_dicts(filtered_input_m, self.current_point)) # it becomes 0?!
-            model_trial_point_output_m = self.get_model_simulation_result([filtered_input_m])[0]
-            obj_var_name = self.problem_description.symbol_list['OBJ']
-            obj_m = self.model_history_data[self.iter_count][obj_var_name] / \
-                  self.problem_description.scaling_factors[obj_var_name]
-            # print(base_input)
-            # print(filtered_input_m)
-            self.model_history_data[self.iter_count]['m_obj_for_merit'] = obj_m
-            infeasibility_sq_m = 0
-            for con_var_name in self.problem_description.symbol_list['CON']:
-                infeasibility_sq_m += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
-                                    self.problem_description.scaling_factors[con_var_name] ** 2
-            infeasibility_m = numpy.sqrt(infeasibility_sq_m)
-            self.model_history_data[self.iter_count]['m_infeasibility'] = infeasibility_m
-            merit_m = obj_m + infeasibility_m * sigma_m
-            self.model_history_data[self.iter_count]['m_merit'] = merit_m
-            base_merit_m = self.model_history_data[base_iteration]['m_base_obj_for_merit'] + \
-                         self.model_history_data[base_iteration]['m_base_infeasibility'] * sigma_m
-            self.model_history_data[self.iter_count]['m_base_merit'] = base_merit_m
+            if not flag_primary_model_iter_calc_failure:
+                model_trial_point_output_m = self.get_model_simulation_result([filtered_input_m])[0]
+            if model_trial_point_output_m is None:
+                flag_primary_model_iter_calc_failure = False
+                print("primary model simulation failure in preparing data for model selection")
+            if not flag_primary_model_iter_calc_failure:
+                obj_var_name = self.problem_description.symbol_list['OBJ']
+                obj_m = self.model_history_data[self.iter_count][obj_var_name] / \
+                      self.problem_description.scaling_factors[obj_var_name]
+                # print(base_input)
+                # print(filtered_input_m)
+                self.model_history_data[self.iter_count]['m_obj_for_merit'] = obj_m
+                infeasibility_sq_m = 0
+                for con_var_name in self.problem_description.symbol_list['CON']:
+                    infeasibility_sq_m += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
+                                        self.problem_description.scaling_factors[con_var_name] ** 2
+                infeasibility_m = numpy.sqrt(infeasibility_sq_m)
+                self.model_history_data[self.iter_count]['m_infeasibility'] = infeasibility_m
+                merit_m = obj_m + infeasibility_m * sigma_m
+                self.model_history_data[self.iter_count]['m_merit'] = merit_m
+                base_merit_m = self.model_history_data[base_iteration]['m_base_obj_for_merit'] + \
+                             self.model_history_data[base_iteration]['m_base_infeasibility'] * sigma_m
+                self.model_history_data[self.iter_count]['m_base_merit'] = base_merit_m
 
             # calculate relevent data from the backup model
             model_trial_point_output_b = self.get_backup_model_simulation_result([filtered_input_b])[0]
@@ -1349,30 +1395,37 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
 
             # compare the two models
             selected = 'm'
-            c_improvement_m = self.model_history_data[base_iteration]['m_base_infeasibility']-\
-                        infeasibility_m
-            c_improvement_b = self.model_history_data[base_iteration]['b_base_infeasibility'] - \
-                              infeasibility_b
-            f_improvement_m = base_merit_m - merit_m
-            f_improvement_b = base_merit_b - merit_b
-            print("c_improvement_m = %.6e"%c_improvement_m)
-            print("c_improvement_b = %.6e"%c_improvement_b)
-            print("f_improvement_m = %.6e"%f_improvement_m)
-            print("f_improvement_b = %.6e"%f_improvement_b)
-            # if self.iter_count > 20:
-                # print("here")
-            if (c_improvement_m < self.options['feasibility_tol'] and c_improvement_b > \
-                    self.options['feasibility_tol']) or \
-                    (c_improvement_m < -self.options['feasibility_tol'] and c_improvement_b >0):
-                if c_improvement_m < c_improvement_b*self.options['kappa_b']:
-                    selected='b'
-            if (f_improvement_m < self.options['stationarity_tol'] and f_improvement_b > \
-                    self.options['stationarity_tol']) or \
-                    (f_improvement_m < -self.options['stationarity_tol'] and f_improvement_b >0):
-                if f_improvement_m/sigma_m < f_improvement_b/sigma_b*self.options['kappa_b']:
-                    selected='b'
-            if self.options['skip_backup']:
-                selected='m'
+            if flag_primary_model_iter_calc_failure:
+                selected = 'b'
+            else:
+                c_improvement_m = self.model_history_data[base_iteration]['m_base_infeasibility']-\
+                            infeasibility_m
+                c_improvement_b = self.model_history_data[base_iteration]['b_base_infeasibility'] - \
+                                  infeasibility_b
+                f_improvement_m = base_merit_m - merit_m
+                f_improvement_b = base_merit_b - merit_b
+                print("c_improvement_m = %.6e"%c_improvement_m)
+                print("c_improvement_b = %.6e"%c_improvement_b)
+                print("f_improvement_m = %.6e"%f_improvement_m)
+                print("f_improvement_b = %.6e"%f_improvement_b)
+                # if self.iter_count > 20:
+                    # print("here")
+                if (c_improvement_m < self.options['feasibility_tol'] and c_improvement_b > \
+                        self.options['feasibility_tol']) or \
+                        (c_improvement_m < -self.options['feasibility_tol'] and c_improvement_b >0):
+                    selected = 'b'
+                else:
+                    if c_improvement_m < c_improvement_b*self.options['kappa_b']:
+                        selected='b'
+                if (f_improvement_m < self.options['stationarity_tol'] and f_improvement_b > \
+                        self.options['stationarity_tol']) or \
+                        (f_improvement_m < -self.options['stationarity_tol'] and f_improvement_b >0):
+                    selected = 'b'
+                else:
+                    if f_improvement_m/sigma_m < f_improvement_b/sigma_b*self.options['kappa_b']:
+                        selected='b'
+                if self.options['skip_backup']:
+                    selected='m'
             if selected == 'm':
                 filtered_input = filtered_input_m
                 self.model_history_data[self.iter_count]['base_merit'] = \
@@ -1422,19 +1475,25 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
             if selected == 'm':
                 # calculate the merit function for the two models using the new sigma
                 model_trial_point_output_m = self.get_model_simulation_result([filtered_input])[0]
-                obj_var_name = self.problem_description.symbol_list['OBJ']
-                obj_m = self.model_history_data[self.iter_count][obj_var_name] / \
-                        self.problem_description.scaling_factors[obj_var_name]
-                infeasibility_sq_m = 0
-                for con_var_name in self.problem_description.symbol_list['CON']:
-                    infeasibility_sq_m += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
-                                          self.problem_description.scaling_factors[con_var_name] ** 2
-                infeasibility_m = numpy.sqrt(infeasibility_sq_m)
-                merit_m = obj_m + infeasibility_m * self.sigma
-                self.model_history_data[self.iter_count]['merit'] = merit_m
-                base_merit_m = self.model_history_data[base_iteration]['m_base_obj_for_merit'] + \
-                               self.model_history_data[base_iteration]['m_base_infeasibility'] * self.sigma
-                self.model_history_data[self.iter_count]['base_merit'] = base_merit_m
+                if model_trial_point_output_m is None:
+                    flag_primary_model_iter_calc_failure = False
+                    print("primary model simulation failure in preparing data for calculating rho")
+                if not flag_primary_model_iter_calc_failure:
+                    obj_var_name = self.problem_description.symbol_list['OBJ']
+                    obj_m = self.model_history_data[self.iter_count][obj_var_name] / \
+                            self.problem_description.scaling_factors[obj_var_name]
+                    infeasibility_sq_m = 0
+                    for con_var_name in self.problem_description.symbol_list['CON']:
+                        infeasibility_sq_m += max(self.model_history_data[self.iter_count][con_var_name], 0) ** 2 / \
+                                              self.problem_description.scaling_factors[con_var_name] ** 2
+                    infeasibility_m = numpy.sqrt(infeasibility_sq_m)
+                    merit_m = obj_m + infeasibility_m * self.sigma
+                    self.model_history_data[self.iter_count]['merit'] = merit_m
+                    self.model_history_data[self.iter_count]['m_merit'] = merit_m
+                    base_merit_m = self.model_history_data[base_iteration]['m_base_obj_for_merit'] + \
+                                   self.model_history_data[base_iteration]['m_base_infeasibility'] * self.sigma
+                    self.model_history_data[self.iter_count]['base_merit'] = base_merit_m
+                    self.model_history_data[self.iter_count]['m_base_merit'] = base_merit_m
             elif selected == 'b':
                 # calculate relevent data from the backup model
                 model_trial_point_output_b = self.get_backup_model_simulation_result([filtered_input])[0]
@@ -1447,10 +1506,12 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                                           self.problem_description.scaling_factors[con_var_name] ** 2
                 infeasibility_b = numpy.sqrt(infeasibility_sq_b)
                 merit_b = obj_b + infeasibility_b * self.sigma
+                self.model_history_data[self.iter_count]['b_merit'] = merit_b
                 self.model_history_data[self.iter_count]['merit'] = merit_b
                 base_merit_b = self.model_history_data[base_iteration]['b_base_obj_for_merit'] + \
                                self.model_history_data[base_iteration]['b_base_infeasibility'] * self.sigma
                 self.model_history_data[self.iter_count]['b_base_merit'] = base_merit_b
+                self.model_history_data[self.iter_count]['base_merit'] = base_merit_b
 
             # accept the trial point
             flag_infeasible = False
@@ -1518,15 +1579,19 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                         self.model_history_data[self.iter_count - 1]['rho'] = 1
                         continue
                 # calculate rho for the primary model optimization problem
-                model_improvement = self.model_history_data[self.iter_count]['m_base_merit'] - \
-                            self.model_history_data[self.iter_count]['m_merit']
-                if model_improvement >= 0 and model_improvement < 1e-4:
-                    model_improvement = 1e-4
-                elif model_improvement <= 0 and model_improvement > -1e-4:
-                    model_improvement = -1e-4
-                rho_m = (self.plant_history_data[self.iter_count]['base_merit'] -
-                               self.plant_history_data[self.iter_count]['merit']) / model_improvement
-                self.model_history_data[self.iter_count - 1]['rho'] = rho_m
+                if not flag_primary_model_iter_calc_failure:
+                    model_improvement = self.model_history_data[self.iter_count]['m_base_merit'] - \
+                                self.model_history_data[self.iter_count]['m_merit']
+                    if model_improvement >= 0 and model_improvement < 1e-4:
+                        model_improvement = 1e-4
+                    elif model_improvement <= 0 and model_improvement > -1e-4:
+                        model_improvement = -1e-4
+                    rho_m = (self.plant_history_data[self.iter_count]['base_merit'] -
+                                   self.plant_history_data[self.iter_count]['merit']) / model_improvement
+                    self.model_history_data[self.iter_count - 1]['rho'] = rho_m
+                else:
+                    rho_m = -3
+                    self.model_history_data[self.iter_count - 1]['rho'] = rho_m
 
                 # calculate rho for the backup model optimization problem
                 model_improvement = self.model_history_data[self.iter_count]['b_base_merit'] - \
@@ -1545,13 +1610,14 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
                     rho = rho_b
 
                 # update trust-region radius
-                if rho_m < self.options["eta1"] and self.trust_radius >= len_trial_step-1e-5:
-                    gamma_m = self.options['gamma1']
-                elif rho_m > self.options["eta2"] and (self.trust_radius <= len_trial_step+1e-5 or selected == 'm'):
-                    gamma_m = self.options['gamma3']
-                else:
-                    gamma_m = 1
-                self.trust_radius *= gamma_m
+                if not flag_primary_model_iter_calc_failure:
+                    if rho_m < self.options["eta1"] and self.trust_radius >= len_trial_step-1e-5:
+                        gamma_m = self.options['gamma1']
+                    elif rho_m > self.options["eta2"] and (self.trust_radius <= len_trial_step+1e-5 or selected == 'm'):
+                        gamma_m = self.options['gamma3']
+                    else:
+                        gamma_m = 1
+                    self.trust_radius *= gamma_m
 
                 if rho_b < self.options["eta1"] and self.trust_radius_backup >= len_trial_step-1e-5:
                     gamma_b = self.options['gamma1']

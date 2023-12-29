@@ -213,20 +213,38 @@ class Algorithm():
             self.model_history_data[self.iter_count]["b_"+k] = v
 
     def current_point_model_simulation(self, current_point):
-        # get model simulation result with and without modifiers
-        outputs, solve_status = self.model_simulator.simulate(current_point,
-                                                              param_values=self.current_parameter_value,
-                                                              use_homo=self.options["homotopy_simulation"])
-        # TODO:deal with solve status
+        successful_flag=True
+        try:
+            outputs, solve_status = self.model_simulator.simulate(current_point,
+                                                                  param_values=self.current_parameter_value,
+                                                                  use_homo=self.options["homotopy_simulation"])
+        except Exception as e:
+            print(e)
+            successful_flag = False
+        else:
+            if solve_status == False or solve_status == AlgoIterReturnStatus.OPTIMIZATION_FAILED:
+                successful_flag = False
+        if not successful_flag:
+            return None
         for k, v in outputs.items():
             self.model_history_data[self.iter_count][k] = v
+        return self.model_history_data
 
     def get_model_simulation_result(self, trial_points):
+        successful_flag=True
         model_output_data = [{} for i in range(len(trial_points))]
         for i, p in enumerate(trial_points):
-            outputs, solve_status = self.model_simulator.simulate(p, param_values=self.current_parameter_value,
+            try:
+                outputs, solve_status = self.model_simulator.simulate(p, param_values=self.current_parameter_value,
                                                                   use_homo=self.options["homotopy_simulation"])
-            # TODO:deal with solve status
+            except Exception as e:
+                print(e)
+                successful_flag = False
+            else:
+                if solve_status == False or solve_status == AlgoIterReturnStatus.OPTIMIZATION_FAILED:
+                    successful_flag = False
+            if not successful_flag:
+                return None
             if i == 0:
                 for k, v in outputs.items():
                     self.model_history_data[self.iter_count][k] = v

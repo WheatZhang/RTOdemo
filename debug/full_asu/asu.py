@@ -3,13 +3,13 @@ from pyomo.environ import *
 import rtolib.util.init_value as ivt
 
 def norminal_simulation():
-    model = get_full_asu_model()
+    model = get_full_asu_model(build_constraint=False, binary_coeff=-0.015)
     ivt.load_init_from_template(model, "GOX17000InitValue.txt")
 
     solver_executable = r"F:\Research\RTOdemo\external\bin\ipopt.exe"
     solver = SolverFactory('ipopt', executable=solver_executable)
     results = solver.solve(model, tee=True)
-    ivt.to_template(model, "GOX17000SimInitValue.txt")
+    ivt.to_template(model, "GOX17000SimInitValue_model.txt")
 
 def get_optimization_result(model):
     ret = {}
@@ -68,6 +68,8 @@ def nominal_optimization():
     solver.solve(model, tee=True)
     result = get_optimization_result(model)
     print(result)
+    # ivt.to_template(model, "GOX17000SimInitValue_model.txt")
+    ivt.to_template(model, "GOX17000SimInitValue_plant.txt")
 
 
 

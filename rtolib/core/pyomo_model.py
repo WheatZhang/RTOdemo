@@ -49,7 +49,12 @@ class PyomoModel():
         raise NotImplementedError('This is an interface method.')
 
     def build(self, model):
+        self.model_inequality_constraints = []
         self.build_body(model)
+        for c in model.component_data_objects(
+                Constraint, descend_into=True):
+            if c.upper is None or c.lower is None:
+                self.model_inequality_constraints.append(c.name)
         self.build_rto(model, self.output_variables)
 
     def load_init(self, model):
@@ -97,7 +102,13 @@ class PyomoModelWithModifiers(PyomoModel):
                 yield mv+"_"+cv + "_lam"
 
     def build(self, model):
+        self.model_inequality_constraints = []
         self.base_pyomo_model.build_body(model)
+        for c in model.component_data_objects(
+                Constraint, descend_into=True):
+            if c.upper is None or c.lower is None:
+                self.model_inequality_constraints.append(c.name)
+
         for name in self.modifier_names_iterator():
             setattr(model, name, Var(initialize=0))
         for mv in self.modifier_mvs:
