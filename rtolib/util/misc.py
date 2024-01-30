@@ -78,3 +78,9 @@ def square_circle_mapping(x, radius, circle_scaling):
         ret[i] = x[i]/k_shrink*radius*circle_scaling[i]
     return ret
 
+def sort_samples(X):
+    from python_tsp.distances import great_circle_distance_matrix
+    from python_tsp.heuristics import solve_tsp_simulated_annealing
+    distance_matrix = great_circle_distance_matrix(X)
+    permutation, distance = solve_tsp_simulated_annealing(distance_matrix, max_processing_time=500)
+    return X[permutation,:]

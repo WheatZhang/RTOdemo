@@ -782,6 +782,8 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
             self.model_history_data[self.iter_count]['sigma'] = self.sigma
             # bound the input
             mv_bounds = self.problem_description.bounds
+            print("optimized_input calculated by the tr problem")
+            print(optimized_input)
             filtered_input = self.adapt_to_bound_mv(optimized_input, mv_bounds)
             # set specification and store input data
             self.set_current_point(filtered_input)
@@ -844,6 +846,8 @@ class ModifierAdaptationCompoStepTR(ModifierAdaptationPenaltyTR):
             self.plant_history_data[self.iter_count]['base_merit'] = base_merit
 
             model_trial_point_output = self.get_model_simulation_result([filtered_input])[0]
+            print("model_trial_point_output")
+            print(model_trial_point_output)
             obj_var_name = self.problem_description.symbol_list['OBJ']
             obj = self.model_history_data[self.iter_count][obj_var_name] / \
                   self.problem_description.scaling_factors[obj_var_name]
@@ -1353,9 +1357,9 @@ class MACompoStepTRBackupModel(ModifierAdaptationCompoStepTR):
             # calculate relevent data from the primary model
             if not flag_primary_model_iter_calc_failure:
                 model_trial_point_output_m = self.get_model_simulation_result([filtered_input_m])[0]
-            if model_trial_point_output_m is None:
-                flag_primary_model_iter_calc_failure = False
-                print("primary model simulation failure in preparing data for model selection")
+                if model_trial_point_output_m is None:
+                    flag_primary_model_iter_calc_failure = False
+                    print("primary model simulation failure in preparing data for model selection")
             if not flag_primary_model_iter_calc_failure:
                 obj_var_name = self.problem_description.symbol_list['OBJ']
                 obj_m = self.model_history_data[self.iter_count][obj_var_name] / \

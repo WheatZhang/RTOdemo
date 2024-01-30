@@ -109,7 +109,8 @@ class PyomoSimulator(Simulator):
         else:
             self.model.homotopy_simulation_obj.deactivate()
         # solve the problem
-        self.solver.options['tol'] = 1e-10
+        if self.solver.name == 'ipopt':
+            self.solver.options['tol'] = 1e-10
         # results = self.solver.solve(self.model, tee=True)
         results = self.solver.solve(self.model, tee=self.tee)
         if not ((results.solver.status == SolverStatus.ok) and (

@@ -9,6 +9,7 @@ from pyomo.environ import SolverFactory
 from rtolib.core.pyomo_model import ModelSolvingStatus
 import numpy as np
 import pickle
+from rtolib.util.init_value import load_init_from_template
 
 def fit_wo_convex_quadratic_surrogate():
     model_simulator = PyomoSimulator(Wo_reactor())
@@ -116,7 +117,7 @@ def fit_parallel_wo_convex_quadratic_surrogate():
         print(model_string)
 
 
-def get_asu_samples():
+def get_asu_model_samples():
     model_simulator = PyomoSimulator(ASU_Model())
     model_simulator.build(default_ASU_description)
     solver_executable = r"F:\Research\ModularTask\wys_fit\WholeOpt\ipopt38.exe"
@@ -186,13 +187,84 @@ def get_asu_samples():
                 Y[i,j] = outputs[cv]
 
 
-    with open("data/asu_quadratic/X",'wb') as f:
+    with open("data/asu_quadratic/X_model",'wb') as f:
         pickle.dump(X, f)
-    with open("data/asu_quadratic/Y", 'wb') as f:
+    with open("data/asu_quadratic/Y_model", 'wb') as f:
         pickle.dump(Y, f)
-    with open("data/asu_quadratic/success_flag", 'wb') as f:
+    with open("data/asu_quadratic/success_flag_model", 'wb') as f:
         pickle.dump(success_flag, f)
 
+
+def get_asu_plant_samples():
+    model_simulator = PyomoSimulator(ASU_Plant())
+    model_simulator.build(default_ASU_description)
+    solver_executable = r"F:\Research\ModularTask\wys_fit\WholeOpt\ipopt38.exe"
+    solver = SolverFactory('ipopt', executable=solver_executable)
+    default_options = {}
+    default_options['tol'] = 1e-8  # this could be smaller if necessary
+    default_options['bound_push'] = 1e-10  # this is also crucial, for both convergence and speed
+    default_options['max_iter'] = 500
+    solver.options['linear_solver'] = 'ma57'
+    # it is sensitive to "obj_scaling_factor"
+    # default_options['obj_scaling_factor'] = 10
+    model_simulator.set_solver(solver, tee=False, default_options=default_options)
+
+    mvs = default_ASU_description.symbol_list['MV']
+    dimension = len(mvs)
+    n_data = 2000
+    shrinking_factor = 1
+    lb = []
+    ub = []
+    for mv in mvs:
+        lb_origin = default_ASU_description.bounds[mv][0]
+        ub_origin = default_ASU_description.bounds[mv][1]
+        center = (lb_origin+ub_origin)/2
+        lb_new = center-(center-lb_origin)*shrinking_factor
+        ub_new = center+(ub_origin-center)*shrinking_factor
+        lb.append(lb_new)
+        ub.append(ub_new)
+    X = get_hypercube_sampling(dimension, n_data, lb, ub, seed=1)
+
+    cvs = list(default_ASU_description.symbol_list['CON'])
+    cvs.append(default_ASU_description.symbol_list['OBJ'])
+
+    Y = np.zeros((n_data,len(cvs)), dtype=float)
+    success_flag = np.zeros((n_data,), dtype=int)
+    param_values = {}
+    for k in model_simulator.pyomo_model.parameters.keys():
+        param_values[k] = model_simulator.pyomo_model.default_value[k]
+    for i in range(n_data):
+        if i%10 == 0:
+            print("simulating data %d"%i)
+        input_dict = {}
+        for j,mv in enumerate(mvs):
+            input_dict[mv] = X[i,j]
+        try:
+            outputs, solve_status = model_simulator.simulate(input_dict, param_values=param_values,
+                                                         use_homo=True)
+        except Exception as e:
+            load_init_from_template(model_simulator.model, model_simulator.pyomo_model.initial_value_file, \
+                                               ignore_init_mismatch=True)
+            solve_status=False
+        else:
+            if solve_status == False or solve_status == ModelSolvingStatus.OPTIMIZATION_FAILED:
+                load_init_from_template(model_simulator.model, model_simulator.pyomo_model.initial_value_file, \
+                                        ignore_init_mismatch=True)
+                solve_status = False
+        if solve_status == False or solve_status == ModelSolvingStatus.OPTIMIZATION_FAILED:
+            print("solution fails")
+        else:
+            for j, cv in enumerate(cvs):
+                success_flag[i] = 1
+                Y[i,j] = outputs[cv]
+
+
+        with open("data/asu_quadratic/X_plant",'wb') as f:
+            pickle.dump(X[0:i,:], f)
+        with open("data/asu_quadratic/Y_plant", 'wb') as f:
+            pickle.dump(Y[0:i,:], f)
+        with open("data/asu_quadratic/success_flag_plant", 'wb') as f:
+            pickle.dump(success_flag[0:i], f)
 
 def fit_asu_convex_quadratic_surrogate():
     with open("data/asu_quadratic/X",'rb') as f:
@@ -262,5 +334,5 @@ def fit_asu_convex_quadratic_surrogate():
 if __name__ == "__main__":
     # fit_wo_convex_quadratic_surrogate()
     # fit_parallel_wo_convex_quadratic_surrogate()
-    # get_asu_samples()
-    fit_asu_convex_quadratic_surrogate()
+    get_asu_plant_samples()
+    # fit_asu_convex_quadratic_surrogate()

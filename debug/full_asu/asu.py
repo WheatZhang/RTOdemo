@@ -53,7 +53,8 @@ def nominal_optimization():
 
     :return:
     '''
-    model = get_full_asu_model(build_constraint=True, binary_coeff=-0.01238)
+    # model = get_full_asu_model(build_constraint=True, binary_coeff=-0.01238)
+    model = get_full_asu_model(build_constraint=True, binary_coeff=-0.01238, LOX = 17100)
     # model = get_full_asu_model(build_constraint=True, binary_coeff=-0.015)
     unfix_mvs(model)
     ivt.load_init_from_template(model, "OriSSOFilled.txt")
@@ -69,7 +70,7 @@ def nominal_optimization():
     result = get_optimization_result(model)
     print(result)
     # ivt.to_template(model, "GOX17000SimInitValue_model.txt")
-    ivt.to_template(model, "GOX17000SimInitValue_plant.txt")
+    # ivt.to_template(model, "GOX17000SimInitValue_plant.txt")
 
 
 

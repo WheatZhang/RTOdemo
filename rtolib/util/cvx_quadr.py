@@ -113,8 +113,10 @@ def fit_convex_quadratic_model(X, y, eps_hessian=1e-4):
     return c0, c, 0.5*Hessian, y_pred
 
 def get_hypercube_sampling(dimension, n_data, lb, ub, seed=1):
+    from rtolib.util.misc import sort_samples
     engine = scipy.stats.qmc.LatinHypercube(d=dimension, seed=seed)
     samples = engine.random(n_data)
+    samples = sort_samples(samples)
     sample_X = np.zeros((n_data,dimension))
     permutation = np.random.permutation(n_data)
     for i, s in enumerate(samples):
