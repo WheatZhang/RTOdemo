@@ -3,34 +3,27 @@
 import numpy as np
 from scipy.optimize import minimize
 import re
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Ridge
 
 def GetVarSymbol(nth):
     return "x"+str(nth)
+def GetFullXAsList(n):
+    s = "["
+    for i in range(n):
+        if i != 0:
+            s += ","
+        s+=GetVarSymbol(i)
+    s += "]"
+    return s
 
 class ConvergenceError(Exception):
     def __init__(self, str):
         print(str)
 
-class MonomialItem(object):
-    def __init__(self, power_coeff, coeff):
-        self.power_coeff = power_coeff
-        self.coeff = coeff
-
-    def calc_derivative(self, direction):
-        if self.power_coeff[direction] == 0:
-            return MonomialItem([0,0,0], 0)
-        else:
-            coeff=self.coeff*self.power_coeff[direction]
-            power_coeff = [0,0,0]
-            for i in range(3):
-                power_coeff[i] = self.power_coeff[i]
-            power_coeff[direction] -= 1
-            return MonomialItem(power_coeff, coeff)
-
-class fittingBase(object):
+class MonomialBase(object):
     '''
     定义了多项式拟合所需要的每一个单项式（基）
+    与MonomialFunction的区别是不含系数
     '''
     def __init__(self, power_coeff):
         self.power_coeff = power_coeff
@@ -42,7 +35,7 @@ class fittingBase(object):
                 raise ValueError("The order is too high.")
 
     def  __eq__(self, baseB):
-        if not isinstance(baseB, fittingBase):
+        if not isinstance(baseB, MonomialBase):
             return False
         if self.dimension != baseB.dimension:
             return False
@@ -78,10 +71,10 @@ class fittingBase(object):
             return "1"
         return str
 
-class fittingBaseGroup(object):
+class MonomialBaseGroup(object):
     '''
     定义了多项式拟合的一组完整的基。
-    self.bases中存储了若干fittingBase对象，每个对应一个单项式基。
+    self.bases中存储了若干MonomialBase对象，每个对应一个单项式基。
     '''
     def __init__(self, name, dimension):
         self.name = name
@@ -109,7 +102,7 @@ class fittingBaseGroup(object):
     def generate_power_series(self):
         str = ""
         for i in range(self.dimension):
-            str += fittingBaseGroup.generate_single_power_series(GetVarSymbol(i), self.max_order[i])
+            str += MonomialBaseGroup.generate_single_power_series(GetVarSymbol(i), self.max_order[i])
         return str
 
     def generate_expression(self, coeff):
@@ -118,9 +111,9 @@ class fittingBaseGroup(object):
         n_items = len(self.bases)
         for index, item in enumerate(self.bases):
             if index != n_items-1:
-                str += "\t    "+item.generate_str()+"*%.8e+\\\n"%coeff[index]
+                str += "\t    "+item.generate_str()+"*%.25e+\\\n"%coeff[index]
             else:
-                str += "\t    "+item.generate_str()+"*%.8e\n"%coeff[index]
+                str += "\t    "+item.generate_str()+"*%.25e\n"%coeff[index]
         return str
 
     def __contains__(self, e):
@@ -161,7 +154,7 @@ class fittingBaseGroup(object):
         else:
             for i in range(0, order + 1):
                 prefix = [i]
-                for suffix in fittingBaseGroup._base_A_iterater(order, dimension - 1):
+                for suffix in MonomialBaseGroup._base_A_iterater(order, dimension - 1):
                     yield prefix + suffix
 
     @staticmethod
@@ -172,7 +165,7 @@ class fittingBaseGroup(object):
         else:
             for i in range(0, order+1):
                 prefix = [i]
-                for suffix in fittingBaseGroup._base_B_iterater(order-i, dimension-1):
+                for suffix in MonomialBaseGroup._base_B_iterater(order-i, dimension-1):
                     yield prefix+suffix
 
     @staticmethod
@@ -183,9 +176,9 @@ class fittingBaseGroup(object):
         # y,xy,x2y,x3y,
         # y2, xy2, x2y2,x3y2,
         # y3,xy3,x2y3,x3y3
-        fitting_base_group = fittingBaseGroup('TypeADim%dOrder%d' % (dimension, order), dimension)
-        for item in fittingBaseGroup._base_A_iterater(order, dimension):
-            fitting_base_group.add_base((fittingBase(item)))
+        fitting_base_group = MonomialBaseGroup('TypeADim%dOrder%d' % (dimension, order), dimension)
+        for item in MonomialBaseGroup._base_A_iterater(order, dimension):
+            fitting_base_group.add_base((MonomialBase(item)))
         return fitting_base_group
 
     @staticmethod
@@ -196,9 +189,9 @@ class fittingBaseGroup(object):
         # y,xy,x2y,
         # y2, xy2,
         # y3
-        fitting_base_group = fittingBaseGroup('TypeBDim%dOrder%d'%(dimension, order), dimension)
-        for item in fittingBaseGroup._base_B_iterater(order, dimension):
-            fitting_base_group.add_base((fittingBase(item)))
+        fitting_base_group = MonomialBaseGroup('TypeBDim%dOrder%d'%(dimension, order), dimension)
+        for item in MonomialBaseGroup._base_B_iterater(order, dimension):
+            fitting_base_group.add_base((MonomialBase(item)))
         return fitting_base_group
 
     @staticmethod
@@ -220,32 +213,82 @@ class fittingBaseGroup(object):
         :return:
         '''
         if way == "Individual":
-            return fittingBaseGroup.general_fitting_base_A(order, dimension)
+            return MonomialBaseGroup.general_fitting_base_A(order, dimension)
         elif way == 'Compound':
-            return fittingBaseGroup.general_fitting_base_B(order, dimension)
+            return MonomialBaseGroup.general_fitting_base_B(order, dimension)
         else:
             raise ValueError("Unknown way.")
 
-class GeneralFitter(object):
-    def __init__(self, name, data=None, indep_var_index=None, dep_var_index=None, base_group=None, sign_derivative=False):
-        if not sign_derivative:
-            if data is None:
-                return
-            if not isinstance(data, np.ndarray):
-                raise TypeError("The data for fitting process must be an ndarray.")
-            self.name = name
-            self.base_group = base_group
-            self.data = data
-            self.dimension = len(indep_var_index)
-            if self.dimension != self.base_group.dimension:
-                raise ValueError("The dimension of the base is incorrect.")
-            self.indep_var_index =indep_var_index
-            self.dep_var_index = dep_var_index
-            self.X_center = None
-            self.y_center = None
-            self.original_X_center = None
-        else:
-            self.name=name
+
+class ApproximatonFunction(object):
+    def __init__(self, dimension):
+        self.dimension = dimension
+
+    def set_var_name(self, indep_var_name, dep_var_name):
+        if self.dimension != len(indep_var_name):
+            raise ValueError("The dimension of the indep_var_name is incorrect.")
+        for name in indep_var_name:
+            if re.match(r"x\d+", name) or re.match(r"x\d+_\d+", name) or name == 'y':
+                raise NameError("Illegal independent variable name: %s"%name)
+        self.indep_var_name = indep_var_name
+        self.dep_var_name = dep_var_name
+
+    def evaluate(self, x):
+        return NotImplementedError
+
+    def generate_text(self):
+        return NotImplementedError
+
+class PolynomialFunction(ApproximatonFunction):
+    def __init__(self, dimension, base_group, coeff, max_value, min_value):
+        self.dimension = dimension
+        self.base_group = base_group
+        self.coeff = coeff
+        self.max_value = max_value
+        self.min_value = min_value
+
+    def evaluate(self, x):
+        data = []
+        for index,item in enumerate(x):
+            data.append((item - self.min_value[index]) / (self.max_value[index] - self.min_value[index]))
+        raw_output = self.base_group.evaluate(data, self.coeff)
+        return raw_output * (self.max_value[-1] - self.min_value[-1]) + self.min_value[-1]
+
+    def generate_text(self, name=None, flag_function_def=True):
+        str = ""
+        if flag_function_def:
+            str += "def " + name + "("
+            first_flag = True
+            for i in range(self.dimension):
+                if first_flag:
+                    str += self.indep_var_name[i]
+                    first_flag = False
+                else:
+                    str += ',' + self.indep_var_name[i]
+            str += "):\n"
+        for i in range(self.dimension):
+            str += "\t" + GetVarSymbol(i) + " = (" + self.indep_var_name[i] + "-%.25e)/%.25e\n" % (
+                self.min_value[i], self.max_value[i] - self.min_value[i])
+        str += self.base_group.generate_power_series()
+        str += self.base_group.generate_expression(self.coeff)
+        str += "\toutput = output*%.25e+%.25e\n" % (
+            self.max_value[-1] - self.min_value[-1], self.min_value[-1])
+        if flag_function_def:
+            str += "\t" + self.dep_var_name + " = output\n"
+            str += "\treturn " + self.dep_var_name+"\n\n"
+        return str
+
+
+class PolynomialFitter(object):
+    def __init__(self, dimension, base_group):
+        assert isinstance(base_group, MonomialBaseGroup)
+        if dimension != base_group.dimension:
+            return ValueError("The dimension of the base is incorrect.")
+        self.base_group = base_group
+        self.dimension = dimension
+        self.X_center = None
+        self.y_center = None
+        self.original_X_center = None
 
     def set_center(self, x, y):
         '''
@@ -256,47 +299,6 @@ class GeneralFitter(object):
         self.original_X_center = np.array(x)
         self.original_y_center = y
 
-    def set_var_name(self, indep_var_name, dep_var_name):
-        if self.dimension != len(indep_var_name):
-            raise ValueError("The dimension of the indep_var_name is incorrect.")
-        for name in indep_var_name:
-            if re.match(r"x\d+_\d+", name) or name == 'y':
-                raise NameError("Illegal independent variable name: %s"%name)
-        self.indep_var_name = indep_var_name
-        self.dep_var_name = dep_var_name
-
-    def cost_function_OLD_VERSION(self, params, data):
-        error = 0
-        for n_data in range(data.shape[0]):
-            error+=np.linalg.norm(data[n_data,self.dep_var_index] - \
-                                  self.base_group.evaluate(data[n_data, self.indep_var_index],params))
-        return error
-
-    def fit_OLD_VERSION(self, fitterB=None):
-        self.min_value = np.zeros(shape=(self.dimension+1,))
-        self.max_value = np.zeros(shape=(self.dimension+1,))
-        for i in range(self.dimension):
-            self.min_value[i] = np.min(self.data[:, self.indep_var_index[i]])
-            self.max_value[i] = np.max(self.data[:, self.indep_var_index[i]])
-        self.min_value[self.dimension] = np.min(self.data[:, self.dep_var_index])
-        self.max_value[self.dimension] = np.max(self.data[:, self.dep_var_index])
-        data = np.zeros(shape=self.data.shape)
-        for i in range(self.data.shape[0]):
-            for index,item in enumerate(self.indep_var_index):
-                data[i,item] = (self.data[i,item]-self.min_value[index])/(self.max_value[index]-self.min_value[index])
-            data[i, self.dep_var_index] = (self.data[i, self.dep_var_index] - self.min_value[-1]) / (self.max_value[-1] - self.min_value[-1])
-        if fitterB == None:
-            x0 = np.zeros(shape=(self.base_group.numberOfBases(),))
-        else:
-            x0 = np.zeros(shape=(self.base_group.numberOfBases(),))
-            for index, item in enumerate(fitterB.base_group.bases):
-                for index2, item2 in enumerate(self.base_group.bases):
-                    if item == item2:
-                        self.coeff[item2] = fitterB.coeff[item]
-                        break
-        output = minimize(self.cost_function, x0, args=(data))
-        self.coeff = output.x
-
     def cost_function(self, params, X, y):
         error = y - X.dot(params)
         return error.dot(error)
@@ -305,331 +307,249 @@ class GeneralFitter(object):
         error = self.y_center - self.X_center.dot(params)
         return error
 
-    def fit(self, fitterB=None, method='minimize'):
+    def fit(self, data_X, data_Y, init_coeff=None, method='minimize'):
         if method == 'sklearn-ols' and self.original_X_center is not None:
             raise Exception("sklearn-ols method can not handle centered ")
-        self.min_value = np.zeros(shape=(self.dimension+1,))
-        self.max_value = np.zeros(shape=(self.dimension+1,))
+        if data_X.shape[1]!=self.dimension:
+            return ValueError("The dimension of the data is incorrect.")
+        min_value = np.zeros(shape=(self.dimension+1,))
+        max_value = np.zeros(shape=(self.dimension+1,))
         for i in range(self.dimension):
-            self.min_value[i] = np.min(self.data[:, self.indep_var_index[i]])
-            self.max_value[i] = np.max(self.data[:, self.indep_var_index[i]])
-        self.min_value[self.dimension] = np.min(self.data[:, self.dep_var_index])
-        self.max_value[self.dimension] = np.max(self.data[:, self.dep_var_index])
-        data = np.zeros(shape=self.data.shape)
+            min_value[i] = np.min(data_X[:, i])
+            max_value[i] = np.max(data_X[:, i])
+            if max_value[i] == min_value[i]:
+                raise ValueError("input %d"%i + " has only one value in all samples.")
+        min_value[self.dimension] = np.min(data_Y[:])
+        max_value[self.dimension] = np.max(data_Y[:])
+        data_X_scaled = np.zeros(shape=data_X.shape)
+        data_Y_scaled = np.zeros(shape=data_Y.shape)
+        n_data = data_X_scaled.shape[0]
         # scale raw data
-        for i in range(self.data.shape[0]):
-            for index,item in enumerate(self.indep_var_index):
-                if self.max_value[index] == self.min_value[index]:
-                    raise ValueError(self.indep_var_name[index]+" has only one value in all samples.")
-                data[i,item] = (self.data[i,item]-self.min_value[index])/(self.max_value[index]-self.min_value[index])
-            if self.max_value[-1] == self.min_value[-1]:
-                raise ValueError(self.dep_var_name+" has only one value in all samples.")
-            data[i, self.dep_var_index] = (self.data[i, self.dep_var_index] - self.min_value[-1]) / (self.max_value[-1] - self.min_value[-1])
-        # adapt data to the base group. This makes the optimization problem an SQP.
+        for i in range(self.dimension):
+            data_X_scaled[:, i] = (data_X[:, i] - min_value[i]) / (
+                            max_value[i] - min_value[i])
+        data_Y_scaled = (data_Y-min_value[self.dimension]) / (
+                            max_value[self.dimension] - min_value[self.dimension])
+        # adapt data to the base group
         temp = []
-        for n_data in range(data.shape[0]):
-            temp.append(self.base_group.bases[0].evaluate(data[n_data, self.indep_var_index]))
+        for n in range(n_data):
+            temp.append(self.base_group.bases[0].evaluate(data_X_scaled[n, :]))
         data_for_fit = np.transpose([temp])
         for index, item in enumerate(self.base_group.bases):
             if index == 0:
                 continue
             temp = []
-            for n_data in range(data.shape[0]):
-                temp.append(item.evaluate(data[n_data, self.indep_var_index]))
+            for n in range(n_data):
+                temp.append(item.evaluate(data_X_scaled[n, :]))
             data_for_fit = np.hstack((data_for_fit,np.transpose([temp])))
         # scale and preceed the center if needed
         if self.original_X_center is not None:
             original_X_center = np.zeros(shape=(1,self.original_X_center.shape[0]))
             for index, item in enumerate(self.original_X_center):
-                original_X_center[0,index] = (self.original_X_center[index] - self.min_value[index]) / (
-                            self.max_value[index] - self.min_value[index])
+                original_X_center[0,index] = (self.original_X_center[index] - min_value[index]) / (
+                            max_value[index] - min_value[index])
             self.X_center = np.zeros(shape=(self.base_group.numberOfBases(),))
             for i in range(self.X_center.shape[0]):
                 self.X_center[i] = self.base_group.bases[i].evaluate(original_X_center[0,self.indep_var_index])
-            self.y_center = (self.original_y_center - self.min_value[self.dimension]) / (
-                            self.max_value[self.dimension] - self.min_value[self.dimension])
+            self.y_center = (self.original_y_center - min_value[self.dimension]) / (
+                            max_value[self.dimension] - min_value[self.dimension])
             # print(self.X_center)
             # print(self.y_center)
         if method=='minimize':
             # get initial values for the fitting parameters
-            if fitterB == None:
+            if init_coeff == None:
                 x0 = np.zeros(shape=(self.base_group.numberOfBases(),))
             else:
-                x0 = np.zeros(shape=(self.base_group.numberOfBases(),))
-                for index, item in enumerate(fitterB.base_group.bases):
-                    for index2, item2 in enumerate(self.base_group.bases):
-                        if item == item2:
-                            x0[index2] = fitterB.coeff[index]
-                            break
+                x0 = init_coeff
             # start fitting
             if self.X_center is not None:
                 # if set center constraints
-                output = minimize(self.cost_function, x0, args=(data_for_fit, data[:, self.dep_var_index]),\
+                output = minimize(self.cost_function, x0, args=(data_for_fit, data_Y_scaled),\
                                   constraints={'type': 'eq', 'fun':self.center_constraints},options={'disp': False})
             else:
-                output = minimize(self.cost_function, x0, args=(data_for_fit, data[:, self.dep_var_index]),options={'disp': False})
-            self.coeff = output.x
+                output = minimize(self.cost_function, x0, args=(data_for_fit, data_Y_scaled),options={'disp': False})
+            coeff = output.x
         elif method == 'sklearn-ols':
             ls_fitter = LinearRegression(fit_intercept=False)
-            ls_fitter.fit(data_for_fit, data[:, self.dep_var_index])
-            self.coeff = ls_fitter.coef_
+            ls_fitter.fit(data_for_fit, data_Y_scaled)
+            coeff = ls_fitter.coef_
 
-    def evaluate(self, sample):
-        if not hasattr(self, "coeff"):
-            raise AttributeError("Must do regression first.")
-        data = []
-        for index,item in enumerate(sample):
-            data.append((item - self.min_value[index]) / (self.max_value[index] - self.min_value[index]))
-        raw_output = self.base_group.evaluate(data, self.coeff)
-        return raw_output * (self.max_value[-1] - self.min_value[-1]) + self.min_value[-1]
+        # return the result
+        return PolynomialFunction(self.dimension, self.base_group,
+                                  coeff, max_value, min_value)
 
-    def generate_result(self):
-        if not hasattr(self, "coeff"):
-            raise AttributeError("Must do regression first.")
-        str = ""
-        str += "def " + self.name + "("
-        first_flag = True
-        for i in range(self.dimension):
-            if first_flag:
-                str += self.indep_var_name[i]
-                first_flag = False
-            else:
-                str += ',' + self.indep_var_name[i]
-        str += "):\n"
-        for i in range(self.dimension):
-            str += "\t" + GetVarSymbol(i) + " = (" + self.indep_var_name[i] + "-%.8e)/%.8e\n" % (
-            self.min_value[i], self.max_value[i] - self.min_value[i])
-        str += self.base_group.generate_power_series()
-        str += self.base_group.generate_expression(self.coeff)
-        str += "\t" + self.dep_var_name + " = output*%.8e+%.8e\n" % (
-        self.max_value[-1] - self.min_value[-1], self.min_value[-1])
-        str += "\treturn " + self.dep_var_name+"\n\n"
-        return str
 
-    def get_derivative_fitter(self, partial_var_index):
-        if partial_var_index>= self.dimension:
-            raise IndexError("The partial derivative variable index beyond the scope.")
-        derivative_fitter = GeneralFitter(name = self.name+"_p"+self.indep_var_name[partial_var_index], sign_derivative=True)
-        derivative_fitter.indep_var_name = self.indep_var_name
-        derivative_fitter.dep_var_name = self.dep_var_name
-        derivative_fitter.dimension = self.dimension
-        derivative_fitter.base_group = fittingBaseGroup("DerivativeFitterBase",self.dimension)
-        derivative_fitter.coeff = []
-        derivative_fitter.max_value = self.max_value.copy()
-        derivative_fitter.min_value = self.min_value.copy()
-        derivative_fitter.max_value[self.dimension] = 1
-        derivative_fitter.min_value[self.dimension] = 0
-        for i in range(len(self.base_group.bases)):
-            if self.base_group.bases[i].power_coeff[partial_var_index] > 0:
-                power_coeff = []
-                for index, item in enumerate(self.base_group.bases[i].power_coeff):
-                    if index == partial_var_index:
-                        power_coeff.append(item-1)
-                    else:
-                        power_coeff.append(item)
-                derivative_fitter.base_group.add_base(fittingBase(power_coeff))
-                derivative_fitter.coeff.append(self.base_group.bases[i].power_coeff[partial_var_index]*self.coeff[i])
-        for i in range(len(derivative_fitter.coeff)):
-            derivative_fitter.coeff[i] *= (self.max_value[self.dimension]-self.min_value[self.dimension])/\
-                                       (self.max_value[partial_var_index]-self.min_value[partial_var_index])
-        return derivative_fitter
-
-    def fit_and_write(self, fitterB=None, method = 'minimize'):
-        self.fit(fitterB, method)
-        return self.generate_result()
-
-class BasePolynomialFitting(object):
-    def __init__(self, thermo_name, method = 'minimize'):
-        self.thermo_name = thermo_name
-        self.X_center = None
-        self.y_center = None
-        self.nominal_value = None
-        self.deviation = None
-        self.method = method
-
-    def set_data(self, df, names):
-        self.csv_data = df
-        self.name_in_df = names
-        self.indep_var_names = names[:-1]
-        self.dep_var_name = names[-1]
-        self.dimension = len(self.indep_var_names)
-
-    def set_range(self, nominal_value, deviation):
-        self.nominal_value = nominal_value
-        self.deviation = deviation
-
-    def set_center(self, X_center, y_center):
-        self.X_center = X_center
-        self.y_center = y_center
-
-    def get_indicator_func(self, df):
-        result = (df[self.indep_var_names[0]]>(self.nominal_value[0]-self.deviation[0])) & (df[self.indep_var_names[0]]<(self.nominal_value[0]+self.deviation[0]))
-        if self.dimension == 1:
-            return result
-        for i in range(1,len(self.indep_var_names)):
-            result = result & (df[self.indep_var_names[i]]>(self.nominal_value[i]-self.deviation[i])) & (df[self.indep_var_names[i]]<(self.nominal_value[i]+self.deviation[i]))
-        return result
-
-class AdaptivePolynomialFitting(BasePolynomialFitting):
-    '''
-    choose a proper order adaptively, starting from a low order
-    '''
-    def set_fitting_param(self, way, max_order, desired_error):
-        self.max_order = max_order
-        self.way = way
-        self.target_error = desired_error
-
-    def generate_derivative_func(self, indexOrName):
-        if not hasattr(self, "last_fitter"):
-            raise AttributeError("The fitting should be done first.")
-        if isinstance(indexOrName, str):
-            index = self.indep_var_names.index(indexOrName)
-        else:
-            index = indexOrName
-        der_fitter = self.last_fitter.get_derivative_fitter(index)
-        return der_fitter.generate_result()
-
-    def generate_funcion(self):
-        if self.nominal_value is not None:
-            selected_data = self.csv_data[self.get_indicator_func(self.csv_data)]
-        else:
-            selected_data = self.csv_data
-        selected_data = selected_data.sample(frac=1.0)  # 全部打乱
-        cut_idx = int(round(0.5 * selected_data.shape[0]))
-        df_test, df_train = selected_data.iloc[:cut_idx], selected_data.iloc[cut_idx:]
-        if selected_data.shape[0] < self.max_order*self.dimension:
-            raise ValueError("Too few samples.At least %d."%(self.max_order*self.dimension))
-        # print(selected_data.shape[0])
-        # print(df_test.shape[0])
-        for name in self.name_in_df:
-            if name not in df_train.columns:
-                raise KeyError("The dataset has no key called %s." % name)
-        train_data = np.array(df_train.loc[:,self.name_in_df])
-        test_data = np.array(df_test.loc[:,self.name_in_df])
-        indep_var_index = []
-        for i in range(len(self.indep_var_names)):
-            indep_var_index.append(i)
-        dep_var_index = self.dimension
-
-        last_base = fittingBaseGroup.fitting_base_library(self.dimension, self.way, 1)
-        last_fitter = GeneralFitter(self.thermo_name, train_data, indep_var_index, dep_var_index, last_base)
-        last_fitter.set_var_name(self.indep_var_names,self.dep_var_name)
-        if self.X_center is not None:
-            last_fitter.set_center(self.X_center, self.y_center)
-        last_fitter.fit(method=self.method)
-        last_predict = np.zeros(shape = (test_data.shape[0],1))
-        for i in range(test_data.shape[0]):
-            last_predict[i,0] = last_fitter.evaluate(test_data[i,:-1])
-        last_error = last_predict-test_data[:,[-1]]
-        max_last_error = max(abs(last_error))[0]
-        flag = False
-        order = 1
-        if max_last_error>self.target_error:
-            if self.max_order > 1:
-                for i in range(2,self.max_order+1):
-                    new_base = fittingBaseGroup.fitting_base_library(self.dimension, self.way, i)
-                    new_fitter = GeneralFitter(self.thermo_name, train_data, indep_var_index, dep_var_index, new_base)
-                    new_fitter.set_var_name(self.indep_var_names, self.dep_var_name)
-                    if self.X_center is not None:
-                        new_fitter.set_center(self.X_center, self.y_center)
-                    new_fitter.fit(last_fitter,method=self.method)
-                    new_predict = np.zeros(shape=(test_data.shape[0], 1))
-                    for j in range(test_data.shape[0]):
-                        new_predict[j, 0] = new_fitter.evaluate(test_data[j, :-1])
-                    new_error = new_predict - test_data[:, [-1]]
-                    max_new_error = max(abs(new_error))[0]
-                    self.current_mean_error = np.mean(abs(new_error))
-                    if max_new_error > max_last_error:
-                        raise ConvergenceError("Mission impossible, the data should be more localized.")
-                    else:
-                        last_fitter = new_fitter
-                        max_last_error = max_new_error
-                        order = i
-                        if max_last_error < self.target_error:
-                            flag = True
-                            break
-            else:
-                raise ConvergenceError("Mission impossible, the order should be bigger.")
-        else:
-            flag = True
-        self.current_max_error = max_last_error
-        self.order = order
-        self.last_fitter = last_fitter
-        if flag == False:
-            raise ConvergenceError("Mission impossible, the order should be bigger.")
-        print("The max error on test dataset is %e." % max_last_error)
-        return last_fitter.generate_result()
-
-class FixOrderPolynomialFitting(BasePolynomialFitting):
-    '''
-    choose a proper order adaptively, starting from a low order
-    '''
-    def set_fitting_param(self, way, order, desired_error):
-        self.order = order
-        self.way = way
-        self.target_error = desired_error
-
-    def generate_derivative_func(self, indexOrName):
-        if not hasattr(self, "this_fitter"):
-            raise AttributeError("The fitting should be done first.")
-        if isinstance(indexOrName, str):
-            index = self.indep_var_names.index(indexOrName)
-        else:
-            index = indexOrName
-        der_fitter = self.this_fitter.get_derivative_fitter(index)
-        return der_fitter.generate_result()
-
-    def generate_funcion(self):
+class GaussianKernel():
+    def __init__(self, dimension, bandwidth):
         '''
-        Revised 20190917. High order fitting using low order fitting result as init values.
+
+        :param dimension:
+        :param bandwidth: list of size 'dimension'
+        '''
+        self.dimension = dimension
+        self.bandwidth = bandwidth
+
+    def evaluate_single(self, input_value):
+        if input_value.shape[0] != self.dimension:
+            raise ValueError("The dimension is not correct")
+        ret = 1
+        for d in range(self.dimension):
+            ret *= np.exp(-(input_value[d]**2)/2/self.bandwidth[d]/self.bandwidth[d])
+        return ret
+
+    def evaluate(self, input_value1, input_value2):
+        return self.evaluate_single(input_value1-input_value2)
+
+
+class GaussianRBFNetworkFunc(ApproximatonFunction):
+    def __init__(self, dimension, bandwidth, x_points, coeff, offset=0):
+        '''
+
+        :param dimension:
+        :param bandwidth: list of size 'dimension'
+        '''
+        self.dimension = dimension
+        self.bandwidth = bandwidth
+        self.x_points = x_points
+        self.data_size = self.x_points.shape[0]
+        self.kernel = GaussianKernel(dimension, bandwidth)
+        self.coeff = coeff
+        self.offset = offset
+
+    def evaluate(self, x):
+        '''
+
+        :param data_point: tuple (input,) like (1,3)
         :return:
         '''
-        # the error here means absolute error
-        if self.nominal_value is not None:
-            selected_data = self.csv_data[self.get_indicator_func(self.csv_data)]
-        else:
-            selected_data = self.csv_data
-        selected_data = selected_data.sample(frac=1.0)  # 全部打乱
-        cut_idx = int(round(0.5 * selected_data.shape[0]))
-        df_test, df_train = selected_data.iloc[:cut_idx], selected_data.iloc[cut_idx:]
-        if selected_data.shape[0] < self.order*self.dimension:
-            raise ValueError("Too few samples.At least %d, now it is %d."%(self.order*self.dimension,selected_data.shape[0]))
-        # print(selected_data.shape[0])
-        # print(df_test.shape[0])
-        for name in self.name_in_df:
-            if name not in df_train.columns:
-                raise KeyError("The dataset has no key called %s." % name)
-        train_data = np.array(df_train.loc[:,self.name_in_df])
-        test_data = np.array(df_test.loc[:,self.name_in_df])
-        indep_var_index = []
-        for i in range(len(self.indep_var_names)):
-            indep_var_index.append(i)
-        dep_var_index = self.dimension
+        if x.shape[0] != self.dimension:
+            raise ValueError("The dimension is not correct")
+        ret = 0
+        for d in range(self.data_size):
+            ret += self.kernel.evaluate(x,self.x_points[d])*self.coeff[d]
+        return ret + self.offset
 
-        for fitting_order in range(1, self.order +1):
-            base = fittingBaseGroup.fitting_base_library(self.dimension, self.way, fitting_order)
-            this_fitter = GeneralFitter(self.thermo_name, train_data, indep_var_index, dep_var_index, base)
-            this_fitter.set_var_name(self.indep_var_names, self.dep_var_name)
-            if self.X_center is not None:
-                this_fitter.set_center(self.X_center, self.y_center)
-            if fitting_order == 1:
-                this_fitter.fit(method=self.method)
-                last_fitter = this_fitter
-            else:
-                this_fitter.fit(last_fitter,method=self.method)
-        this_predict = np.zeros(shape = (test_data.shape[0],1))
-        for i in range(test_data.shape[0]):
-            this_predict[i,0] = this_fitter.evaluate(test_data[i,:-1])
-        this_error = this_predict-test_data[:,[-1]]
-        max_error = max(abs(this_error))[0]
-        print("The max error on test dataset is %e."%max_error)
-        self.current_mean_error = np.mean(abs(this_error))
-        if max_error > self.target_error:
-            print("Target precision not reached.")
-        self.current_max_error = max_error
-        self.this_fitter = this_fitter
-        return this_fitter.generate_result()
+    def generate_text(self, name=None, flag_function_def=True):
+        str = ""
+        if flag_function_def:
+            str += "def " + name + "("
+            first_flag = True
+            for i in range(self.dimension):
+                if first_flag:
+                    str += self.indep_var_name[i]
+                    first_flag = False
+                else:
+                    str += ',' + self.indep_var_name[i]
+            str += "):\n"
+        name_list="["
+        name_list+=",".join(self.indep_var_name)
+        name_list+="]"
+        str += "\tfull_x_list = "+name_list+"\n"
+        str += "\tdata_x = np.array("+np.array2string(self.x_points,separator=',', formatter={'float_kind':lambda x: "%.25e" % x})+")\n"
+        str += "\tcoeff = np.array(" + np.array2string(self.coeff,separator=',', formatter={'float_kind': lambda x: "%.25e" % x}) + ")\n"
+        str += "\tbandwidth = np.array(" + np.array2string(self.bandwidth,separator=',',
+                                                       formatter={'float_kind': lambda x: "%.25e" % x}) + ")\n"
+        str +=\
+'''
+\toutput = 0
+\tfor i in range(%d):
+\t\ttemp = 0
+\t\tfor j in range(%d):
+\t\t\ttemp += ((full_x_list[j]-data_x[i,j])/bandwidth[j])**2
+\t\ttemp *= -0.5
+\t\toutput += np.exp(temp)*coeff[i]
+'''%(self.data_size, self.dimension)
+        str += "\toutput += %.25e\n"%self.offset
+        if flag_function_def:
+            str += "\t" + self.dep_var_name + " = output\n"
+            str += "\treturn " + self.dep_var_name + "\n\n"
+        return str
+
+class GaussianRBFNetworkFuncFitter():
+    def __init__(self, dimension, bandwidth):
+        self.dimension = dimension
+        self.bandwidth = bandwidth
+        self.kernel = GaussianKernel(dimension, bandwidth)
+
+    def fit(self, sample_X, sample_Y, point_X=None, fit_intercept=False, alpha=0.0):
+        '''
+
+        :param sample_X:
+        :param sample_Y:
+        :param point_X:
+        :param fit_intercept:bool
+        :param alpha: [0,inf)
+        :return:
+        '''
+        if point_X is None:
+            point_X = sample_X
+        n_p = point_X.shape[0]
+        n_s = sample_X.shape[0]
+        if n_p > n_s:
+            raise ValueError("too few sample points")
+
+        X = np.zeros((n_s, n_p))
+        for i in range(n_s):
+            for j in range(n_p):
+                X[i,j] = self.kernel.evaluate(sample_X[i],point_X[j])
+        if alpha == 0.0:
+            model = LinearRegression(fit_intercept=fit_intercept)
+        else:
+            model = Ridge(alpha=1.0, fit_intercept=fit_intercept)
+
+        model.fit(X, sample_Y)
+        coeff = np.array(model.coef_)
+        offset = model.intercept_
+        return GaussianRBFNetworkFunc(self.dimension, self.bandwidth, point_X, coeff, offset)
+
+
+class KrigingFunction(ApproximatonFunction):
+    def __init__(self, polynomial, rbf_network):
+        assert polynomial.dimension == rbf_network.dimension
+        self.dimension = polynomial.dimension
+        self.polynomial = polynomial
+        self.rbf_network = rbf_network
+
+    def evaluate(self, x):
+        return self.polynomial.evaluate(x)+self.rbf_network.evaluate(x)
+
+    def generate_text(self, name=None, flag_function_def=True):
+        str = ""
+        if flag_function_def:
+            str += "def " + name + "("
+            first_flag = True
+            for i in range(self.dimension):
+                if first_flag:
+                    str += self.indep_var_name[i]
+                    first_flag = False
+                else:
+                    str += ',' + self.indep_var_name[i]
+            str += "):\n"
+        str += self.polynomial.generate_text(flag_function_def=False)
+        str += "\t"+self.dep_var_name+" = output\n"
+        str += self.rbf_network.generate_text(flag_function_def=False)
+        str += "\t" + self.dep_var_name + " += output\n"
+        if flag_function_def:
+            str += "\treturn " + self.dep_var_name + "\n\n"
+        return str
+
+    def set_var_name(self, indep_var_name, dep_var_name):
+        self.polynomial.set_var_name(indep_var_name, dep_var_name)
+        self.rbf_network.set_var_name(indep_var_name, dep_var_name)
+        super().set_var_name(indep_var_name, dep_var_name)
+
+class KrigingFitter():
+    def __init__(self, dimension, base_group, bandwidth):
+        self.polynomial_fitter = PolynomialFitter(dimension, base_group)
+        self.rbf_network_fitter = GaussianRBFNetworkFuncFitter(dimension, bandwidth)
+    def fit(self, sample_X, sample_Y, point_X=None, fit_intercept=False, alpha=0.0):
+        polynomial = self.polynomial_fitter.fit(sample_X, sample_Y, init_coeff=None, method='sklearn-ols')
+        polynomial_Y = np.zeros(shape=sample_Y.shape)
+        for i in range(polynomial_Y.shape[0]):
+            polynomial_Y[i] = polynomial.evaluate(sample_X[i])
+        rbf_network = self.rbf_network_fitter.fit(sample_X, sample_Y-polynomial_Y, point_X, fit_intercept, alpha)
+        return KrigingFunction(polynomial, rbf_network)
+
 
 if __name__=="__main__":
-    for item in fittingBaseGroup._base_A_iterater(3,4):
-        print(item)
+    pass
