@@ -4,6 +4,7 @@ import numpy as np
 from scipy.optimize import minimize
 import re
 from sklearn.linear_model import LinearRegression, Ridge
+import pickle
 
 def GetVarSymbol(nth):
     return "x"+str(nth)
@@ -429,7 +430,7 @@ class GaussianRBFNetworkFunc(ApproximatonFunction):
             ret += self.kernel.evaluate(x,self.x_points[d])*self.coeff[d]
         return ret + self.offset
 
-    def generate_text(self, name=None, flag_function_def=True):
+    def generate_text(self, name=None, flag_function_def=True, data_x_path=None, coeff_path=None):
         str = ""
         if flag_function_def:
             str += "def " + name + "("
@@ -445,10 +446,26 @@ class GaussianRBFNetworkFunc(ApproximatonFunction):
         name_list+=",".join(self.indep_var_name)
         name_list+="]"
         str += "\tfull_x_list = "+name_list+"\n"
-        str += "\tdata_x = np.array("+np.array2string(self.x_points,separator=',', formatter={'float_kind':lambda x: "%.25e" % x})+")\n"
-        str += "\tcoeff = np.array(" + np.array2string(self.coeff,separator=',', formatter={'float_kind': lambda x: "%.25e" % x}) + ")\n"
+        if data_x_path is None and self.data_size > 20:
+            raise Exception("large data needs to be stored in file")
+        if data_x_path is None:
+            str += "\tdata_x = np.array("+np.array2string(self.x_points,separator=',', formatter={'float_kind':lambda x: "%.25e" % x},\
+                                                      threshold=20)+")\n"
+        else:
+            with open(data_x_path, 'wb') as f:
+                pickle.dump(self.x_points, f)
+            str += "\twith open(r\"%s\", \'rb\') as fp:\n\t\tdata_x = pickle.load(fp)\n"%data_x_path
+        if coeff_path is None:
+            str += "\tcoeff = np.array(" + np.array2string(self.coeff,separator=',', formatter={'float_kind': lambda x: "%.25e" % x},\
+                                                      threshold=20) + ")\n"
+        else:
+            with open(coeff_path, 'wb') as f:
+                pickle.dump(self.coeff, f)
+            str += "\twith open(r\"%s\", \'rb\') as fp:\n\t\tcoeff = pickle.load(fp)\n" % coeff_path
+
         str += "\tbandwidth = np.array(" + np.array2string(self.bandwidth,separator=',',
-                                                       formatter={'float_kind': lambda x: "%.25e" % x}) + ")\n"
+                                                       formatter={'float_kind': lambda x: "%.25e" % x},\
+                                                      threshold=20) + ")\n"
         str +=\
 '''
 \toutput = 0
@@ -513,7 +530,7 @@ class KrigingFunction(ApproximatonFunction):
     def evaluate(self, x):
         return self.polynomial.evaluate(x)+self.rbf_network.evaluate(x)
 
-    def generate_text(self, name=None, flag_function_def=True):
+    def generate_text(self, name=None, flag_function_def=True, data_x_path=None, coeff_path=None):
         str = ""
         if flag_function_def:
             str += "def " + name + "("
@@ -527,7 +544,8 @@ class KrigingFunction(ApproximatonFunction):
             str += "):\n"
         str += self.polynomial.generate_text(flag_function_def=False)
         str += "\t"+self.dep_var_name+" = output\n"
-        str += self.rbf_network.generate_text(flag_function_def=False)
+        str += self.rbf_network.generate_text(flag_function_def=False, data_x_path=data_x_path,\
+                                              coeff_path=coeff_path)
         str += "\t" + self.dep_var_name + " += output\n"
         if flag_function_def:
             str += "\treturn " + self.dep_var_name + "\n\n"

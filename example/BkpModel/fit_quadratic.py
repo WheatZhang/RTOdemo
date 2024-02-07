@@ -2,7 +2,8 @@ from rtolib.model.wo_reactor_con import RTO_Mismatched_WO_reactor as Wo_reactor
 from rtolib.model.wo_reactor_con import default_WOR_description as wo_description
 from rtolib.model.parallel_wo import RTO_Mismatched_Parallel_WO as Parallel_wo_reactor
 from rtolib.model.parallel_wo import default_WOR_description as parallel_wo_description
-from rtolib.model.asu17000 import default_ASU_description, ASU_Model, ASU_Plant
+from rtolib.model.asu17000 import default_ASU_description, ASU_Model, ASU_Plant,\
+    PlantKriging
 from rtolib.util.cvx_quadr import fit_convex_quadratic_model, get_hypercube_sampling
 from rtolib.core.solve import PyomoSimulator
 from pyomo.environ import SolverFactory
@@ -10,6 +11,7 @@ from rtolib.core.pyomo_model import ModelSolvingStatus
 import numpy as np
 import pickle
 from rtolib.util.init_value import load_init_from_template
+from rtolib.util.fit_poly_krig import KrigingFunction, KrigingFitter, MonomialBaseGroup
 
 def fit_wo_convex_quadratic_surrogate():
     model_simulator = PyomoSimulator(Wo_reactor())
@@ -330,9 +332,136 @@ def fit_asu_convex_quadratic_surrogate():
             fp.write(model_string)
             fp.write("\ntest_model."+cv_strings[cv]+" = Expression(rule="+cv_strings[cv]+")\n\n")
 
+def fit_asu_plant_kriging():
+    with open("data/asu_quadratic/X_plant",'rb') as f:
+        X=pickle.load(f)
+    with open("data/asu_quadratic/Y_plant", 'rb') as f:
+        Y=pickle.load(f)
+    with open("data/asu_quadratic/success_flag_plant", 'rb') as f:
+        success_flag = pickle.load(f)
+    mvs = default_ASU_description.symbol_list['MV']
+    cvs = list(default_ASU_description.symbol_list['CON'])
+    cvs.append(default_ASU_description.symbol_list['OBJ'])
+    X = X[success_flag==1,:]
+    Y = Y[success_flag==1,:]
+    mv_strings = ['m.FeedMFlow',
+                  'm.FeedSplitterOut1Ratio',
+                  'm.FeedSplitterOut2Ratio',
+                  'm.HPCCondPrdtMFlow',
+                  'm.LPCExt46MFlow',
+                  'm.LPCExt15MFlow',
+                  'm.ASCCondRefRatio',
+                  'm.OxSplitterOutARatio']
+    cv_strings = {
+        "cost": "OBJ",
+        "OxygenPrdtPurityCon": "PurityCon1",
+        "OxygenPrdtImpurityCon": "PurityCon2",
+        "NitrogenPrdtPurityCon": "PurityCon3",
+        "NitrogenPrdtImpurityCon": "PurityCon4",
+        "ArgonPrdtImpurityCon": "PurityCon5",
+        "CrudeArgonImpurityCon": "PurityCon6",
+        "LOX_Con": "ProductCon1",
+        "GAN_Con": "ProductCon2",
+        "GAR_Con": "ProductCon3",
+        "MainCoolerTempDiffCon": "TempDiffCon1",
+        "HeatLPCTempDiffCon": "TempDiffCon2",
+        "HPA_GOX_LB_Con": "TurbineCon1",
+        "HPA_GOX_UB_Con": "TurbineCon2",
+        "Feed_LB_Con": "TurbineCon3",
+        "Feed_UB_Con": "TurbineCon4",
+        "HPA_LB_Con": "TurbineCon7",
+        "HPA_UB_Con": "TurbineCon8",
+        "TA_LB_Con": "TurbineCon9",
+        "TA_UB_Con": "TurbineCon10",
+        "OverallHeatCon": "OverallHeatBlnc",
+    }
+    max_order = 3
+    dimension = 8
+    way = 'Compound'
+    base_group = MonomialBaseGroup.fitting_base_library(dimension, way, max_order)
+    bandwidth = np.zeros((8,))
+    bandwidth_factor = 0.1
+    for i, mv in enumerate(mvs):
+        lb = default_ASU_description.bounds[mv][0]
+        ub = default_ASU_description.bounds[mv][1]
+        bandwidth[i] = bandwidth_factor*(ub-lb)
+
+    fitter = KrigingFitter(dimension, base_group, bandwidth)
+
+    with open("data/asu_kriging_plant_text.txt", 'w') as fp:
+        for j, cv in enumerate(cvs):
+            print("fitting %s"%cv)
+            kriging_func = fitter.fit(X, Y[:, j])
+            kriging_func.set_var_name(['v'+mv for mv in mvs], cv)
+            string = kriging_func.generate_text(name=cv+"_func", data_x_path="data/asu_quadratic/krig_x_point",\
+                                                coeff_path="data/asu_quadratic/krig_coeff/"+cv)
+            fp.write(string.replace("np.exp", "exp"))
+
+            fp.write("def " + cv_strings[cv] + "(m):\n\treturn ")
+            model_string=cv+"_func("
+            for k, mv in enumerate(mvs):
+                if k != 0:
+                    model_string += ","
+                model_string += mv_strings[k]
+            model_string+=")\n"
+            fp.write(model_string)
+            fp.write("\ntest_model." + cv_strings[cv] + " = Expression(rule=" + cv_strings[cv] + ")\n\n")
+            fp.flush()
+
+
+def check_plant_krig_precision():
+    model_simulator = PyomoSimulator(PlantKriging())
+    model_simulator.build(default_ASU_description)
+    solver_executable = r"F:\Research\ModularTask\wys_fit\WholeOpt\ipopt38.exe"
+    solver = SolverFactory('ipopt', executable=solver_executable)
+    default_options = {}
+    default_options['tol'] = 1e-8  # this could be smaller if necessary
+    default_options['bound_push'] = 1e-10  # this is also crucial, for both convergence and speed
+    default_options['max_iter'] = 1000
+    solver.options['linear_solver'] = 'ma57'
+    model_simulator.set_solver(solver, tee=False, default_options=default_options)
+
+    with open("data/asu_quadratic/X_plant", 'rb') as f:
+        X = pickle.load(f)
+    with open("data/asu_quadratic/Y_plant", 'rb') as f:
+        Y = pickle.load(f)
+    with open("data/asu_quadratic/success_flag_plant", 'rb') as f:
+        success_flag = pickle.load(f)
+    mvs = default_ASU_description.symbol_list['MV']
+    cvs = list(default_ASU_description.symbol_list['CON'])
+    cvs.append(default_ASU_description.symbol_list['OBJ'])
+    X = X[success_flag == 1, :]
+    Y = Y[success_flag == 1, :]
+
+    n_data = X.shape[0]
+    Y_fitted = np.zeros(shape=Y.shape, dtype=float)
+    param_values = {}
+    for k in model_simulator.pyomo_model.parameters.keys():
+        param_values[k] = model_simulator.pyomo_model.default_value[k]
+    for i in range(n_data):
+        if i % 100 == 0:
+            print("simulating data %d" % i)
+        input_dict = {}
+        for j, mv in enumerate(mvs):
+            input_dict[mv] = X[i, j]
+        outputs, solve_status = model_simulator.simulate(input_dict, param_values=param_values,
+                                                             use_homo=False)
+        if solve_status == False or solve_status == ModelSolvingStatus.OPTIMIZATION_FAILED:
+            raise Exception("kriging model evaluation error")
+        for j, cv in enumerate(cvs):
+            Y_fitted[i, j] = outputs[cv]
+
+    n_cv = Y.shape[1]
+    for i in range(n_cv):
+        error = max(abs(Y[:,i] - fitted_Y[:,i]))
+        y_range = max(Y[:,i]) - min(Y[:,i])
+        print("%s: error %.5e,  range %.5e,  relative_e %.5e"%(cvs[i],error,y_range,error/y_range))
+
 
 if __name__ == "__main__":
     # fit_wo_convex_quadratic_surrogate()
     # fit_parallel_wo_convex_quadratic_surrogate()
-    get_asu_plant_samples()
+    # get_asu_plant_samples()
     # fit_asu_convex_quadratic_surrogate()
+    # fit_asu_plant_kriging()
+    check_plant_krig_precision()
